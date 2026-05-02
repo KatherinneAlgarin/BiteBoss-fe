@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(Test-Path \"c:\\\\Users\\\\kathy\\\\Desktop\\\\Ciclo7\\\\CalidadSoftware\\\\BiteBossPeriodo3\\\\biteboss-fe\\\\.env\")"
+    ]
+  }
+}

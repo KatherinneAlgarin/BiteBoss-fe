@@ -1,67 +1,48 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute } from './routes/ProtectedRoute';
-import { RoleRoute } from './routes/RoleRoute';
-import { RoleRedirect } from './routes/RoleRedirect';
-import { DashboardLayout } from './layouts/DashboardLayout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { RoleRoute } from './components/auth/RoleRoute';
+import { RoleRedirect } from './components/auth/RoleRedirect';
+import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { LoginPage } from './pages/LoginPage';
-import { AdminDashboard } from './pages/dashboard/AdminDashboard';
-import { GerenteDashboard } from './pages/dashboard/GerenteDashboard';
-import { CajeroDashboard } from './pages/dashboard/CajeroDashboard';
-import { MeseroDashboard } from './pages/dashboard/MeseroDashboard';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
+import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
+import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
+import { CocineroDashboard } from './pages/dashboard/cocinero/CocineroDashboard';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Ruta raíz → login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-
-          {/* Ruta pública */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Rutas protegidas (requieren sesión activa) */}
           <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout><RoleRedirect /></DashboardLayout>} path="/dashboard" />
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<RoleRedirect />} />
 
-            {/* Solo Admin */}
-            <Route element={<RoleRoute allowedRoles={['admin']} />}>
-              <Route
-                path="/dashboard/admin"
-                element={<DashboardLayout><AdminDashboard /></DashboardLayout>}
-              />
-            </Route>
+              <Route element={<RoleRoute allowedRoles={['admin']} />}>
+                <Route path="/dashboard/admin" element={<AdminDashboard />} />
+              </Route>
 
-            {/* Gerente y Admin */}
-            <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
-              <Route
-                path="/dashboard/gerente"
-                element={<DashboardLayout><GerenteDashboard /></DashboardLayout>}
-              />
-            </Route>
+              <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
+                <Route path="/dashboard/cajero" element={<CajeroDashboard />} />
+              </Route>
 
-            {/* Cajero y Admin */}
-            <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
-              <Route
-                path="/dashboard/cajero"
-                element={<DashboardLayout><CajeroDashboard /></DashboardLayout>}
-              />
-            </Route>
+              <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
+                <Route path="/dashboard/mesero" element={<MeseroDashboard />} />
+              </Route>
 
-            {/* Mesero y Admin */}
-            <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
-              <Route
-                path="/dashboard/mesero"
-                element={<DashboardLayout><MeseroDashboard /></DashboardLayout>}
-              />
+              <Route element={<RoleRoute allowedRoles={['admin', 'cocinero']} />}>
+                <Route path="/dashboard/cocinero" element={<CocineroDashboard />} />
+              </Route>
             </Route>
           </Route>
 
-          {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>

@@ -1,4 +1,4 @@
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -7,7 +7,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.profile?.full_name ?? 'Administrador'}
+          Bienvenido, {user?.profile?.nombre ?? 'Administrador'}
         </h1>
         <p className="text-gray-500 mt-1">Panel de administración — BiteBoss</p>
       </div>

@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import type { AuthState, AuthUser, LoginCredentials } from '../types/auth';
-import { signIn, signOut, getUserProfile } from '../services/authService';
-import { supabase } from '../services/supabaseClient';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { AuthState, AuthUser, LoginCredentials } from '../types/auth.types';
+import { signIn, signOut, getStoredSession, storeSession } from '../services/auth.service';
 
 interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -19,57 +18,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   });
 
-  const loadUserProfile = useCallback(async (userId: string, email: string) => {
-    try {
-      const profile = await getUserProfile(userId);
-      const authUser: AuthUser = { id: userId, email, profile };
+  useEffect(() => {
+    const session = getStoredSession();
+    if (session) {
+      const authUser: AuthUser = {
+        id: String(session.user.id_usuario),
+        email: session.user.email,
+        profile: session.user,
+      };
       setState({ user: authUser, isLoading: false, isAuthenticated: true });
-    } catch {
+    } else {
       setState({ user: null, isLoading: false, isAuthenticated: false });
     }
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        loadUserProfile(session.user.id, session.user.email ?? '');
-      } else {
-        setState({ user: null, isLoading: false, isAuthenticated: false });
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        loadUserProfile(session.user.id, session.user.email ?? '');
-      } else {
-        setState({ user: null, isLoading: false, isAuthenticated: false });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [loadUserProfile]);
-
   const login = async (credentials: LoginCredentials) => {
     setState(prev => ({ ...prev, isLoading: true }));
     try {
-      const { user } = await signIn(credentials);
-      if (!user) throw new Error(GENERIC_ERROR);
-      await loadUserProfile(user.id, user.email ?? '');
-    } catch {
+      const { token, usuario } = await signIn(credentials);
+      storeSession(token, usuario);
+      const authUser: AuthUser = {
+        id: String(usuario.id_usuario),
+        email: usuario.email,
+        profile: usuario,
+      };
+      setState({ user: authUser, isLoading: false, isAuthenticated: true });
+    } catch (err) {
       setState(prev => ({ ...prev, isLoading: false }));
-      throw new Error(GENERIC_ERROR);
+      throw err instanceof Error ? err : new Error(GENERIC_ERROR);
     }
   };
 
   const logout = async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
-    try {
-      await signOut();
-      setState({ user: null, isLoading: false, isAuthenticated: false });
-    } catch {
-      setState(prev => ({ ...prev, isLoading: false }));
-      throw new Error(GENERIC_ERROR);
-    }
+    signOut();
+    setState({ user: null, isLoading: false, isAuthenticated: false });
   };
 
   return (

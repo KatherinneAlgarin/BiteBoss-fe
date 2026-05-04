@@ -7,7 +7,6 @@ interface AuthLayoutProps {
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-500 to-orange-700 flex-col items-center justify-center p-12 text-white">
         <div className="max-w-md text-center space-y-6">
           <div className="flex items-center justify-center gap-3 mb-8">
@@ -23,9 +22,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </div>
 
-      {/* Panel derecho — formulario */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50">
-        {/* Logo mobile */}
         <div className="flex items-center gap-2 mb-8 lg:hidden">
           <span className="text-3xl">🍽️</span>
           <span className="text-2xl font-bold text-orange-500">BiteBoss</span>

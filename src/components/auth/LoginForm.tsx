@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Input } from '../common/Input';
-import { Button } from '../common/Button';
-import { AlertMessage } from '../common/AlertMessage';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+import { AlertMessage } from '../ui/AlertMessage';
 
 const loginSchema = z.object({
   email: z
@@ -38,14 +38,9 @@ export function LoginForm() {
     setErrorMessage(null);
     try {
       await login(data);
-      // El RoleRedirect en /dashboard maneja la redirección según el rol
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Ocurrió un error. Intenta de nuevo.');
-      }
+      setErrorMessage(err instanceof Error ? err.message : 'Ocurrió un error. Intenta de nuevo.');
     }
   };
 

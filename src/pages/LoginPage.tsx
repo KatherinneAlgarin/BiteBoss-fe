@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthLayout } from '../layouts/AuthLayout';
-import { LoginForm } from '../components/login/LoginForm';
+import { AuthLayout } from '../components/auth/AuthLayout';
+import { LoginForm } from '../components/auth/LoginForm';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {

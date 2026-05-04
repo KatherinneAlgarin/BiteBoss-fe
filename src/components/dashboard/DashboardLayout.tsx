@@ -1,21 +1,21 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/common/Button';
-import type { UserRole } from '../types/auth';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { Button } from '../ui/Button';
+import type { UserRole } from '../../types/auth.types';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Administrador',
-  gerente: 'Gerente',
   cajero: 'Cajero',
   mesero: 'Mesero',
+  cocinero: 'Cocinero',
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin: 'bg-purple-100 text-purple-700',
-  gerente: 'bg-blue-100 text-blue-700',
   cajero: 'bg-green-100 text-green-700',
   mesero: 'bg-orange-100 text-orange-700',
+  cocinero: 'bg-red-100 text-red-700',
 };
 
 interface NavItem {
@@ -29,16 +29,16 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Dashboard',
     path: '/dashboard',
-    icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
-    roles: ['admin', 'gerente', 'cajero', 'mesero'],
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+    roles: ['admin', 'cajero', 'mesero', 'cocinero'],
   },
 ];
 
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,7 +46,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const role = user?.profile?.role;
-
   const visibleItems = NAV_ITEMS.filter(item => role && item.roles.includes(role));
 
   const handleLogout = async () => {
@@ -83,10 +82,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <span className="text-xl font-bold text-orange-500">BiteBoss</span>
         </div>
 
-        {/* User info */}
+        {/* Info de usuario */}
         {user?.profile && (
           <div className="px-5 py-4 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-800 truncate">{user.profile.full_name}</p>
+            <p className="text-sm font-semibold text-gray-800 truncate">{user.profile.nombre}</p>
             <p className="text-xs text-gray-500 truncate mb-2">{user.email}</p>
             {role && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[role]}`}>
@@ -96,7 +95,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         )}
 
-        {/* Nav */}
+        {/* Navegación */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {visibleItems.map(item => {
             const isActive = location.pathname === item.path;
@@ -118,14 +117,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           })}
         </nav>
 
-        {/* Logout */}
+        {/* Cerrar sesión */}
         <div className="p-4 border-t border-gray-100">
-          <Button
-            variant="secondary"
-            fullWidth
-            isLoading={loggingOut}
-            onClick={handleLogout}
-          >
+          <Button variant="secondary" fullWidth isLoading={loggingOut} onClick={handleLogout}>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
@@ -134,7 +128,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </aside>
 
-      {/* Main content */}
+      {/* Contenido principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar mobile */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
@@ -155,7 +149,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

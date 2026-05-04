@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useHasRole } from '../hooks/useAuth';
-import type { UserRole } from '../types/auth';
+import { useHasRole } from '../../hooks/useAuth';
+import type { UserRole } from '../../types/auth.types';
 
 interface RoleRouteProps {
   allowedRoles: UserRole[];
@@ -8,10 +8,6 @@ interface RoleRouteProps {
 
 export function RoleRoute({ allowedRoles }: RoleRouteProps) {
   const hasRole = useHasRole(...allowedRoles);
-
-  if (!hasRole) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
+  if (!hasRole) return <Navigate to="/unauthorized" replace />;
   return <Outlet />;
 }

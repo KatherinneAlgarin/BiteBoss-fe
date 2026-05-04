@@ -1,12 +1,14 @@
-export type UserRole = 'admin' | 'gerente' | 'cajero' | 'mesero';
+export type UserRole = 'admin' | 'cajero' | 'mesero' | 'cocinero';
 
 export interface UserProfile {
-  id: string;
+  id_usuario: number;
+  nombre: string;
   email: string;
-  full_name: string;
+  activo: boolean;
   role: UserRole;
-  avatar_url?: string;
-  created_at: string;
+  id_rol: number;
+  id_sucursal: number;
+  id_usuario_sucursal: number;
 }
 
 export interface AuthUser {

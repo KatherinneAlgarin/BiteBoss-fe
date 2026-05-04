@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/common/Button';
+import { Button } from '../components/ui/Button';
 
 export function UnauthorizedPage() {
   const { isAuthenticated, logout } = useAuth();

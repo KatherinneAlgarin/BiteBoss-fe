@@ -1,5 +1,5 @@
 import { useAuthContext } from '../context/AuthContext';
-import type { UserRole } from '../types/auth';
+import type { UserRole } from '../types/auth.types';
 
 export function useAuth() {
   return useAuthContext();

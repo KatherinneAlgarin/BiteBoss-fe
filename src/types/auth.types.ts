@@ -1,3 +1,5 @@
+import type { Session } from '@supabase/supabase-js';
+
 export type UserRole = 'admin' | 'cajero' | 'mesero' | 'cocinero';
 
 export interface UserProfile {
@@ -11,14 +13,8 @@ export interface UserProfile {
   id_usuario_sucursal: number;
 }
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  profile: UserProfile | null;
-}
-
 export interface AuthState {
-  user: AuthUser | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 }

@@ -23,9 +23,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/dashboard" element={<RoleRedirect />} />
 
             <Route element={<RoleRoute allowedRoles={['admin']} />}>

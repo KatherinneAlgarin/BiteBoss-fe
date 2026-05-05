@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, UtensilsCrossed } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
@@ -10,16 +10,16 @@ const navMain = [
 ];
 
 export function MeseroDashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { session, logout } = useAuth();
+  const meta = session?.user?.app_metadata;
 
-  if (!user?.profile) return null;
+  if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: user.profile.nombre, email: user.email, role: 'mesero' }}
+      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'mesero' }}
       data={{ navMain }}
-      onLogout={() => { void logout().then(() => navigate('/login', { replace: true })); }}
+      onLogout={() => { void logout(); }}
     >
       <Outlet />
     </DashboardLayout>

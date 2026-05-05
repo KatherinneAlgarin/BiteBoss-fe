@@ -3,7 +3,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { RoleRoute } from './components/auth/RoleRoute';
 import { RoleRedirect } from './components/auth/RoleRedirect';
-import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { LoginPage } from './pages/LoginPage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -22,24 +21,22 @@ function App() {
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<RoleRedirect />} />
+            <Route path="/dashboard" element={<RoleRedirect />} />
 
-              <Route element={<RoleRoute allowedRoles={['admin']} />}>
-                <Route path="/dashboard/admin" element={<AdminDashboard />} />
-              </Route>
+            <Route element={<RoleRoute allowedRoles={['admin']} />}>
+              <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            </Route>
 
-              <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
-                <Route path="/dashboard/cajero" element={<CajeroDashboard />} />
-              </Route>
+            <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
+              <Route path="/dashboard/cajero" element={<CajeroDashboard />} />
+            </Route>
 
-              <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
-                <Route path="/dashboard/mesero" element={<MeseroDashboard />} />
-              </Route>
+            <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
+              <Route path="/dashboard/mesero" element={<MeseroDashboard />} />
+            </Route>
 
-              <Route element={<RoleRoute allowedRoles={['admin', 'cocinero']} />}>
-                <Route path="/dashboard/cocinero" element={<CocineroDashboard />} />
-              </Route>
+            <Route element={<RoleRoute allowedRoles={['admin', 'cocinero']} />}>
+              <Route path="/dashboard/cocinero" element={<CocineroDashboard />} />
             </Route>
           </Route>
 

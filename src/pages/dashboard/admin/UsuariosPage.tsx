@@ -3,6 +3,7 @@ import { UserPlus, Loader2, AlertCircle, Users } from 'lucide-react';
 import { listarUsuarios, listarRoles, listarSucursales, crearUsuario } from '../../../services/usuario.service';
 import { UsuarioModal, type UsuarioModalMode } from '../../../components/usuarios/UsuarioModal';
 import type { CrearUsuarioDto, RolItem, SucursalItem, UsuarioListItem } from '../../../types/usuario.types';
+import { useHasRole } from '../../../hooks/useAuth';
 
 const ROLE_BADGE: Record<string, string> = {
   admin:    'bg-purple-100 text-purple-700',
@@ -24,6 +25,7 @@ interface ModalState {
 const MODAL_CLOSED: ModalState = { open: false, mode: 'crear' };
 
 export function UsuariosPage() {
+  const esAdmin = useHasRole('admin');
   const [usuarios, setUsuarios] = useState<UsuarioListItem[]>([]);
   const [roles, setRoles] = useState<RolItem[]>([]);
   const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
@@ -36,20 +38,20 @@ export function UsuariosPage() {
     setLoading(true);
     setLoadError('');
     try {
-      const [usuariosData, rolesData, sucursalesData] = await Promise.all([
-        listarUsuarios(),
-        listarRoles(),
-        listarSucursales(),
-      ]);
+      const usuariosData = await listarUsuarios();
       setUsuarios(usuariosData);
-      setRoles(rolesData);
-      setSucursales(sucursalesData);
+
+      if (esAdmin) {
+        const [rolesData, sucursalesData] = await Promise.all([listarRoles(), listarSucursales()]);
+        setRoles(rolesData);
+        setSucursales(sucursalesData);
+      }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Error al cargar los datos');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [esAdmin]);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -100,14 +102,16 @@ export function UsuariosPage() {
           <h1 className="text-2xl font-bold text-gray-900">Usuarios</h1>
           <p className="text-sm text-gray-500 mt-0.5">{usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} activo{usuarios.length !== 1 ? 's' : ''}</p>
         </div>
-        <button
-          onClick={() => openModal('crear')}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium
-            rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          <UserPlus className="w-4 h-4" />
-          Nuevo usuario
-        </button>
+        {esAdmin && (
+          <button
+            onClick={() => openModal('crear')}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium
+              rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Nuevo usuario
+          </button>
+        )}
       </div>
 
       {/* Success message */}

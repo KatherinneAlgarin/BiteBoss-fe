@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, Settings } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
@@ -12,16 +12,16 @@ const navMain = [
 ];
 
 export function AdminDashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { session, logout } = useAuth();
+  const meta = session?.user?.app_metadata;
 
-  if (!user?.profile) return null;
+  if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: user.profile.nombre, email: user.email, role: 'admin' }}
+      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'admin' }}
       data={{ navMain }}
-      onLogout={() => { void logout().then(() => navigate('/login', { replace: true })); }}
+      onLogout={() => { void logout(); }}
     >
       <Outlet />
     </DashboardLayout>

@@ -6,8 +6,8 @@ export function useAuth() {
 }
 
 export function useRole(): UserRole | null {
-  const { user } = useAuthContext();
-  return user?.profile?.role ?? null;
+  const { role } = useAuthContext();
+  return role;
 }
 
 export function useHasRole(...roles: UserRole[]): boolean {

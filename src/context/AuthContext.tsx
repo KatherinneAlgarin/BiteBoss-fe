@@ -83,8 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // INITIAL_SESSION ya lo gestiona la inicialización de arriba
-      if (event === 'INITIAL_SESSION') return;
+      // INITIAL_SESSION lo gestiona la inicialización de arriba
+      // SIGNED_IN lo gestiona login() de forma atómica (junto con dbUserInfo)
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') return;
       if (!mounted) return;
 
       setState({
@@ -125,8 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw err instanceof Error ? err : new Error('Error al obtener la información del usuario');
     }
 
-    setDbUserInfo(info);
+    // Actualización atómica: dbUserInfo + sesión a la vez para evitar render
+    // intermedio con isAuthenticated=true y rol=null (causaría parpadeo).
     localStorage.setItem(DB_INFO_KEY(session.user.id), JSON.stringify(info));
+    setDbUserInfo(info);
+    setState({
+      session,
+      isLoading:       false,
+      isAuthenticated: true,
+    });
   };
 
   const logout = async () => {
@@ -141,8 +149,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const role: UserRole | null = dbUserInfo?.rol ?? null;
   const displayName: string = dbUserInfo?.nombre ?? '';
 
+  // Mantener isLoading=true mientras hay sesión pero el rol no se haya resuelto.
+  // Evita que ProtectedRoute deje pasar a RoleRoute con role=null por una condición
+  // de carrera entre la inicialización y eventos de Supabase (TOKEN_REFRESHED).
+  const isLoading = state.isLoading || (state.isAuthenticated && !dbUserInfo);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, role, displayName }}>
+    <AuthContext.Provider value={{ ...state, isLoading, login, logout, role, displayName }}>
       {children}
     </AuthContext.Provider>
   );

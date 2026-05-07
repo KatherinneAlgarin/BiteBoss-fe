@@ -14,17 +14,17 @@ export interface SidebarData {
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Administrador',
-  cajero: 'Cajero',
-  mesero: 'Mesero',
-  cocinero: 'Cocinero',
+  admin:   'Administrador',
+  cajero:  'Cajero',
+  mesero:  'Mesero',
+  gerente: 'Gerente',
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin: 'bg-purple-100 text-purple-700',
-  cajero: 'bg-green-100 text-green-700',
-  mesero: 'bg-orange-100 text-orange-700',
-  cocinero: 'bg-red-100 text-red-700',
+  admin:   'bg-purple-100 text-purple-700',
+  cajero:  'bg-green-100 text-green-700',
+  mesero:  'bg-orange-100 text-orange-700',
+  gerente: 'bg-blue-100 text-blue-700',
 };
 
 interface SidebarProps {

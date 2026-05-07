@@ -1,15 +1,15 @@
 import { useAuth } from '../../../hooks/useAuth';
 
-export function CocineroHome() {
+export function GerenteHome() {
   const { user } = useAuth();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.profile?.nombre ?? 'Cocinero'}
+          Bienvenido, {user?.profile?.nombre ?? 'Gerente'}
         </h1>
-        <p className="text-gray-500 mt-1">Panel de cocina — BiteBoss</p>
+        <p className="text-gray-500 mt-1">Panel de gerencia — BiteBoss</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

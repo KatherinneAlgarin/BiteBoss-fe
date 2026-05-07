@@ -16,8 +16,8 @@ import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
-import { CocineroDashboard } from './pages/dashboard/cocinero/CocineroDashboard';
-import { CocineroHome } from './pages/dashboard/cocinero/CocineroHome';
+import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
+import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
 
 function App() {
   return (
@@ -53,9 +53,9 @@ function App() {
               </Route>
             </Route>
 
-            <Route element={<RoleRoute allowedRoles={['admin', 'cocinero']} />}>
-              <Route path="/dashboard/cocinero" element={<CocineroDashboard />}>
-                <Route index element={<CocineroHome />} />
+            <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
+              <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
+                <Route index element={<GerenteHome />} />
               </Route>
             </Route>
           </Route>

@@ -11,16 +11,15 @@ const navMain = [
 ];
 
 export function CajeroDashboard() {
-  const { session, logout } = useAuth();
-  const meta = session?.user?.app_metadata;
+  const { session, logout, displayName } = useAuth();
 
   if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'cajero' }}
+      user={{ name: displayName, email: session.user.email ?? '', role: 'cajero' }}
       data={{ navMain }}
-      onLogout={() => { void logout(); }}
+      onLogout={logout}
     >
       <Outlet />
     </DashboardLayout>

@@ -11,16 +11,15 @@ const navMain = [
 ];
 
 export function GerenteDashboard() {
-  const { session, logout } = useAuth();
-  const meta = session?.user?.app_metadata;
+  const { session, logout, displayName } = useAuth();
 
   if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'gerente' }}
+      user={{ name: displayName, email: session.user.email ?? '', role: 'gerente' }}
       data={{ navMain }}
-      onLogout={() => { void logout(); }}
+      onLogout={logout}
     >
       <Outlet />
     </DashboardLayout>

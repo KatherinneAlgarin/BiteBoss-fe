@@ -5,14 +5,14 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && role) {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, role, navigate]);
 
   if (isLoading) return null;
 

@@ -12,16 +12,15 @@ const navMain = [
 ];
 
 export function AdminDashboard() {
-  const { session, logout } = useAuth();
-  const meta = session?.user?.app_metadata;
+  const { session, logout, displayName } = useAuth();
 
   if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'admin' }}
+      user={{ name: displayName, email: session.user.email ?? '', role: 'admin' }}
       data={{ navMain }}
-      onLogout={() => { void logout(); }}
+      onLogout={logout}
     >
       <Outlet />
     </DashboardLayout>

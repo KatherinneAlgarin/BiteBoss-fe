@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Sidebar, type SidebarData } from './Sidebar';
 import type { UserRole } from '../../types/auth.types';
@@ -13,20 +12,19 @@ export interface DashboardUser {
 interface DashboardLayoutProps {
   user: DashboardUser;
   data: SidebarData;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;
   children: ReactNode;
 }
 
 export function DashboardLayout({ user, data, onLogout, children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      onLogout();
-      navigate('/login', { replace: true });
+      await onLogout();
+      // ProtectedRoute redirige automáticamente al detectar !isAuthenticated
     } catch {
       setLoggingOut(false);
     }

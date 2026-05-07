@@ -4,13 +4,13 @@ import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard', url: '/dashboard/mesero',         icon: LayoutDashboard },
-  { title: 'Mis Mesas', url: '/dashboard/mesero/mesas',   icon: UtensilsCrossed },
-  { title: 'Órdenes',   url: '/dashboard/mesero/ordenes', icon: ClipboardList },
-  { title: 'Perfil',    url: '/dashboard/profile',        icon: UserCircle },
+  { title: 'Dashboard', url: '/dashboard/gerente',          icon: LayoutDashboard },
+  { title: 'Menú',      url: '/dashboard/gerente/menu',     icon: UtensilsCrossed },
+  { title: 'Órdenes',   url: '/dashboard/gerente/ordenes',  icon: ClipboardList },
+  { title: 'Perfil',    url: '/dashboard/profile',           icon: UserCircle },
 ];
 
-export function MeseroDashboard() {
+export function GerenteDashboard() {
   const { session, logout } = useAuth();
   const meta = session?.user?.app_metadata;
 
@@ -18,7 +18,7 @@ export function MeseroDashboard() {
 
   return (
     <DashboardLayout
-      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'mesero' }}
+      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'gerente' }}
       data={{ navMain }}
       onLogout={() => { void logout(); }}
     >

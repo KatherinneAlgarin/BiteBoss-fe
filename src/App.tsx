@@ -4,6 +4,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { RoleRoute } from './components/auth/RoleRoute';
 import { RoleRedirect } from './components/auth/RoleRedirect';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { ProfilePage } from './pages/dashboard/ProfilePage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
@@ -13,8 +16,8 @@ import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
-import { CocineroDashboard } from './pages/dashboard/cocinero/CocineroDashboard';
-import { CocineroHome } from './pages/dashboard/cocinero/CocineroHome';
+import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
+import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
 
 function App() {
   return (
@@ -23,10 +26,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/dashboard" element={<RoleRedirect />} />
+            <Route path="/dashboard/profile" element={<ProfilePage />} />
 
             <Route element={<RoleRoute allowedRoles={['admin']} />}>
               <Route path="/dashboard/admin" element={<AdminDashboard />}>
@@ -47,9 +53,9 @@ function App() {
               </Route>
             </Route>
 
-            <Route element={<RoleRoute allowedRoles={['admin', 'cocinero']} />}>
-              <Route path="/dashboard/cocinero" element={<CocineroDashboard />}>
-                <Route index element={<CocineroHome />} />
+            <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
+              <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
+                <Route index element={<GerenteHome />} />
               </Route>
             </Route>
           </Route>

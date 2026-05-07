@@ -4,6 +4,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { RoleRoute } from './components/auth/RoleRoute';
 import { RoleRedirect } from './components/auth/RoleRedirect';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { ProfilePage } from './pages/dashboard/ProfilePage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
@@ -23,10 +26,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/dashboard" element={<RoleRedirect />} />
+            <Route path="/dashboard/profile" element={<ProfilePage />} />
 
             <Route element={<RoleRoute allowedRoles={['admin']} />}>
               <Route path="/dashboard/admin" element={<AdminDashboard />}>

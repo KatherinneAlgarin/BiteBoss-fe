@@ -1,14 +1,14 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard',     url: '/dashboard/admin',          icon: LayoutDashboard },
-  { title: 'Usuarios',      url: '/dashboard/admin/usuarios', icon: Users },
-  { title: 'Menú',          url: '/dashboard/admin/menu',     icon: UtensilsCrossed },
-  { title: 'Caja',          url: '/dashboard/admin/caja',     icon: DollarSign },
-  { title: 'Configuración', url: '/dashboard/admin/config',   icon: Settings },
+  { title: 'Dashboard', url: '/dashboard/admin',          icon: LayoutDashboard },
+  { title: 'Usuarios',  url: '/dashboard/admin/usuarios', icon: Users },
+  { title: 'Menú',      url: '/dashboard/admin/menu',     icon: UtensilsCrossed },
+  { title: 'Caja',      url: '/dashboard/admin/caja',     icon: DollarSign },
+  { title: 'Perfil',    url: '/dashboard/profile',        icon: UserCircle },
 ];
 
 export function AdminDashboard() {

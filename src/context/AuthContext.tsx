@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase';
 import type { AuthState, LoginCredentials, UserRole } from '../types/auth.types';
 
 interface AuthContextValue extends AuthState {
-  login:  (credentials: LoginCredentials) => Promise<void>;
-  logout: () => Promise<void>;
-  role:   UserRole | null;
+  login:       (credentials: LoginCredentials) => Promise<void>;
+  logout:      () => Promise<void>;
+  role:        UserRole | null;
+  displayName: string;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,9 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const role = (state.session?.user?.app_metadata?.rol as UserRole) ?? null;
+  const displayName: string =
+    state.session?.user?.app_metadata?.nombre ??
+    state.session?.user?.user_metadata?.nombre ??
+    '';
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, role }}>
+    <AuthContext.Provider value={{ ...state, login, logout, role, displayName }}>
       {children}
     </AuthContext.Provider>
   );

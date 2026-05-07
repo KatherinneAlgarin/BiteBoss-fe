@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -7,6 +7,7 @@ const navMain = [
   { title: 'Dashboard', url: '/dashboard/mesero',         icon: LayoutDashboard },
   { title: 'Mis Mesas', url: '/dashboard/mesero/mesas',   icon: UtensilsCrossed },
   { title: 'Órdenes',   url: '/dashboard/mesero/ordenes', icon: ClipboardList },
+  { title: 'Perfil',    url: '/dashboard/profile',        icon: UserCircle },
 ];
 
 export function MeseroDashboard() {

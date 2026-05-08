@@ -1,13 +1,13 @@
 import { useAuth } from '../../../hooks/useAuth';
 
 export function CajeroHome() {
-  const { user } = useAuth();
+  const { displayName } = useAuth();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.profile?.nombre ?? 'Cajero'}
+          Bienvenido, {displayName ?? 'Cajero'}
         </h1>
         <p className="text-gray-500 mt-1">Panel de caja — BiteBoss</p>
       </div>

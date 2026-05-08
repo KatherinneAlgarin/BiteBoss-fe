@@ -14,6 +14,7 @@ import { AdminHome } from './pages/dashboard/admin/AdminHome';
 import { UsuariosPage } from './pages/dashboard/admin/UsuariosPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
+import { POSPage } from './pages/dashboard/cajero/POSPage';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
@@ -44,6 +45,7 @@ function App() {
             <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
               <Route path="/dashboard/cajero" element={<CajeroDashboard />}>
                 <Route index element={<CajeroHome />} />
+                <Route path="ordenes" element={<POSPage />} />
               </Route>
             </Route>
 

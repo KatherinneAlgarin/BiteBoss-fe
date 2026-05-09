@@ -25,9 +25,12 @@ export function ProductCatalog({ productos, onAddToCart }: ProductCatalogProps) 
   return (
     <div className="flex flex-col h-full">
       {/* Category tabs */}
-      <div className="flex gap-2 flex-wrap mb-4">
+      <div className="flex gap-2 flex-wrap mb-4" role="tablist">
         <button
           onClick={() => setCategoriaActiva(null)}
+          role="tab"
+          aria-selected={categoriaActiva === null}
+          aria-label="Mostrar todos los productos"
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             categoriaActiva === null
               ? 'bg-orange-500 text-white'
@@ -40,6 +43,9 @@ export function ProductCatalog({ productos, onAddToCart }: ProductCatalogProps) 
           <button
             key={id}
             onClick={() => setCategoriaActiva(id)}
+            role="tab"
+            aria-selected={categoriaActiva === id}
+            aria-label={`Mostrar ${nombre}`}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               categoriaActiva === id
                 ? 'bg-orange-500 text-white'

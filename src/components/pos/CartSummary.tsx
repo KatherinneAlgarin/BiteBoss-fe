@@ -51,13 +51,15 @@ export function CartSummary({
                 <button
                   onClick={() => onDecrease(item.id_producto)}
                   disabled={item.cantidad <= 1}
+                  aria-label="Disminuir cantidad"
                   className="w-6 h-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-bold leading-none"
                 >
                   −
                 </button>
-                <span className="w-6 text-center text-sm font-semibold">{item.cantidad}</span>
+                <span className="w-6 text-center text-sm font-semibold" aria-live="polite">{item.cantidad}</span>
                 <button
                   onClick={() => onIncrease(item.id_producto)}
+                  aria-label="Aumentar cantidad"
                   className="w-6 h-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-bold leading-none"
                 >
                   +

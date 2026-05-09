@@ -1,5 +1,5 @@
 // pages/dashboard/cajero/POSPage.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProductos } from '../../../hooks/useProductos';
 import { useAuth } from '../../../hooks/useAuth';
@@ -16,17 +16,18 @@ const ROLE_HOME: Record<string, string> = {
 };
 
 export function POSPage() {
-  const navigate   = useNavigate();
-  const { role, id_sucursal } = useAuth();
+  const navigate = useNavigate();
+  const { role } = useAuth();
   const { productos, loading, error } = useProductos();
 
   const [cart, setCart] = useState<CartItem[]>([]);
 
   // Redirect admins and encargados (gerente) to their own panel
-  if (role && ROLE_HOME[role]) {
-    navigate(ROLE_HOME[role], { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (role && ROLE_HOME[role]) {
+      navigate(ROLE_HOME[role], { replace: true });
+    }
+  }, [role, navigate]);
 
   const addToCart = useCallback((producto: Producto) => {
     setCart(prev => {

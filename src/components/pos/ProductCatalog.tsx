@@ -55,16 +55,13 @@ export function ProductCatalog({ productos, onAddToCart }: ProductCatalogProps) 
       {productosFiltrados.length === 0 ? (
         <p className="text-gray-500 text-center py-8">No hay productos disponibles.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto flex-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto flex-1 content-start auto-rows-max">
           {productosFiltrados.map(producto => (
             <button
               key={producto.id_producto}
               onClick={() => onAddToCart(producto)}
-              className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-orange-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="self-start bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-orange-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
-              <div className="w-full h-20 bg-orange-50 rounded-lg flex items-center justify-center mb-3">
-                <span className="text-3xl">🍽️</span>
-              </div>
               <p className="font-medium text-gray-900 text-sm leading-tight line-clamp-2">
                 {producto.nombre}
               </p>

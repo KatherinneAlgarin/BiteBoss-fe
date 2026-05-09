@@ -10,7 +10,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-500 to-orange-700 flex-col items-center justify-center p-12 text-white">
         <div className="max-w-md text-center space-y-6">
           <div className="flex items-center justify-center gap-3 mb-8">
-            <span className="text-5xl">🍽️</span>
             <h1 className="text-4xl font-bold tracking-tight">BiteBoss</h1>
           </div>
           <p className="text-xl font-light text-orange-100">
@@ -24,7 +23,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50">
         <div className="flex items-center gap-2 mb-8 lg:hidden">
-          <span className="text-3xl">🍽️</span>
           <span className="text-2xl font-bold text-orange-500">BiteBoss</span>
         </div>
 

@@ -68,7 +68,6 @@ export function Sidebar({
       >
         {/* Logo */}
         <div className="flex items-center gap-2 p-5 border-b border-gray-100">
-          <span className="text-2xl">🍽️</span>
           <span className="text-xl font-bold text-orange-500">BiteBoss</span>
         </div>
 

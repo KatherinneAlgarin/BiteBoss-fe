@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { listarProveedores, obtenerProveedor, crearProveedor, actualizarProveedor, eliminarProveedor } from '../services/proveedor.service';
 import type { ProveedorListItem, ProveedorDto, CrearProveedorDto, ActualizarProveedorDto } from '../types/proveedor.types';
 
+const isDev = import.meta.env.DEV;
+
 export function useProveedores() {
   const [proveedores, setProveedores] = useState<ProveedorListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -11,10 +13,14 @@ export function useProveedores() {
     try {
       setLoading(true);
       setError(null);
+      if (isDev) console.log('[useProveedores] Cargando proveedores...');
       const data = await listarProveedores();
       setProveedores(data);
+      if (isDev) console.log('[useProveedores] Datos cargados:', data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMsg);
+      if (isDev) console.error('[useProveedores] Error:', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -26,6 +32,7 @@ export function useProveedores() {
 
   const createProveedor = async (dto: CrearProveedorDto) => {
     try {
+      if (isDev) console.log('[useProveedores] Creando proveedor:', dto);
       const nuevoProveedor = await crearProveedor(dto);
       setProveedores(prev => [...prev, {
         id_proveedor: nuevoProveedor.id_proveedor!,
@@ -34,16 +41,19 @@ export function useProveedores() {
         telefono: nuevoProveedor.telefono,
         direccion: nuevoProveedor.direccion,
         activo: nuevoProveedor.activo,
-        creado_en: new Date().toISOString(), // Approximate
+        creado_en: new Date().toISOString(),
       }]);
       return nuevoProveedor;
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      if (isDev) console.error('[useProveedores] Error al crear:', errorMsg);
       throw err;
     }
   };
 
   const updateProveedor = async (id: number, dto: ActualizarProveedorDto) => {
     try {
+      if (isDev) console.log('[useProveedores] Actualizando proveedor:', id, dto);
       const updatedProveedor = await actualizarProveedor(id, dto);
       setProveedores(prev => prev.map(p =>
         p.id_proveedor === id ? {
@@ -53,15 +63,20 @@ export function useProveedores() {
       ));
       return updatedProveedor;
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      if (isDev) console.error('[useProveedores] Error al actualizar:', errorMsg);
       throw err;
     }
   };
 
   const deleteProveedor = async (id: number) => {
     try {
+      if (isDev) console.log('[useProveedores] Eliminando proveedor:', id);
       await eliminarProveedor(id);
       setProveedores(prev => prev.filter(p => p.id_proveedor !== id));
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      if (isDev) console.error('[useProveedores] Error al eliminar:', errorMsg);
       throw err;
     }
   };
@@ -92,10 +107,14 @@ export function useProveedor(id: number | null) {
       try {
         setLoading(true);
         setError(null);
+        if (isDev) console.log('[useProveedor] Cargando proveedor:', id);
         const data = await obtenerProveedor(id);
         setProveedor(data);
+        if (isDev) console.log('[useProveedor] Proveedor cargado:', data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+        setError(errorMsg);
+        if (isDev) console.error('[useProveedor] Error:', errorMsg);
       } finally {
         setLoading(false);
       }

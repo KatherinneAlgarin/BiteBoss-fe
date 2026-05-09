@@ -1,6 +1,4 @@
 // components/pos/CartSummary.tsx
-import { Button } from '../ui/Button';
-
 export interface CartItem {
   id_producto: number;
   nombre:      string;
@@ -13,8 +11,6 @@ interface CartSummaryProps {
   onIncrease:     (id: number) => void;
   onDecrease:     (id: number) => void;
   onRemove:       (id: number) => void;
-  onConfirmar:    () => void;
-  isCreating:     boolean;
 }
 
 export function CartSummary({
@@ -22,8 +18,6 @@ export function CartSummary({
   onIncrease,
   onDecrease,
   onRemove,
-  onConfirmar,
-  isCreating,
 }: CartSummaryProps) {
   const total = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
 
@@ -86,14 +80,6 @@ export function CartSummary({
           <span>Total</span>
           <span className="text-orange-600">${total.toFixed(2)}</span>
         </div>
-        <Button
-          fullWidth
-          onClick={onConfirmar}
-          disabled={items.length === 0}
-          isLoading={isCreating}
-        >
-          Confirmar pedido
-        </Button>
       </div>
     </div>
   );

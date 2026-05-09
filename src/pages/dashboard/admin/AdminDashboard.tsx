@@ -1,27 +1,28 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard',     url: '/dashboard/admin',          icon: LayoutDashboard },
-  { title: 'Usuarios',      url: '/dashboard/admin/usuarios', icon: Users },
-  { title: 'Menú',          url: '/dashboard/admin/menu',     icon: UtensilsCrossed },
-  { title: 'Caja',          url: '/dashboard/admin/caja',     icon: DollarSign },
-  { title: 'Configuración', url: '/dashboard/admin/config',   icon: Settings },
+  { title: 'Dashboard',   url: '/dashboard/admin',             icon: LayoutDashboard },
+  { title: 'Usuarios',    url: '/dashboard/admin/usuarios',    icon: Users },
+  { title: 'Proveedores', url: '/dashboard/admin/proveedores', icon: Truck },
+  { title: 'Tipos de Orden', url: '/dashboard/admin/tipos-orden', icon: ListOrdered },
+  { title: 'Menú',        url: '/dashboard/admin/menu',        icon: UtensilsCrossed },
+  { title: 'Caja',        url: '/dashboard/admin/caja',        icon: DollarSign },
+  { title: 'Perfil',      url: '/dashboard/profile',           icon: UserCircle },
 ];
 
 export function AdminDashboard() {
-  const { session, logout } = useAuth();
-  const meta = session?.user?.app_metadata;
+  const { session, logout, displayName } = useAuth();
 
   if (!session) return null;
 
   return (
     <DashboardLayout
-      user={{ name: meta?.nombre ?? '', email: session.user.email ?? '', role: 'admin' }}
+      user={{ name: displayName, email: session.user.email ?? '', role: 'admin' }}
       data={{ navMain }}
-      onLogout={() => { void logout(); }}
+      onLogout={logout}
     >
       <Outlet />
     </DashboardLayout>

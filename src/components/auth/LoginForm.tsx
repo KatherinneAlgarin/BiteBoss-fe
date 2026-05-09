@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -67,14 +67,24 @@ export function LoginForm() {
           {...register('email')}
         />
 
-        <Input
-          label="Contraseña"
-          showPasswordToggle
-          placeholder="••••••••"
-          autoComplete="current-password"
-          error={errors.password?.message}
-          {...register('password')}
-        />
+        <div>
+          <Input
+            label="Contraseña"
+            showPasswordToggle
+            placeholder="••••••••"
+            autoComplete="current-password"
+            error={errors.password?.message}
+            {...register('password')}
+          />
+          <div className="mt-1.5 text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+        </div>
 
         <Button type="submit" fullWidth isLoading={isSubmitting}>
           {isSubmitting ? 'Ingresando...' : 'Ingresar'}

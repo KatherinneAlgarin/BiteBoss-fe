@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Sidebar, type SidebarData } from './Sidebar';
 import type { UserRole } from '../../types/auth.types';
@@ -13,27 +12,26 @@ export interface DashboardUser {
 interface DashboardLayoutProps {
   user: DashboardUser;
   data: SidebarData;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;
   children: ReactNode;
 }
 
 export function DashboardLayout({ user, data, onLogout, children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      onLogout();
-      navigate('/login', { replace: true });
+      await onLogout();
+      // ProtectedRoute redirige automáticamente al detectar !isAuthenticated
     } catch {
       setLoggingOut(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -56,13 +54,12 @@ export function DashboardLayout({ user, data, onLogout, children }: DashboardLay
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-lg">🍽️</span>
             <span className="font-bold text-orange-500">BiteBoss</span>
           </div>
           <div className="w-9" />
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto h-full">
           {children}
         </main>
       </div>

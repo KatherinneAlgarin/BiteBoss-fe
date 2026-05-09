@@ -14,6 +14,7 @@ import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
 import { AdminHome } from './pages/dashboard/admin/AdminHome';
 import { UsuariosPage } from './pages/dashboard/admin/UsuariosPage';
 import { ProveedoresPage } from './pages/dashboard/admin/ProveedoresPage';
+import { MenuPage } from './pages/dashboard/admin/MenuPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
@@ -45,6 +46,7 @@ function App() {
                   <Route index element={<AdminHome />} />
                   <Route path="usuarios" element={<UsuariosPage />} />
                   <Route path="proveedores" element={<ProveedoresPage />} />
+                  <Route path="menu" element={<MenuPage />} />
                 </Route>
               </Route>
 

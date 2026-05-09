@@ -31,7 +31,7 @@ export function DashboardLayout({ user, data, onLogout, children }: DashboardLay
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -60,7 +60,7 @@ export function DashboardLayout({ user, data, onLogout, children }: DashboardLay
           <div className="w-9" />
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto h-full">
           {children}
         </main>
       </div>

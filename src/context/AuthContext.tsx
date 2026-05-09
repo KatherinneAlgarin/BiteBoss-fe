@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase';
 import type { AuthState, LoginCredentials, UserRole } from '../types/auth.types';
 
 interface DbUserInfo {
-  rol:    UserRole;
-  nombre: string;
+  rol:         UserRole;
+  nombre:      string;
+  id_sucursal: number;
 }
 
 interface AuthContextValue extends AuthState {
@@ -12,6 +13,7 @@ interface AuthContextValue extends AuthState {
   logout:      () => Promise<void>;
   role:        UserRole | null;
   displayName: string;
+  id_sucursal: number | null;
 }
 
 const DB_INFO_KEY = (authId: string) => `bb_user_${authId}`;
@@ -26,8 +28,8 @@ async function fetchUserInfo(token: string): Promise<DbUserInfo> {
     throw new Error(data.mensaje ?? 'No se pudo obtener la información del usuario');
   }
 
-  const data = await res.json() as { usuario: { rol: UserRole; nombre: string } };
-  return { rol: data.usuario.rol, nombre: data.usuario.nombre };
+  const data = await res.json() as { usuario: { rol: UserRole; nombre: string; id_sucursal: number } };
+  return { rol: data.usuario.rol, nombre: data.usuario.nombre, id_sucursal: data.usuario.id_sucursal };
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -148,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const role: UserRole | null = dbUserInfo?.rol ?? null;
   const displayName: string = dbUserInfo?.nombre ?? '';
+  const id_sucursal: number | null = dbUserInfo?.id_sucursal ?? null;
 
   // Mantener isLoading=true mientras hay sesión pero el rol no se haya resuelto.
   // Evita que ProtectedRoute deje pasar a RoleRoute con role=null por una condición
@@ -155,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isLoading = state.isLoading || (state.isAuthenticated && !dbUserInfo);
 
   return (
-    <AuthContext.Provider value={{ ...state, isLoading, login, logout, role, displayName }}>
+    <AuthContext.Provider value={{ ...state, isLoading, login, logout, role, displayName, id_sucursal }}>
       {children}
     </AuthContext.Provider>
   );

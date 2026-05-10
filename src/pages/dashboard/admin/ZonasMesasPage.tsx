@@ -3,6 +3,7 @@ import { useSucursales } from '../../../hooks/useSucursales';
 import { Tabs } from '../../../components/ui/Tabs';
 import { SucursalSelect } from '../../../components/ui/SucursalSelect';
 import { ZonasTab } from '../../../components/zonas/ZonasTab';
+import { MesasTab } from '../../../components/mesas/MesasTab';
 
 type TabKey = 'zonas' | 'mesas';
 
@@ -34,17 +35,13 @@ export function ZonasMesasPage() {
       <Tabs
         items={[
           { key: 'zonas', label: 'Zonas' },
-          { key: 'mesas', label: 'Mesas', disabled: true, hint: 'próximamente' },
+          { key: 'mesas', label: 'Mesas' },
         ]}
         active={activeTab}
         onChange={(key) => setActiveTab(key as TabKey)}
       >
         {activeTab === 'zonas' && <ZonasTab id_sucursal={idSucursal} />}
-        {activeTab === 'mesas' && (
-          <div className="text-center py-12 bg-white shadow rounded-lg">
-            <p className="text-gray-500">El módulo de mesas se habilitará en una próxima entrega.</p>
-          </div>
-        )}
+        {activeTab === 'mesas' && <MesasTab id_sucursal={idSucursal} />}
       </Tabs>
     </div>
   );

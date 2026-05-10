@@ -114,14 +114,7 @@ export function ZonasList({
 
         {zonas.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No hay zonas registradas en esta sucursal</p>
-            <button
-              onClick={onCreate}
-              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Crear la primera
-            </button>
+            <p className="text-gray-500">No hay zonas registradas en esta sucursal</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

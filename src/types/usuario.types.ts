@@ -23,11 +23,6 @@ export interface RolItem {
   nombre: string;
 }
 
-export interface SucursalItem {
-  id_sucursal: number;
-  nombre: string;
-}
-
 export interface UsuarioCreadoResponse {
   id_usuario: number;
   nombre: string;

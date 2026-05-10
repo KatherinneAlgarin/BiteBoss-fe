@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, X, Loader2 } from 'lucide-react';
-import type { CrearUsuarioDto, RolItem, SucursalItem, UsuarioListItem } from '../../types/usuario.types';
+import type { CrearUsuarioDto, RolItem, UsuarioListItem } from '../../types/usuario.types';
+import type { SucursalItem } from '../../types/sucursal.types';
 
 export type UsuarioModalMode = 'crear' | 'editar' | 'ver';
 

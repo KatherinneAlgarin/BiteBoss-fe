@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UserPlus, Loader2, AlertCircle, Users } from 'lucide-react';
-import { listarUsuarios, listarRoles, listarSucursales, crearUsuario } from '../../../services/usuario.service';
+import { listarUsuarios, listarRoles, crearUsuario } from '../../../services/usuario.service';
+import { listarSucursales } from '../../../services/sucursal.service';
 import { UsuarioModal, type UsuarioModalMode } from '../../../components/usuarios/UsuarioModal';
-import type { CrearUsuarioDto, RolItem, SucursalItem, UsuarioListItem } from '../../../types/usuario.types';
+import type { CrearUsuarioDto, RolItem, UsuarioListItem } from '../../../types/usuario.types';
+import type { SucursalItem } from '../../../types/sucursal.types';
 import { useHasRole } from '../../../hooks/useAuth';
 
 const ROLE_BADGE: Record<string, string> = {

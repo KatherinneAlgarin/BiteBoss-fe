@@ -4,6 +4,7 @@ import type {
   SucursalDetalle,
   CrearSucursalDto,
   ActualizarSucursalDto,
+  DependenciasSucursal,
 } from '../types/sucursal.types';
 
 export async function listarSucursales(soloActivas = false): Promise<SucursalItem[]> {
@@ -25,6 +26,10 @@ export async function actualizarSucursal(id: number, dto: ActualizarSucursalDto)
 
 export async function desactivarSucursal(id: number): Promise<SucursalItem> {
   return apiPatch<SucursalItem>(`/api/sucursales/${id}/desactivar`, {});
+}
+
+export async function obtenerDependenciasSucursal(id: number): Promise<DependenciasSucursal> {
+  return apiGet<DependenciasSucursal>(`/api/sucursales/${id}/dependencias`);
 }
 
 export async function activarSucursal(id: number): Promise<SucursalItem> {

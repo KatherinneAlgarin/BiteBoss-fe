@@ -6,12 +6,14 @@ import {
   actualizarSucursal,
   desactivarSucursal,
   activarSucursal,
+  obtenerDependenciasSucursal,
 } from '../services/sucursal.service';
 import type {
   SucursalItem,
   SucursalDetalle,
   CrearSucursalDto,
   ActualizarSucursalDto,
+  DependenciasSucursal,
 } from '../types/sucursal.types';
 
 const isDev = import.meta.env.DEV;
@@ -66,6 +68,10 @@ export function useSucursales() {
     await fetchSucursales();
   };
 
+  const fetchDependencias = async (id: number): Promise<DependenciasSucursal> => {
+    return obtenerDependenciasSucursal(id);
+  };
+
   return {
     sucursales,
     loading,
@@ -76,5 +82,6 @@ export function useSucursales() {
     updateSucursal,
     deactivateSucursal,
     activateSucursal,
+    fetchDependencias,
   };
 }

@@ -62,13 +62,19 @@ export function SucursalForm({
   const [loadingDetalle, setLoadingDetalle] = useState(false);
 
   const tiposOrdenSeleccionables = useMemo(() => {
+    const activos = tiposOrden.filter(t => t.activo);
     const idsConHijos = new Set(
-      tiposOrden
+      activos
         .map(t => t.id_tipo_orden_padre)
         .filter((id): id is number => id !== null && id !== undefined),
     );
-    return tiposOrden.filter(t => !idsConHijos.has(t.id_tipo_orden));
+    return activos.filter(t => !idsConHijos.has(t.id_tipo_orden));
   }, [tiposOrden]);
+
+  const tiposPagoSeleccionables = useMemo(
+    () => tiposPago.filter(t => t.activo),
+    [tiposPago],
+  );
 
   useEffect(() => {
     if (!sucursal) {
@@ -230,7 +236,7 @@ export function SucursalForm({
           <CheckboxGroup
             label="Métodos de pago aceptados *"
             emptyMessage={loadingCatalogos ? 'Cargando...' : 'No hay tipos de pago registrados'}
-            options={tiposPago.map(t => ({ id: t.id_tipo_pago, label: t.nombre }))}
+            options={tiposPagoSeleccionables.map(t => ({ id: t.id_tipo_pago, label: t.nombre }))}
             selected={form.tipos_pago}
             onToggle={(id) => handleChange('tipos_pago', toggleId(form.tipos_pago, id))}
             error={errors.tipos_pago}

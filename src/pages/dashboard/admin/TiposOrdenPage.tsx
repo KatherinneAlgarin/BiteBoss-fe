@@ -14,8 +14,8 @@ export function TiposOrdenPage() {
     refetch,
     createTipoOrden,
     updateTipoOrden,
-    deleteTipoOrden,
-    fetchDependencias,
+    deactivateTipoOrden,
+    activateTipoOrden,
   } = useTiposOrden();
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -52,8 +52,8 @@ export function TiposOrdenPage() {
         onRefetch={refetch}
         onCreate={handleCreate}
         onEdit={handleEdit}
-        onDelete={deleteTipoOrden}
-        onFetchDependencias={fetchDependencias}
+        onDeactivate={deactivateTipoOrden}
+        onActivate={activateTipoOrden}
       />
 
       {modalMode && (

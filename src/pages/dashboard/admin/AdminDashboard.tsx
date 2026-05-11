@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store } from 'lucide-react';
+import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -9,6 +9,7 @@ const navMain = [
   { title: 'Proveedores', url: '/dashboard/admin/proveedores', icon: Truck },
   { title: 'Tipos de Orden', url: '/dashboard/admin/tipos-orden', icon: ListOrdered },
   { title: 'Sucursales',  url: '/dashboard/admin/sucursales',  icon: Store },
+  { title: 'Zonas y Mesas', url: '/dashboard/admin/zonas-mesas', icon: LayoutGrid },
   { title: 'Menú',        url: '/dashboard/admin/menu',        icon: UtensilsCrossed },
   { title: 'Caja',        url: '/dashboard/admin/caja',        icon: DollarSign },
   { title: 'Perfil',      url: '/dashboard/profile',           icon: UserCircle },

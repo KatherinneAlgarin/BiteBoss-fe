@@ -18,6 +18,7 @@ export function SucursalesPage() {
     updateSucursal,
     deactivateSucursal,
     activateSucursal,
+    fetchDependencias,
   } = useSucursales();
 
   const { tipos: tiposOrden, loading: loadingTiposOrden } = useTiposOrden();
@@ -61,6 +62,7 @@ export function SucursalesPage() {
         onEdit={handleEdit}
         onDeactivate={deactivateSucursal}
         onActivate={activateSucursal}
+        onFetchDependencias={fetchDependencias}
       />
 
       {modalMode && (

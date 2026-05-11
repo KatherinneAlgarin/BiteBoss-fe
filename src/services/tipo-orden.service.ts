@@ -1,9 +1,8 @@
-import { apiGet, apiPost, apiPatch, apiDelete } from './api';
+import { apiGet, apiPost, apiPatch } from './api';
 import type {
   TipoOrdenItem,
   CrearTipoOrdenDto,
   ActualizarTipoOrdenDto,
-  DependenciasTipoOrden,
 } from '../types/tipo-orden.types';
 
 export async function listarTiposOrden(): Promise<TipoOrdenItem[]> {
@@ -22,10 +21,10 @@ export async function actualizarTipoOrden(id: number, dto: ActualizarTipoOrdenDt
   return apiPatch<TipoOrdenItem>(`/api/tipos-orden/${id}`, dto);
 }
 
-export async function obtenerDependenciasTipoOrden(id: number): Promise<DependenciasTipoOrden> {
-  return apiGet<DependenciasTipoOrden>(`/api/tipos-orden/${id}/dependencias`);
+export async function desactivarTipoOrden(id: number): Promise<TipoOrdenItem> {
+  return apiPatch<TipoOrdenItem>(`/api/tipos-orden/${id}/desactivar`, {});
 }
 
-export async function eliminarTipoOrden(id: number): Promise<void> {
-  return apiDelete<void>(`/api/tipos-orden/${id}`);
+export async function activarTipoOrden(id: number): Promise<TipoOrdenItem> {
+  return apiPatch<TipoOrdenItem>(`/api/tipos-orden/${id}/activar`, {});
 }

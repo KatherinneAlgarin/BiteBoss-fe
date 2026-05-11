@@ -249,7 +249,7 @@ function DeactivateDialog({ state, loading, error, onConfirm, onCancel }: Deacti
                     Las zonas y mesas asociadas a esta sucursal se eliminarán
                   </p>
                   <p className="mt-1 text-amber-700 text-xs">
-                    Esta acción no se puede deshacer. Si reactivas la sucursal después, deberás crear
+                    Si reactivas la sucursal después, deberás crear
                     nuevamente sus zonas y mesas.
                   </p>
                 </div>

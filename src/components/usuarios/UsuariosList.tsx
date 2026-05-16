@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Edit2, Loader2, AlertCircle, Users, Search, Filter } from 'lucide-react';
 import type { UsuarioListItem, RolItem } from '../../types/usuario.types';
 import type { SucursalItem } from '../../types/sucursal.types';
+import { formatRoleLabel, normalizeRole } from '../../lib/roles';
+import type { UserRole } from '../../types/auth.types';
 
 interface UsuariosListProps {
   usuarios: UsuarioListItem[];
@@ -14,7 +16,7 @@ interface UsuariosListProps {
   onRefetch: () => void;
 }
 
-const ROLE_BADGE: Record<string, string> = {
+const ROLE_BADGE: Record<UserRole, string> = {
   admin:   'bg-purple-100 text-purple-700',
   cajero:  'bg-green-100 text-green-700',
   mesero:  'bg-orange-100 text-orange-700',
@@ -22,7 +24,8 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 function roleBadgeClass(rol: string): string {
-  return ROLE_BADGE[rol?.toLowerCase()] ?? 'bg-gray-100 text-gray-700';
+  const normalizedRole = normalizeRole(rol);
+  return normalizedRole ? ROLE_BADGE[normalizedRole] : 'bg-gray-100 text-gray-700';
 }
 
 export function UsuariosList({
@@ -118,7 +121,7 @@ export function UsuariosList({
               >
                 <option value="">Todos los roles</option>
                 {roles.map(r => (
-                  <option key={r.id_rol} value={r.id_rol}>{r.nombre}</option>
+                  <option key={r.id_rol} value={r.id_rol}>{formatRoleLabel(r.nombre)}</option>
                 ))}
               </select>
             </div>
@@ -168,7 +171,7 @@ export function UsuariosList({
                     <td className="px-4 py-3 text-gray-600 text-xs">{u.email}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBadgeClass(u.rol)}`}>
-                        {u.rol}
+                        {formatRoleLabel(u.rol)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{u.sucursal}</td>

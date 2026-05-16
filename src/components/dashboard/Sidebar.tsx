@@ -2,6 +2,7 @@ import { type ElementType } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { UserRole } from '../../types/auth.types';
 import { LogOut } from 'lucide-react';
+import { formatRoleLabel } from '../../lib/roles';
 
 export interface NavItem {
   title: string;
@@ -12,13 +13,6 @@ export interface NavItem {
 export interface SidebarData {
   navMain: NavItem[];
 }
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  admin:   'Administrador',
-  cajero:  'Cajero',
-  mesero:  'Mesero',
-  gerente: 'Gerente',
-};
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin:   'bg-purple-100 text-purple-700',
@@ -76,7 +70,7 @@ export function Sidebar({
           <p className="text-sm font-semibold text-gray-800 truncate">{userName}</p>
           <p className="text-xs text-gray-500 truncate mb-2">{userEmail}</p>
           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[userRole]}`}>
-            {ROLE_LABELS[userRole]}
+            {formatRoleLabel(userRole)}
           </span>
         </div>
 

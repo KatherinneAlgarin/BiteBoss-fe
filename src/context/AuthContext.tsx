@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { AuthState, LoginCredentials, UserRole } from '../types/auth.types';
+import { normalizeRole } from '../lib/roles';
 
 interface DbUserInfo {
   rol:         UserRole;
@@ -28,8 +29,14 @@ async function fetchUserInfo(token: string): Promise<DbUserInfo> {
     throw new Error(data.mensaje ?? 'No se pudo obtener la información del usuario');
   }
 
-  const data = await res.json() as { usuario: { rol: UserRole; nombre: string; id_sucursal: number } };
-  return { rol: data.usuario.rol, nombre: data.usuario.nombre, id_sucursal: data.usuario.id_sucursal };
+  const data = await res.json() as { usuario: { rol: string; nombre: string; id_sucursal: number } };
+  const rol = normalizeRole(data.usuario.rol);
+
+  if (!rol) {
+    throw new Error('Rol de usuario no reconocido');
+  }
+
+  return { rol, nombre: data.usuario.nombre, id_sucursal: data.usuario.id_sucursal };
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -55,7 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let info: DbUserInfo | null = null;
 
         if (stored) {
-          try { info = JSON.parse(stored) as DbUserInfo; } catch { /* localStorage corrupto */ }
+          try {
+            const parsed = JSON.parse(stored) as { rol?: string; nombre?: string; id_sucursal?: number };
+            const rol = normalizeRole(parsed.rol);
+            if (rol && typeof parsed.nombre === 'string' && typeof parsed.id_sucursal === 'number') {
+              info = { rol, nombre: parsed.nombre, id_sucursal: parsed.id_sucursal };
+            }
+          } catch {
+            /* localStorage corrupto */
+          }
         }
 
         if (!info) {

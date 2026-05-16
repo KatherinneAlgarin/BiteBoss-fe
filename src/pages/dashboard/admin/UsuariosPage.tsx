@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { UserPlus, Loader2, AlertCircle, Users } from 'lucide-react';
+import { UserPlus, Loader2, AlertCircle } from 'lucide-react';
 import { useUsuarios, type UsuariosFilters } from '../../../hooks/useUsuarios';
 import { listarSucursales } from '../../../services/sucursal.service';
 import { UsuarioModal } from '../../../components/usuarios/UsuarioModal';

@@ -15,6 +15,7 @@ import { AdminHome } from './pages/dashboard/admin/AdminHome';
 import { UsuariosPage } from './pages/dashboard/admin/UsuariosPage';
 import { ProveedoresPage } from './pages/dashboard/admin/ProveedoresPage';
 import { MenuPage } from './pages/dashboard/admin/MenuPage';
+import { InventarioPage } from './pages/dashboard/admin/InventarioPage';
 import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
 import { ZonasMesasPage } from './pages/dashboard/admin/ZonasMesasPage';
@@ -50,6 +51,7 @@ function App() {
                   <Route path="usuarios" element={<UsuariosPage />} />
                   <Route path="proveedores" element={<ProveedoresPage />} />
                   <Route path="menu" element={<MenuPage />} />
+                  <Route path="inventario" element={<InventarioPage />} />
                   <Route path="tipos-orden" element={<TiposOrdenPage />} />
                   <Route path="sucursales" element={<SucursalesPage />} />
                   <Route path="zonas-mesas" element={<ZonasMesasPage />} />
@@ -72,6 +74,7 @@ function App() {
               <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
                 <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
                   <Route index element={<GerenteHome />} />
+                  <Route path="inventario" element={<InventarioPage />} />
                 </Route>
               </Route>
             </Route>

@@ -1,13 +1,14 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle, CalendarDays } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard', url: '/dashboard/gerente',          icon: LayoutDashboard },
-  { title: 'Menú',      url: '/dashboard/gerente/menu',     icon: UtensilsCrossed },
-  { title: 'Órdenes',   url: '/dashboard/gerente/ordenes',  icon: ClipboardList },
-  { title: 'Perfil',    url: '/dashboard/profile',           icon: UserCircle },
+  { title: 'Dashboard',     url: '/dashboard/gerente',               icon: LayoutDashboard },
+  { title: 'Reservaciones', url: '/dashboard/gerente/reservaciones', icon: CalendarDays },
+  { title: 'Menú',          url: '/dashboard/gerente/menu',          icon: UtensilsCrossed },
+  { title: 'Órdenes',       url: '/dashboard/gerente/ordenes',       icon: ClipboardList },
+  { title: 'Perfil',        url: '/dashboard/profile',               icon: UserCircle },
 ];
 
 export function GerenteDashboard() {

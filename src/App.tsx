@@ -18,6 +18,7 @@ import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
 import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
+import { ReservacionesPage } from './pages/dashboard/reservaciones/ReservacionesPage';
 
 function App() {
   return (
@@ -50,12 +51,14 @@ function App() {
             <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
               <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
                 <Route index element={<MeseroHome />} />
+                <Route path="reservaciones" element={<ReservacionesPage />} />
               </Route>
             </Route>
 
             <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
               <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
                 <Route index element={<GerenteHome />} />
+                <Route path="reservaciones" element={<ReservacionesPage />} />
               </Route>
             </Route>
           </Route>

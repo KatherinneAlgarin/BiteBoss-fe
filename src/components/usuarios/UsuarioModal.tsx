@@ -99,7 +99,7 @@ interface PropsEditar {
 type Props = PropsCrear | PropsEditar;
 
 export function UsuarioModal(props: Props) {
-  const { mode, roles, sucursales, onClose, onSubmit } = props;
+  const { mode, roles, sucursales, onClose } = props;
   const usuario = 'usuario' in props ? props.usuario : undefined;
   
   const [crearForm, setCrearForm] = useState<CrearFormState>(buildInitialCrearForm());
@@ -157,7 +157,8 @@ export function UsuarioModal(props: Props) {
     setSubmitting(true);
     setServerError('');
     try {
-      await onSubmit({
+      if (props.mode !== 'crear') return;
+      await props.onSubmit({
         nombre:      crearForm.nombre.trim(),
         email:       crearForm.email.trim().toLowerCase(),
         password:    crearForm.password,
@@ -173,7 +174,7 @@ export function UsuarioModal(props: Props) {
 
   async function handleEditarSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!usuario) return;
+    if (!usuario || props.mode !== 'editar') return;
 
     const fieldErrors = validateEditarForm(editarForm);
     if (Object.keys(fieldErrors).length > 0) {
@@ -184,7 +185,7 @@ export function UsuarioModal(props: Props) {
     setSubmitting(true);
     setServerError('');
     try {
-      await onSubmit(usuario.id_usuario, {
+      await props.onSubmit(usuario.id_usuario, {
         id_rol:      Number(editarForm.id_rol),
         id_sucursal: Number(editarForm.id_sucursal),
         activo:      editarForm.activo,

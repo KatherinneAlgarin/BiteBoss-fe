@@ -8,13 +8,11 @@ import type {
 
 interface FormState {
   nombre: string;
-  descripcion: string;
 }
 
 function buildInitialForm(tipo?: TipoPagoItem): FormState {
   return {
     nombre: tipo?.nombre ?? '',
-    descripcion: tipo?.descripcion ?? '',
   };
 }
 
@@ -63,7 +61,6 @@ export function TipoPagoForm({ tipo, onCreate, onUpdate, onSuccess, onCancel }: 
 
       const dto = {
         nombre: form.nombre.trim(),
-        descripcion: form.descripcion.trim() || null,
       };
 
       if (tipo) {
@@ -115,19 +112,6 @@ export function TipoPagoForm({ tipo, onCreate, onUpdate, onSuccess, onCancel }: 
             {errors.nombre && (
               <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descripción
-            </label>
-            <textarea
-              value={form.descripcion}
-              onChange={(e) => handleChange('descripcion', e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Opcional"
-            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

@@ -1,10 +1,11 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle, Package } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
   { title: 'Dashboard', url: '/dashboard/gerente',          icon: LayoutDashboard },
+  { title: 'Inventario', url: '/dashboard/gerente/inventario', icon: Package },
   { title: 'Menú',      url: '/dashboard/gerente/menu',     icon: UtensilsCrossed },
   { title: 'Órdenes',   url: '/dashboard/gerente/ordenes',  icon: ClipboardList },
   { title: 'Perfil',    url: '/dashboard/profile',           icon: UserCircle },

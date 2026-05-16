@@ -1,21 +1,57 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
+import { SucursalSelect } from '../../../components/ui/SucursalSelect';
+import { useAuth } from '../../../hooks/useAuth';
 import { getInventarioStockActual } from '../../../services/inventario.service';
+import { listarSucursales } from '../../../services/sucursal.service';
 import type { InventarioStockItem } from '../../../types/inventario.types';
+import type { SucursalItem } from '../../../types/sucursal.types';
 
 export function InventarioPage() {
+  const { id_sucursal: idSucursalUsuario } = useAuth();
+
   const [items, setItems] = useState<InventarioStockItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
+  const [selectedSucursal, setSelectedSucursal] = useState<number | null>(idSucursalUsuario);
+  const [loadingSucursales, setLoadingSucursales] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const loadSucursales = async () => {
+      setLoadingSucursales(true);
+
+      try {
+        const data = await listarSucursales(true);
+        setSucursales(data);
+
+        if (!idSucursalUsuario && data.length > 0) {
+          setSelectedSucursal(data[0].id_sucursal);
+        }
+      } catch {
+        // If branch catalog fails, inventory request still handles backend errors.
+      } finally {
+        setLoadingSucursales(false);
+      }
+    };
+
+    loadSucursales();
+  }, [idSucursalUsuario]);
+
+  useEffect(() => {
+    if (selectedSucursal === null) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
     const loadInventario = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const data = await getInventarioStockActual();
+        const data = await getInventarioStockActual(selectedSucursal);
         setItems(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar inventario');
@@ -25,7 +61,7 @@ export function InventarioPage() {
     };
 
     loadInventario();
-  }, []);
+  }, [selectedSucursal]);
 
   const totalAlertas = useMemo(
     () => items.filter(item => item.en_alerta).length,
@@ -50,24 +86,44 @@ export function InventarioPage() {
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-          <span className="font-medium text-gray-700">Alertas:</span>
-          <span className={`font-semibold ${totalAlertas > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {totalAlertas}
-          </span>
+        <div className="flex flex-col sm:items-end gap-2">
+          <div className="w-full sm:w-64">
+            <SucursalSelect
+              sucursales={sucursales}
+              value={selectedSucursal}
+              onChange={setSelectedSucursal}
+              loading={loadingSucursales}
+              label="Sucursal"
+              placeholder="Selecciona una sucursal"
+            />
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+            <span className="font-medium text-gray-700">Alertas:</span>
+            <span className={`font-semibold ${totalAlertas > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {totalAlertas}
+            </span>
+          </div>
         </div>
       </div>
 
       {error && <AlertMessage type="error" message={error} />}
 
-      {!error && items.length === 0 && (
+      {!error && selectedSucursal === null && (
+        <AlertMessage
+          type="info"
+          message="Selecciona una sucursal para ver su inventario."
+        />
+      )}
+
+      {!error && selectedSucursal !== null && items.length === 0 && (
         <AlertMessage
           type="info"
           message="No hay productos activos en inventario para esta sucursal."
         />
       )}
 
-      {!error && items.length > 0 && (
+      {!error && selectedSucursal !== null && items.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">

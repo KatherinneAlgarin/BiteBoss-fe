@@ -4,6 +4,7 @@ import type { UsuarioListItem, RolItem } from '../../types/usuario.types';
 import type { SucursalItem } from '../../types/sucursal.types';
 import { formatRoleLabel, normalizeRole } from '../../lib/roles';
 import type { UserRole } from '../../types/auth.types';
+import { useAuth } from '../../hooks/useAuth';
 
 interface UsuariosListProps {
   usuarios: UsuarioListItem[];
@@ -38,6 +39,8 @@ export function UsuariosList({
   onSearch,
   onRefetch,
 }: UsuariosListProps) {
+  const { session } = useAuth();
+  const currentUserEmail = session?.user?.email;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRol, setSelectedRol] = useState<number | undefined>(undefined);
   const [selectedSucursal, setSelectedSucursal] = useState<number | undefined>(undefined);
@@ -165,36 +168,40 @@ export function UsuariosList({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {usuarios.map(u => (
-                  <tr key={u.id_usuario} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{u.nombre}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">{u.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBadgeClass(u.rol)}`}>
-                        {formatRoleLabel(u.rol)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{u.sucursal}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        u.activo
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {u.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => onEdit(u)}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {usuarios.map(u => {
+                  const isCurrentUser = u.email === currentUserEmail;
+                  return (
+                    <tr key={u.id_usuario} className={`hover:bg-gray-50 transition-colors ${isCurrentUser ? 'opacity-60 pointer-events-none' : ''}`}>
+                      <td className="px-4 py-3 font-medium text-gray-900">{u.nombre}</td>
+                      <td className="px-4 py-3 text-gray-600 text-xs">{u.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBadgeClass(u.rol)}`}>
+                          {formatRoleLabel(u.rol)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{u.sucursal}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          u.activo
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => onEdit(u)}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline"
+                          disabled={isCurrentUser}
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

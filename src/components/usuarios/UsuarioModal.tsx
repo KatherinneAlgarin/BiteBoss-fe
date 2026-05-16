@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, X, Loader2 } from 'lucide-react';
-import type { CrearUsuarioDto, RolItem, UsuarioListItem } from '../../types/usuario.types';
+import type { CrearUsuarioDto, ActualizarUsuarioDto, RolItem, UsuarioListItem } from '../../types/usuario.types';
 import type { SucursalItem } from '../../types/sucursal.types';
 
-export type UsuarioModalMode = 'crear' | 'editar' | 'ver';
+export type UsuarioModalMode = 'crear' | 'editar';
 
-interface FormState {
+interface CrearFormState {
   nombre: string;
   email: string;
   password: string;
@@ -13,18 +13,32 @@ interface FormState {
   id_sucursal: string;
 }
 
-function buildInitialForm(usuario?: UsuarioListItem): FormState {
+interface EditarFormState {
+  id_rol: string;
+  id_sucursal: string;
+  activo: boolean;
+}
+
+function buildInitialCrearForm(): CrearFormState {
   return {
-    nombre:      usuario?.nombre      ?? '',
-    email:       usuario?.email       ?? '',
+    nombre:      '',
+    email:       '',
     password:    '',
-    id_rol:      usuario?.id_rol      ? String(usuario.id_rol)      : '',
-    id_sucursal: usuario?.id_sucursal ? String(usuario.id_sucursal) : '',
+    id_rol:      '',
+    id_sucursal: '',
   };
 }
 
-function validateForm(form: FormState, mode: UsuarioModalMode): Partial<Record<keyof FormState, string>> {
-  const errors: Partial<Record<keyof FormState, string>> = {};
+function buildInitialEditarForm(usuario: UsuarioListItem): EditarFormState {
+  return {
+    id_rol:      String(usuario.id_rol),
+    id_sucursal: String(usuario.id_sucursal),
+    activo:      usuario.activo,
+  };
+}
+
+function validateCrearForm(form: CrearFormState): Partial<Record<keyof CrearFormState, string>> {
+  const errors: Partial<Record<keyof CrearFormState, string>> = {};
 
   if (!form.nombre.trim() || form.nombre.trim().length < 2)
     errors.nombre = 'El nombre es requerido (mínimo 2 caracteres)';
@@ -34,13 +48,19 @@ function validateForm(form: FormState, mode: UsuarioModalMode): Partial<Record<k
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
     errors.email = 'El correo no tiene un formato válido';
 
-  // La contraseña solo es obligatoria al crear
-  if (mode === 'crear') {
-    if (!form.password)
-      errors.password = 'La contraseña temporal es requerida';
-    else if (form.password.length < 6)
-      errors.password = 'La contraseña debe tener al menos 6 caracteres';
-  }
+  if (!form.password)
+    errors.password = 'La contraseña es requerida';
+  else if (form.password.length < 6)
+    errors.password = 'La contraseña debe tener al menos 6 caracteres';
+
+  if (!form.id_rol)      errors.id_rol      = 'El rol es requerido';
+  if (!form.id_sucursal) errors.id_sucursal = 'La sucursal es requerida';
+
+  return errors;
+}
+
+function validateEditarForm(form: EditarFormState): Partial<Record<keyof EditarFormState, string>> {
+  const errors: Partial<Record<keyof EditarFormState, string>> = {};
 
   if (!form.id_rol)      errors.id_rol      = 'El rol es requerido';
   if (!form.id_sucursal) errors.id_sucursal = 'La sucursal es requerida';
@@ -49,39 +69,55 @@ function validateForm(form: FormState, mode: UsuarioModalMode): Partial<Record<k
 }
 
 const MODAL_TITLE: Record<UsuarioModalMode, string> = {
-  crear:  'Crear usuario',
-  editar: 'Editar usuario',
-  ver:    'Detalle de usuario',
+  crear:  'Crear nuevo usuario',
+  editar: 'Editar permisos del usuario',
 };
 
 const SUBMIT_LABEL: Record<UsuarioModalMode, string> = {
   crear:  'Crear usuario',
   editar: 'Guardar cambios',
-  ver:    '',
 };
 
-interface Props {
-  mode: UsuarioModalMode;
+interface PropsCrear {
+  mode: 'crear';
   roles: RolItem[];
   sucursales: SucursalItem[];
-  usuario?: UsuarioListItem;
+  usuario?: never;
   onClose: () => void;
-  onSubmit?: (dto: CrearUsuarioDto) => Promise<void>;
+  onSubmit: (dto: CrearUsuarioDto) => Promise<void>;
 }
 
-export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubmit }: Props) {
-  const isReadOnly = mode === 'ver';
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(usuario));
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+interface PropsEditar {
+  mode: 'editar';
+  roles: RolItem[];
+  sucursales: SucursalItem[];
+  usuario: UsuarioListItem;
+  onClose: () => void;
+  onSubmit: (id_usuario: number, dto: ActualizarUsuarioDto) => Promise<void>;
+}
+
+type Props = PropsCrear | PropsEditar;
+
+export function UsuarioModal(props: Props) {
+  const { mode, roles, sucursales, onClose, onSubmit } = props;
+  const usuario = 'usuario' in props ? props.usuario : undefined;
+  
+  const [crearForm, setCrearForm] = useState<CrearFormState>(buildInitialCrearForm());
+  const [editarForm, setEditarForm] = useState<EditarFormState>(
+    usuario ? buildInitialEditarForm(usuario) : { id_rol: '', id_sucursal: '', activo: true }
+  );
+  const [crearErrors, setCrearErrors] = useState<Partial<Record<keyof CrearFormState, string>>>({});
+  const [editarErrors, setEditarErrors] = useState<Partial<Record<keyof EditarFormState, string>>>({});
   const [serverError, setServerError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setForm(buildInitialForm(usuario));
-    setErrors({});
+    setCrearForm(buildInitialCrearForm());
+    setCrearErrors({});
+    setEditarErrors({});
     setServerError('');
-  }, [usuario, mode]);
+  }, [mode]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -89,22 +125,32 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    if (isReadOnly) return;
+  function handleCrearChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormState])
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+    setCrearForm(prev => ({ ...prev, [name]: value }));
+    if (crearErrors[name as keyof CrearFormState])
+      setCrearErrors(prev => ({ ...prev, [name]: undefined }));
     setServerError('');
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (isReadOnly || !onSubmit) return;
+  function handleEditarChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      setEditarForm(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setEditarForm(prev => ({ ...prev, [name]: value }));
+    }
+    if (editarErrors[name as keyof EditarFormState])
+      setEditarErrors(prev => ({ ...prev, [name]: undefined }));
+    setServerError('');
+  }
 
-    const fieldErrors = validateForm(form, mode);
+  async function handleCrearSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const fieldErrors = validateCrearForm(crearForm);
     if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors);
+      setCrearErrors(fieldErrors);
       return;
     }
 
@@ -112,11 +158,11 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
     setServerError('');
     try {
       await onSubmit({
-        nombre:      form.nombre.trim(),
-        email:       form.email.trim().toLowerCase(),
-        password:    form.password,
-        id_rol:      Number(form.id_rol),
-        id_sucursal: Number(form.id_sucursal),
+        nombre:      crearForm.nombre.trim(),
+        email:       crearForm.email.trim().toLowerCase(),
+        password:    crearForm.password,
+        id_rol:      Number(crearForm.id_rol),
+        id_sucursal: Number(crearForm.id_sucursal),
       });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Error al procesar la solicitud');
@@ -125,11 +171,40 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
     }
   }
 
-  const inputClass = (field: keyof FormState) =>
+  async function handleEditarSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!usuario) return;
+
+    const fieldErrors = validateEditarForm(editarForm);
+    if (Object.keys(fieldErrors).length > 0) {
+      setEditarErrors(fieldErrors);
+      return;
+    }
+
+    setSubmitting(true);
+    setServerError('');
+    try {
+      await onSubmit(usuario.id_usuario, {
+        id_rol:      Number(editarForm.id_rol),
+        id_sucursal: Number(editarForm.id_sucursal),
+        activo:      editarForm.activo,
+      });
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Error al procesar la solicitud');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const crearInputClass = (field: keyof CrearFormState) =>
     `w-full px-3 py-2 rounded-lg border text-sm transition-colors
      focus:outline-none focus:ring-2 focus:ring-orange-400
-     ${isReadOnly ? 'bg-gray-50 text-gray-700 cursor-default' : ''}
-     ${errors[field] ? 'border-red-400 bg-red-50' : 'border-gray-300'}`;
+     ${crearErrors[field] ? 'border-red-400 bg-red-50' : 'border-gray-300'}`;
+
+  const editarInputClass = (field: keyof EditarFormState) =>
+    `w-full px-3 py-2 rounded-lg border text-sm transition-colors
+     focus:outline-none focus:ring-2 focus:ring-orange-400
+     ${editarErrors[field] ? 'border-red-400 bg-red-50' : 'border-gray-300'}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
@@ -147,62 +222,59 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} noValidate className="px-6 py-5 space-y-4">
-          {serverError && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {serverError}
-            </div>
-          )}
+        {mode === 'crear' ? (
+          <form onSubmit={handleCrearSubmit} noValidate className="px-6 py-5 space-y-4">
+            {serverError && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {serverError}
+              </div>
+            )}
 
-          {/* Nombre */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre completo {!isReadOnly && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              readOnly={isReadOnly}
-              placeholder="Ej: María García"
-              className={inputClass('nombre')}
-            />
-            {errors.nombre && <p className="mt-1 text-xs text-red-600">{errors.nombre}</p>}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo electrónico {!isReadOnly && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              readOnly={isReadOnly}
-              placeholder="usuario@ejemplo.com"
-              className={inputClass('email')}
-            />
-            {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-          </div>
-
-          {/* Contraseña — solo en crear/editar */}
-          {mode !== 'ver' && (
+            {/* Nombre */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña temporal {mode === 'crear' && <span className="text-red-500">*</span>}
-                {mode === 'editar' && <span className="text-xs text-gray-400 ml-1">(dejar vacío para no cambiarla)</span>}
+                Nombre completo <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="nombre"
+                value={crearForm.nombre}
+                onChange={handleCrearChange}
+                placeholder="Ej: María García"
+                className={crearInputClass('nombre')}
+              />
+              {crearErrors.nombre && <p className="mt-1 text-xs text-red-600">{crearErrors.nombre}</p>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Correo electrónico <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={crearForm.email}
+                onChange={handleCrearChange}
+                placeholder="usuario@ejemplo.com"
+                className={crearInputClass('email')}
+              />
+              {crearErrors.email && <p className="mt-1 text-xs text-red-600">{crearErrors.email}</p>}
+            </div>
+
+            {/* Contraseña */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña temporal <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  value={form.password}
-                  onChange={handleChange}
+                  value={crearForm.password}
+                  onChange={handleCrearChange}
                   placeholder="Mínimo 6 caracteres"
-                  className={`${inputClass('password')} pr-10`}
+                  className={`${crearInputClass('password')} pr-10`}
                 />
                 <button
                   type="button"
@@ -213,85 +285,151 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
-              {showPassword && form.password && (
-                <p className="mt-1 text-xs text-orange-600 font-medium">
-                  Contraseña visible: {form.password}
-                </p>
-              )}
+              {crearErrors.password && <p className="mt-1 text-xs text-red-600">{crearErrors.password}</p>}
             </div>
-          )}
 
-          {/* Rol */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rol {!isReadOnly && <span className="text-red-500">*</span>}
-            </label>
-            {isReadOnly ? (
-              <input
-                type="text"
-                value={usuario?.rol ?? ''}
-                readOnly
-                className={inputClass('id_rol')}
-              />
-            ) : (
+            {/* Rol */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Rol <span className="text-red-500">*</span>
+              </label>
               <select
                 name="id_rol"
-                value={form.id_rol}
-                onChange={handleChange}
-                className={inputClass('id_rol')}
+                value={crearForm.id_rol}
+                onChange={handleCrearChange}
+                className={crearInputClass('id_rol')}
               >
                 <option value="">Seleccionar rol</option>
                 {roles.map(r => (
                   <option key={r.id_rol} value={r.id_rol}>{r.nombre}</option>
                 ))}
               </select>
-            )}
-            {errors.id_rol && <p className="mt-1 text-xs text-red-600">{errors.id_rol}</p>}
-          </div>
+              {crearErrors.id_rol && <p className="mt-1 text-xs text-red-600">{crearErrors.id_rol}</p>}
+            </div>
 
-          {/* Sucursal */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sucursal {!isReadOnly && <span className="text-red-500">*</span>}
-            </label>
-            {isReadOnly ? (
-              <input
-                type="text"
-                value={usuario?.sucursal ?? ''}
-                readOnly
-                className={inputClass('id_sucursal')}
-              />
-            ) : (
+            {/* Sucursal */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sucursal <span className="text-red-500">*</span>
+              </label>
               <select
                 name="id_sucursal"
-                value={form.id_sucursal}
-                onChange={handleChange}
-                className={inputClass('id_sucursal')}
+                value={crearForm.id_sucursal}
+                onChange={handleCrearChange}
+                className={crearInputClass('id_sucursal')}
               >
                 <option value="">Seleccionar sucursal</option>
                 {sucursales.map(s => (
                   <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre}</option>
                 ))}
               </select>
-            )}
-            {errors.id_sucursal && <p className="mt-1 text-xs text-red-600">{errors.id_sucursal}</p>}
-          </div>
+              {crearErrors.id_sucursal && <p className="mt-1 text-xs text-red-600">{crearErrors.id_sucursal}</p>}
+            </div>
 
-          {/* Actions */}
-          {isReadOnly ? (
-            <div className="pt-2">
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium
-                  text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={submitting}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium
+                  text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                Cerrar
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg
+                  bg-orange-500 text-white text-sm font-medium hover:bg-orange-600
+                  transition-colors disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {submitting ? 'Creando...' : SUBMIT_LABEL[mode]}
               </button>
             </div>
-          ) : (
-            <div className="flex gap-3 pt-2">
+          </form>
+        ) : (
+          <form onSubmit={handleEditarSubmit} noValidate className="px-6 py-5 space-y-4">
+            {serverError && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {serverError}
+              </div>
+            )}
+
+            {/* Información del usuario (solo lectura) */}
+            <div className="space-y-3 pb-4 border-b border-gray-200">
+              <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wide">Nombre</label>
+                <p className="text-sm font-medium text-gray-900">{usuario?.nombre}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wide">Correo</label>
+                <p className="text-sm font-medium text-gray-900">{usuario?.email}</p>
+              </div>
+            </div>
+
+            {/* Rol */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Rol <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="id_rol"
+                value={editarForm.id_rol}
+                onChange={handleEditarChange}
+                className={editarInputClass('id_rol')}
+              >
+                <option value="">Seleccionar rol</option>
+                {roles.map(r => (
+                  <option key={r.id_rol} value={r.id_rol}>{r.nombre}</option>
+                ))}
+              </select>
+              {editarErrors.id_rol && <p className="mt-1 text-xs text-red-600">{editarErrors.id_rol}</p>}
+            </div>
+
+            {/* Sucursal */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sucursal <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="id_sucursal"
+                value={editarForm.id_sucursal}
+                onChange={handleEditarChange}
+                className={editarInputClass('id_sucursal')}
+              >
+                <option value="">Seleccionar sucursal</option>
+                {sucursales.map(s => (
+                  <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre}</option>
+                ))}
+              </select>
+              {editarErrors.id_sucursal && <p className="mt-1 text-xs text-red-600">{editarErrors.id_sucursal}</p>}
+            </div>
+
+            {/* Estado (Activo/Inactivo) */}
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="activo"
+                  checked={editarForm.activo}
+                  onChange={handleEditarChange}
+                  className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Usuario activo
+                  {editarForm.activo ? (
+                    <span className="ml-2 text-xs font-normal text-green-600">(Puede acceder)</span>
+                  ) : (
+                    <span className="ml-2 text-xs font-normal text-red-600">(No puede acceder)</span>
+                  )}
+                </span>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -312,8 +450,8 @@ export function UsuarioModal({ mode, roles, sucursales, usuario, onClose, onSubm
                 {submitting ? 'Guardando...' : SUBMIT_LABEL[mode]}
               </button>
             </div>
-          )}
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

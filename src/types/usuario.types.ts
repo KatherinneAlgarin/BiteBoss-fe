@@ -6,6 +6,12 @@ export interface CrearUsuarioDto {
   id_sucursal: number;
 }
 
+export interface ActualizarUsuarioDto {
+  id_rol: number;
+  id_sucursal: number;
+  activo: boolean;
+}
+
 export interface UsuarioListItem {
   id_usuario: number;
   nombre: string;
@@ -29,4 +35,8 @@ export interface UsuarioCreadoResponse {
   email: string;
   rol: string;
   sucursal: string;
+}
+
+export interface UsuarioActualizadoResponse {
+  mensaje: string;
 }

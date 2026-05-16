@@ -158,8 +158,7 @@ export function UsuarioModal(props: Props) {
     setSubmitting(true);
     setServerError('');
     try {
-      if (mode !== 'crear') return;
-
+      if (props.mode !== 'crear') return;
       await props.onSubmit({
         nombre:      crearForm.nombre.trim(),
         email:       crearForm.email.trim().toLowerCase(),
@@ -176,7 +175,7 @@ export function UsuarioModal(props: Props) {
 
   async function handleEditarSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!usuario) return;
+    if (!usuario || props.mode !== 'editar') return;
 
     const fieldErrors = validateEditarForm(editarForm);
     if (Object.keys(fieldErrors).length > 0) {
@@ -187,8 +186,6 @@ export function UsuarioModal(props: Props) {
     setSubmitting(true);
     setServerError('');
     try {
-      if (mode !== 'editar') return;
-
       await props.onSubmit(usuario.id_usuario, {
         id_rol:      Number(editarForm.id_rol),
         id_sucursal: Number(editarForm.id_sucursal),

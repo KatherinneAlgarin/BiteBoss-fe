@@ -17,6 +17,7 @@ import { ProveedoresPage } from './pages/dashboard/admin/ProveedoresPage';
 import { MenuPage } from './pages/dashboard/admin/MenuPage';
 import { InventarioPage } from './pages/dashboard/admin/InventarioPage';
 import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
+import { TiposPagoPage } from './pages/dashboard/admin/TiposPagoPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
 import { ZonasMesasPage } from './pages/dashboard/admin/ZonasMesasPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
@@ -53,6 +54,7 @@ function App() {
                   <Route path="menu" element={<MenuPage />} />
                   <Route path="inventario" element={<InventarioPage />} />
                   <Route path="tipos-orden" element={<TiposOrdenPage />} />
+                  <Route path="tipos-pago" element={<TiposPagoPage />} />
                   <Route path="sucursales" element={<SucursalesPage />} />
                   <Route path="zonas-mesas" element={<ZonasMesasPage />} />
                 </Route>

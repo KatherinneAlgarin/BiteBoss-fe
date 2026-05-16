@@ -1,3 +1,5 @@
+export type EstadoReservacion = 'pendiente' | 'cancelada' | 'completada';
+
 export interface ReservacionItem {
   id_reservacion: number;
   nombre_cliente: string;
@@ -11,6 +13,7 @@ export interface ReservacionItem {
   mesa_numero: number;
   id_sucursal: number;
   id_usuario_sucursal: number;
+  estado: EstadoReservacion;
   activo: boolean;
   creado_en: string;
 }

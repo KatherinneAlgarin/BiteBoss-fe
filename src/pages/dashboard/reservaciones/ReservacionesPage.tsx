@@ -1,16 +1,29 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw } from 'lucide-react';
-import { listarReservaciones, cancelarReservacion, reactivarReservacion } from '../../../services/reservacion.service';
+import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle } from 'lucide-react';
+import { listarReservaciones, cancelarReservacion, reactivarReservacion, completarReservacion } from '../../../services/reservacion.service';
 import { ReservacionModal, type ReservacionModalMode } from '../../../components/reservaciones/ReservacionModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
-import type { ReservacionItem } from '../../../types/reservacion.types';
+import type { ReservacionItem, EstadoReservacion } from '../../../types/reservacion.types';
 
-type FiltroEstado = 'activas' | 'canceladas' | 'todas';
+type FiltroEstado = EstadoReservacion | 'todas';
 
 const FILTRO_LABEL: Record<FiltroEstado, string> = {
-  activas:    'Activas',
-  canceladas: 'Canceladas',
+  pendiente:  'Pendientes',
+  cancelada:  'Canceladas',
+  completada: 'Completadas',
   todas:      'Todas',
+};
+
+const ESTADO_BADGE: Record<EstadoReservacion, string> = {
+  pendiente:  'bg-amber-100 text-amber-700',
+  cancelada:  'bg-red-100 text-red-700',
+  completada: 'bg-blue-100 text-blue-700',
+};
+
+const ESTADO_LABEL: Record<EstadoReservacion, string> = {
+  pendiente:  'Pendiente',
+  cancelada:  'Cancelada',
+  completada: 'Completada',
 };
 
 function formatFecha(isoString: string): string {
@@ -39,8 +52,8 @@ interface ConfirmState {
   onConfirm: () => Promise<void>;
 }
 
-const MODAL_CLOSED: ModalState      = { open: false, mode: 'crear' };
-const CONFIRM_CLOSED: ConfirmState  = {
+const MODAL_CLOSED: ModalState     = { open: false, mode: 'crear' };
+const CONFIRM_CLOSED: ConfirmState = {
   open: false, titulo: '', mensaje: '', confirmLabel: '', variant: 'danger',
   onConfirm: async () => {},
 };
@@ -51,30 +64,26 @@ export function ReservacionesPage() {
   const [loadError, setLoadError]         = useState('');
   const [successMsg, setSuccessMsg]       = useState('');
 
-  const [filtroEstado, setFiltroEstado]   = useState<FiltroEstado>('activas');
+  const [filtroEstado, setFiltroEstado]   = useState<FiltroEstado>('pendiente');
   const [busqueda, setBusqueda]           = useState('');
 
   const [modal, setModal]     = useState<ModalState>(MODAL_CLOSED);
   const [confirm, setConfirm] = useState<ConfirmState>(CONFIRM_CLOSED);
 
-  const activoParam = filtroEstado === 'activas'
-    ? true
-    : filtroEstado === 'canceladas'
-      ? false
-      : undefined;
+  const estadoParam = filtroEstado === 'todas' ? undefined : filtroEstado;
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await listarReservaciones(activoParam);
+      const data = await listarReservaciones(estadoParam);
       setReservaciones(data);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Error al cargar las reservaciones');
     } finally {
       setLoading(false);
     }
-  }, [activoParam]);
+  }, [estadoParam]);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -128,13 +137,29 @@ export function ReservacionesPage() {
     setConfirm({
       open:         true,
       titulo:       'Reactivar reservación',
-      mensaje:      `¿Reactivar la reservación de "${r.nombre_cliente}"?`,
+      mensaje:      `¿Reactivar la reservación de "${r.nombre_cliente}"? Volverá a estado pendiente.`,
       confirmLabel: 'Sí, reactivar',
       variant:      'warning',
       onConfirm:    async () => {
         await reactivarReservacion(r.id_reservacion);
         setConfirm(CONFIRM_CLOSED);
         showSuccess('Reservación reactivada correctamente.');
+        void loadData();
+      },
+    });
+  }
+
+  function pedirCompletar(r: ReservacionItem) {
+    setConfirm({
+      open:         true,
+      titulo:       'Completar reservación',
+      mensaje:      `¿Marcar como completada la reservación de "${r.nombre_cliente}"?`,
+      confirmLabel: 'Sí, completar',
+      variant:      'warning',
+      onConfirm:    async () => {
+        await completarReservacion(r.id_reservacion);
+        setConfirm(CONFIRM_CLOSED);
+        showSuccess('Reservación marcada como completada.');
         void loadData();
       },
     });
@@ -185,7 +210,6 @@ export function ReservacionesPage() {
 
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Buscador */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -206,7 +230,6 @@ export function ReservacionesPage() {
           )}
         </div>
 
-        {/* Filtro de estado */}
         <select
           value={filtroEstado}
           onChange={e => setFiltroEstado(e.target.value as FiltroEstado)}
@@ -274,17 +297,13 @@ export function ReservacionesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        r.activo
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {r.activo ? 'Activa' : 'Cancelada'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_BADGE[r.estado]}`}>
+                        {ESTADO_LABEL[r.estado]}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {r.activo ? (
+                        {r.estado === 'pendiente' && (
                           <>
                             <button
                               onClick={() => openEditar(r)}
@@ -295,6 +314,14 @@ export function ReservacionesPage() {
                               Editar
                             </button>
                             <button
+                              onClick={() => pedirCompletar(r)}
+                              className="flex items-center gap-1 text-xs font-medium text-blue-600
+                                hover:text-blue-700 hover:underline"
+                            >
+                              <CheckCircle className="w-3 h-3" />
+                              Completar
+                            </button>
+                            <button
                               onClick={() => pedirCancelar(r)}
                               className="flex items-center gap-1 text-xs font-medium text-red-600
                                 hover:text-red-700 hover:underline"
@@ -303,11 +330,12 @@ export function ReservacionesPage() {
                               Cancelar
                             </button>
                           </>
-                        ) : (
+                        )}
+                        {r.estado === 'cancelada' && (
                           <button
                             onClick={() => pedirReactivar(r)}
-                            className="flex items-center gap-1 text-xs font-medium text-blue-600
-                              hover:text-blue-700 hover:underline"
+                            className="flex items-center gap-1 text-xs font-medium text-amber-600
+                              hover:text-amber-700 hover:underline"
                           >
                             <RotateCcw className="w-3 h-3" />
                             Reactivar

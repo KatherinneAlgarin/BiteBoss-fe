@@ -114,7 +114,7 @@ export function ProfilePage() {
     <DashboardLayout
       user={{ name: currentName, email: userEmail, role }}
       data={{ navMain: [] }}
-      onLogout={() => { void logout(); }}
+      onLogout={logout}
     >
       <div className="max-w-lg mx-auto">
         <div className="mb-6">

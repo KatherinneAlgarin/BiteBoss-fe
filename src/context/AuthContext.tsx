@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { AuthState, LoginCredentials, UserRole } from '../types/auth.types';
+import { normalizeRole } from '../lib/roles';
 
 interface DbUserInfo {
   rol:         UserRole;
   nombre:      string;
   id_sucursal: number;
-  sucursal:    string;
 }
 
 interface AuthContextValue extends AuthState {
@@ -15,7 +15,6 @@ interface AuthContextValue extends AuthState {
   role:        UserRole | null;
   displayName: string;
   id_sucursal: number | null;
-  sucursal:    string;
 }
 
 const DB_INFO_KEY = (authId: string) => `bb_user_${authId}`;
@@ -30,13 +29,14 @@ async function fetchUserInfo(token: string): Promise<DbUserInfo> {
     throw new Error(data.mensaje ?? 'No se pudo obtener la información del usuario');
   }
 
-  const data = await res.json() as { usuario: { rol: UserRole; nombre: string; id_sucursal: number; sucursal: string } };
-  return {
-    rol:         data.usuario.rol,
-    nombre:      data.usuario.nombre,
-    id_sucursal: data.usuario.id_sucursal,
-    sucursal:    data.usuario.sucursal,
-  };
+  const data = await res.json() as { usuario: { rol: string; nombre: string; id_sucursal: number } };
+  const rol = normalizeRole(data.usuario.rol);
+
+  if (!rol) {
+    throw new Error('Rol de usuario no reconocido');
+  }
+
+  return { rol, nombre: data.usuario.nombre, id_sucursal: data.usuario.id_sucursal };
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -62,7 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let info: DbUserInfo | null = null;
 
         if (stored) {
-          try { info = JSON.parse(stored) as DbUserInfo; } catch { /* localStorage corrupto */ }
+          try {
+            const parsed = JSON.parse(stored) as { rol?: string; nombre?: string; id_sucursal?: number };
+            const rol = normalizeRole(parsed.rol);
+            if (rol && typeof parsed.nombre === 'string' && typeof parsed.id_sucursal === 'number') {
+              info = { rol, nombre: parsed.nombre, id_sucursal: parsed.id_sucursal };
+            }
+          } catch {
+            /* localStorage corrupto */
+          }
         }
 
         if (!info) {
@@ -158,7 +166,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const role: UserRole | null = dbUserInfo?.rol ?? null;
   const displayName: string = dbUserInfo?.nombre ?? '';
   const id_sucursal: number | null = dbUserInfo?.id_sucursal ?? null;
-  const sucursal: string = dbUserInfo?.sucursal ?? '';
 
   // Mantener isLoading=true mientras hay sesión pero el rol no se haya resuelto.
   // Evita que ProtectedRoute deje pasar a RoleRoute con role=null por una condición
@@ -166,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isLoading = state.isLoading || (state.isAuthenticated && !dbUserInfo);
 
   return (
-    <AuthContext.Provider value={{ ...state, isLoading, login, logout, role, displayName, id_sucursal, sucursal }}>
+    <AuthContext.Provider value={{ ...state, isLoading, login, logout, role, displayName, id_sucursal }}>
       {children}
     </AuthContext.Provider>
   );

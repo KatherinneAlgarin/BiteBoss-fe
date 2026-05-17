@@ -1,13 +1,13 @@
 import { useAuth } from '../../../hooks/useAuth';
 
 export function MeseroHome() {
-  const { user } = useAuth();
+  const { displayName } = useAuth();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.profile?.nombre ?? 'Mesero'}
+          Bienvenido, {displayName ?? 'Mesero'}
         </h1>
         <p className="text-gray-500 mt-1">Panel de servicio — BiteBoss</p>
       </div>

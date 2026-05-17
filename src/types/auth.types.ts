@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'cajero' | 'mesero' | 'gerente';
+export const USER_ROLES = ['admin', 'cajero', 'mesero', 'gerente'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
 
 export interface UserProfile {
   id_usuario: number;

@@ -27,6 +27,7 @@ import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
 import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
+import { ReservacionesPage } from './pages/dashboard/reservaciones/ReservacionesPage';
 // Import diagnostics for development
 import './lib/api-diagnostics';
 
@@ -70,6 +71,7 @@ function App() {
               <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
                 <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
                   <Route index element={<MeseroHome />} />
+                  <Route path="reservaciones" element={<ReservacionesPage />} />
                 </Route>
               </Route>
 
@@ -77,6 +79,7 @@ function App() {
                 <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
                   <Route index element={<GerenteHome />} />
                   <Route path="inventario" element={<InventarioPage />} />
+                  <Route path="reservaciones" element={<ReservacionesPage />} />
                 </Route>
               </Route>
             </Route>

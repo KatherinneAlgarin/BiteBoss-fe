@@ -37,23 +37,56 @@ const EMPTY_FORM: ReservacionFormData = {
   tiempo_extra:      '0',
 };
 
+const PHONE_REGEX = /^\+?[\d\s\-()./]{7,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 type FormErrors = Partial<Record<keyof ReservacionFormData, string>>;
 
 function validateForm(form: ReservacionFormData): FormErrors {
   const errors: FormErrors = {};
+
   if (!form.nombre_cliente.trim())
     errors.nombre_cliente = 'El nombre del cliente es requerido.';
-  if (!form.fecha)
+
+  if (form.telefono.trim() && !PHONE_REGEX.test(form.telefono.trim()))
+    errors.telefono = 'El teléfono no tiene un formato válido.';
+
+  if (form.email.trim() && !EMAIL_REGEX.test(form.email.trim()))
+    errors.email = 'El email no tiene un formato válido.';
+
+  const ahora = new Date();
+  const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+
+  if (!form.fecha) {
     errors.fecha = 'La fecha de llegada es requerida.';
-  if (!form.hora)
+  } else if (form.fecha < hoyStr) {
+    errors.fecha = 'La fecha de llegada no puede ser en el pasado.';
+  }
+
+  if (!form.hora) {
     errors.hora = 'La hora de llegada es requerida.';
+  } else if (form.fecha && form.fecha >= hoyStr) {
+    const [year, month, day] = form.fecha.split('-').map(Number);
+    const [h, m] = form.hora.split(':').map(Number);
+    const fechaHora = new Date(year, month - 1, day, h, m, 0, 0);
+    const minimo = new Date(ahora.getTime() + 15 * 60 * 1000);
+    if (fechaHora < minimo) {
+      const hMin = String(minimo.getHours()).padStart(2, '0');
+      const mMin = String(minimo.getMinutes()).padStart(2, '0');
+      errors.hora = `La reservación debe ser con al menos 15 min de anticipación (mínimo ${hMin}:${mMin}).`;
+    }
+  }
+
   const personas = parseInt(form.cantidad_personas, 10);
   if (!form.cantidad_personas || isNaN(personas) || personas <= 0)
     errors.cantidad_personas = 'Ingresa un número de personas válido (mínimo 1).';
+
   if (!form.id_zona)
     errors.id_zona = 'La zona es requerida.';
+
   if (!form.id_mesa)
     errors.id_mesa = 'La mesa es requerida.';
+
   return errors;
 }
 

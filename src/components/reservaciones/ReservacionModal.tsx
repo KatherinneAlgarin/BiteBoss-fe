@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Clock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { crearReservacion, actualizarReservacion } from '../../services/reservacion.service';
 import { listarZonasPorSucursal } from '../../services/zona.service';
@@ -16,6 +16,15 @@ interface Props {
   onSuccess: () => void;
 }
 
+const TIEMPOS_EXTRA = [0, 30, 60, 90] as const;
+
+function calcularDuracionBase(cantidad_personas: number): number {
+  if (cantidad_personas <= 2) return 60;
+  if (cantidad_personas <= 4) return 90;
+  if (cantidad_personas <= 7) return 120;
+  return 150;
+}
+
 const EMPTY_FORM: ReservacionFormData = {
   nombre_cliente:    '',
   telefono:          '',
@@ -25,6 +34,7 @@ const EMPTY_FORM: ReservacionFormData = {
   cantidad_personas: '',
   id_zona:           '',
   id_mesa:           '',
+  tiempo_extra:      '0',
 };
 
 type FormErrors = Partial<Record<keyof ReservacionFormData, string>>;
@@ -51,6 +61,9 @@ function buildFormFromReservacion(r: ReservacionItem): ReservacionFormData {
   const dt = r.fecha_llegada ?? '';
   const [fecha = '', horaRaw = ''] = dt.includes('T') ? dt.split('T') : [dt, ''];
   const hora = horaRaw.slice(0, 5);
+  const base  = calcularDuracionBase(r.cantidad_personas);
+  const extra = Math.min(90, Math.max(0, r.duracion_minutos - base));
+  const extraRedondeado = (Math.round(extra / 30) * 30) as 0 | 30 | 60 | 90;
   return {
     nombre_cliente:    r.nombre_cliente,
     telefono:          r.telefono ?? '',
@@ -60,6 +73,7 @@ function buildFormFromReservacion(r: ReservacionItem): ReservacionFormData {
     cantidad_personas: String(r.cantidad_personas),
     id_zona:           String(r.id_zona),
     id_mesa:           String(r.id_mesa),
+    tiempo_extra:      String(extraRedondeado),
   };
 }
 
@@ -76,18 +90,24 @@ const SUBMIT_LABEL: Record<ReservacionModalMode, string> = {
 export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess }: Props) {
   const { id_sucursal } = useAuth();
 
-  const [form, setForm]                 = useState<ReservacionFormData>(EMPTY_FORM);
-  const [errors, setErrors]             = useState<FormErrors>({});
-  const [serverError, setServerError]   = useState('');
-  const [submitting, setSubmitting]     = useState(false);
+  const [form, setForm]               = useState<ReservacionFormData>(EMPTY_FORM);
+  const [errors, setErrors]           = useState<FormErrors>({});
+  const [serverError, setServerError] = useState('');
+  const [submitting, setSubmitting]   = useState(false);
 
-  const [zonas, setZonas]               = useState<ZonaItem[]>([]);
-  const [todasMesas, setTodasMesas]     = useState<MesaItem[]>([]);
-  const [mesasFiltradas, setMesasFiltradas] = useState<MesaItem[]>([]);
-  const [loadingZonas, setLoadingZonas] = useState(false);
-  const [loadingMesas, setLoadingMesas] = useState(false);
+  const [zonas, setZonas]                       = useState<ZonaItem[]>([]);
+  const [todasMesas, setTodasMesas]             = useState<MesaItem[]>([]);
+  const [mesasFiltradas, setMesasFiltradas]     = useState<MesaItem[]>([]);
+  const [loadingZonas, setLoadingZonas]         = useState(false);
+  const [loadingMesas, setLoadingMesas]         = useState(false);
 
-  // Inicializar form y cargar catálogos al abrir
+  // Duración calculada en tiempo real
+  const personas   = parseInt(form.cantidad_personas, 10);
+  const tienePersonas = !isNaN(personas) && personas > 0;
+  const duracionBase  = tienePersonas ? calcularDuracionBase(personas) : 0;
+  const tiempoExtra   = parseInt(form.tiempo_extra, 10) || 0;
+  const duracionTotal = duracionBase + tiempoExtra;
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -110,7 +130,6 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
         const zonasData = await listarZonasPorSucursal(id_sucursal);
         setZonas(zonasData.filter(z => z.activo));
 
-        // En modo editar, pre-cargar las mesas de la zona existente
         const zonaInicial = mode === 'editar' && reservacion ? reservacion.id_zona : null;
         if (zonaInicial) {
           setLoadingMesas(true);
@@ -130,22 +149,19 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Cerrar con Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  // Filtrar mesas por capacidad cuando cambia cantidad_personas o la lista de mesas
   useEffect(() => {
-    const personas = parseInt(form.cantidad_personas, 10);
-    const filtradas = isNaN(personas) || personas <= 0
+    const p = parseInt(form.cantidad_personas, 10);
+    const filtradas = isNaN(p) || p <= 0
       ? todasMesas
-      : todasMesas.filter(m => m.capacidad >= personas);
+      : todasMesas.filter(m => m.capacidad >= p);
     setMesasFiltradas(filtradas);
 
-    // Si la mesa seleccionada ya no cumple la capacidad, limpiarla
     if (form.id_mesa && !filtradas.find(m => String(m.id_mesa) === form.id_mesa)) {
       setForm(prev => ({ ...prev, id_mesa: '' }));
     }
@@ -187,7 +203,9 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
     setSubmitting(true);
     setServerError('');
     try {
-      const fecha_llegada = `${form.fecha}T${form.hora}:00`;
+      const fecha_llegada       = `${form.fecha}T${form.hora}:00`;
+      const tiempo_extra_minutos = parseInt(form.tiempo_extra, 10) || 0;
+
       const payload = {
         nombre_cliente:    form.nombre_cliente.trim(),
         telefono:          form.telefono.trim() || null,
@@ -196,6 +214,7 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
         cantidad_personas: parseInt(form.cantidad_personas, 10),
         id_zona:           Number(form.id_zona),
         id_mesa:           Number(form.id_mesa),
+        tiempo_extra_minutos,
       };
 
       if (mode === 'editar' && reservacion) {
@@ -329,6 +348,35 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
               {errors.cantidad_personas && <p className="mt-1 text-xs text-red-600">{errors.cantidad_personas}</p>}
             </div>
           </div>
+
+          {/* Duración estimada */}
+          {tienePersonas && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <Clock className="w-4 h-4 text-gray-400" />
+                Duración estimada
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm text-gray-500">
+                  Base: <span className="font-medium text-gray-700">{duracionBase} min</span>
+                </span>
+                <span className="text-gray-300">+</span>
+                <select
+                  name="tiempo_extra"
+                  value={form.tiempo_extra}
+                  onChange={handleChange}
+                  className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg bg-white
+                    focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  {TIEMPOS_EXTRA.map(t => (
+                    <option key={t} value={t}>+{t} min</option>
+                  ))}
+                </select>
+                <span className="text-gray-300">=</span>
+                <span className="text-sm font-semibold text-orange-600">{duracionTotal} min total</span>
+              </div>
+            </div>
+          )}
 
           {/* Zona */}
           <div>

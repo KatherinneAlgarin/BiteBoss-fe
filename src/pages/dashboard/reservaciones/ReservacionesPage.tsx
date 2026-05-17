@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle, MoreVertical } from 'lucide-react';
 import { listarReservaciones, cancelarReservacion, reactivarReservacion, completarReservacion } from '../../../services/reservacion.service';
 import { ReservacionModal, type ReservacionModalMode } from '../../../components/reservaciones/ReservacionModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
@@ -57,6 +57,69 @@ const CONFIRM_CLOSED: ConfirmState = {
   open: false, titulo: '', mensaje: '', confirmLabel: '', variant: 'danger',
   onConfirm: async () => {},
 };
+
+interface MenuAction {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  className: string;
+}
+
+function RowMenu({ actions }: { actions: MenuAction[] }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!pos) return;
+    function handleClose() { setPos(null); }
+    document.addEventListener('mousedown', handleClose);
+    document.addEventListener('scroll', handleClose, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClose);
+      document.removeEventListener('scroll', handleClose, true);
+    };
+  }, [pos]);
+
+  if (actions.length === 0) return <span className="text-xs text-gray-400">—</span>;
+
+  function handleOpen() {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos(prev => prev ? null : { top: rect.bottom + 4, left: rect.right - 176 });
+  }
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={handleOpen}
+        className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        aria-label="Acciones"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+
+      {pos && (
+        <div
+          style={{ position: 'fixed', top: pos.top, left: pos.left }}
+          className="z-50 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1"
+          onMouseDown={e => e.stopPropagation()}
+        >
+          {actions.map((action, i) => (
+            <button
+              key={i}
+              onClick={() => { setPos(null); action.onClick(); }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors ${action.className}`}
+            >
+              {action.icon}
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
 export function ReservacionesPage() {
   const [reservaciones, setReservaciones] = useState<ReservacionItem[]>([]);
@@ -302,46 +365,15 @@ export function ReservacionesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {r.estado === 'pendiente' && (
-                          <>
-                            <button
-                              onClick={() => openEditar(r)}
-                              className="flex items-center gap-1 text-xs font-medium text-orange-600
-                                hover:text-orange-700 hover:underline"
-                            >
-                              <Pencil className="w-3 h-3" />
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => pedirCompletar(r)}
-                              className="flex items-center gap-1 text-xs font-medium text-blue-600
-                                hover:text-blue-700 hover:underline"
-                            >
-                              <CheckCircle className="w-3 h-3" />
-                              Completar
-                            </button>
-                            <button
-                              onClick={() => pedirCancelar(r)}
-                              className="flex items-center gap-1 text-xs font-medium text-red-600
-                                hover:text-red-700 hover:underline"
-                            >
-                              <X className="w-3 h-3" />
-                              Cancelar
-                            </button>
-                          </>
-                        )}
-                        {r.estado === 'cancelada' && (
-                          <button
-                            onClick={() => pedirReactivar(r)}
-                            className="flex items-center gap-1 text-xs font-medium text-amber-600
-                              hover:text-amber-700 hover:underline"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            Reactivar
-                          </button>
-                        )}
-                      </div>
+                      <RowMenu actions={
+                        r.estado === 'pendiente' ? [
+                          { label: 'Editar',     icon: <Pencil className="w-3.5 h-3.5" />,      onClick: () => openEditar(r),     className: 'text-orange-600 hover:bg-orange-50' },
+                          { label: 'Completar',  icon: <CheckCircle className="w-3.5 h-3.5" />, onClick: () => pedirCompletar(r), className: 'text-blue-600 hover:bg-blue-50' },
+                          { label: 'Cancelar',   icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
+                        ] : r.estado === 'cancelada' ? [
+                          { label: 'Reactivar',  icon: <RotateCcw className="w-3.5 h-3.5" />,   onClick: () => pedirReactivar(r), className: 'text-amber-600 hover:bg-amber-50' },
+                        ] : []
+                      } />
                     </td>
                   </tr>
                 ))}

@@ -7,6 +7,7 @@ export interface ReservacionItem {
   email: string | null;
   fecha_llegada: string;
   cantidad_personas: number;
+  duracion_minutos: number;
   id_zona: number;
   zona_nombre: string;
   id_mesa: number;
@@ -26,6 +27,7 @@ export interface ActualizarReservacionPayload {
   cantidad_personas?: number;
   id_zona?: number;
   id_mesa?: number;
+  tiempo_extra_minutos?: number;
 }
 
 export interface CrearReservacionPayload {
@@ -36,6 +38,7 @@ export interface CrearReservacionPayload {
   cantidad_personas: number;
   id_zona: number;
   id_mesa: number;
+  tiempo_extra_minutos: number;
 }
 
 export interface ReservacionFormData {
@@ -47,6 +50,7 @@ export interface ReservacionFormData {
   cantidad_personas: string;
   id_zona: string;
   id_mesa: string;
+  tiempo_extra: string;
 }
 
 export interface ZonaItem {

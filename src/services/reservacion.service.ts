@@ -1,9 +1,17 @@
 import { apiGet, apiPost, apiPatch } from './api';
 import type { ReservacionItem, CrearReservacionPayload, ActualizarReservacionPayload, EstadoReservacion } from '../types/reservacion.types';
 
-export async function listarReservaciones(estado?: EstadoReservacion): Promise<ReservacionItem[]> {
-  const param = estado ? `?estado=${estado}` : '';
-  return apiGet<ReservacionItem[]>(`/api/reservaciones${param}`);
+export async function listarReservaciones(
+  estado?: EstadoReservacion,
+  fecha?: string,
+  id_zona?: number,
+): Promise<ReservacionItem[]> {
+  const params = new URLSearchParams();
+  if (estado)  params.set('estado', estado);
+  if (fecha)   params.set('fecha', fecha);
+  if (id_zona) params.set('zona', String(id_zona));
+  const qs = params.toString();
+  return apiGet<ReservacionItem[]>(`/api/reservaciones${qs ? `?${qs}` : ''}`);
 }
 
 export async function crearReservacion(payload: CrearReservacionPayload): Promise<ReservacionItem> {

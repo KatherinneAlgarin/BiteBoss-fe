@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle, MoreVertical } from 'lucide-react';
 import { listarReservaciones, cancelarReservacion, reactivarReservacion, completarReservacion } from '../../../services/reservacion.service';
+import { listarZonasPorSucursal } from '../../../services/zona.service';
 import { ReservacionModal, type ReservacionModalMode } from '../../../components/reservaciones/ReservacionModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import { useAuth } from '../../../hooks/useAuth';
 import type { ReservacionItem, EstadoReservacion } from '../../../types/reservacion.types';
+import type { ZonaItem } from '../../../types/zona.types';
 
 type FiltroEstado = EstadoReservacion | 'todas';
 
@@ -125,32 +128,49 @@ function RowMenu({ actions }: { actions: MenuAction[] }) {
   );
 }
 
+function hoyStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function ReservacionesPage() {
+  const { role } = useAuth();
+
   const [reservaciones, setReservaciones] = useState<ReservacionItem[]>([]);
   const [loading, setLoading]             = useState(true);
   const [loadError, setLoadError]         = useState('');
   const [successMsg, setSuccessMsg]       = useState('');
 
   const [filtroEstado, setFiltroEstado]   = useState<FiltroEstado>('pendiente');
+  const [filtroFecha, setFiltroFecha]     = useState<string>(role === 'mesero' ? hoyStr() : '');
+  const [filtroZona, setFiltroZona]       = useState<string>('');
+  const [zonas, setZonas]                 = useState<ZonaItem[]>([]);
   const [busqueda, setBusqueda]           = useState('');
 
   const [modal, setModal]     = useState<ModalState>(MODAL_CLOSED);
   const [confirm, setConfirm] = useState<ConfirmState>(CONFIRM_CLOSED);
 
+  useEffect(() => {
+    listarZonasPorSucursal()
+      .then(data => setZonas(data.filter(z => z.activo)))
+      .catch(() => {});
+  }, []);
+
   const estadoParam = filtroEstado === 'todas' ? undefined : filtroEstado;
+  const zonaParam   = filtroZona ? Number(filtroZona) : undefined;
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await listarReservaciones(estadoParam);
+      const data = await listarReservaciones(estadoParam, filtroFecha || undefined, zonaParam);
       setReservaciones(data);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Error al cargar las reservaciones');
     } finally {
       setLoading(false);
     }
-  }, [estadoParam]);
+  }, [estadoParam, filtroFecha, zonaParam]);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -276,37 +296,73 @@ export function ReservacionesPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
-            placeholder="Buscar por nombre o teléfono..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
-          {busqueda && (
-            <button
-              onClick={() => setBusqueda('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+      <div className="flex flex-col gap-3">
+        {/* Fila 1: búsqueda + estado */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por nombre o teléfono..."
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={filtroEstado}
+            onChange={e => setFiltroEstado(e.target.value as FiltroEstado)}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg
+              focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+          >
+            {(Object.keys(FILTRO_LABEL) as FiltroEstado[]).map(k => (
+              <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
+            ))}
+          </select>
         </div>
 
-        <select
-          value={filtroEstado}
-          onChange={e => setFiltroEstado(e.target.value as FiltroEstado)}
-          className="px-3 py-2 text-sm border border-gray-300 rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-        >
-          {(Object.keys(FILTRO_LABEL) as FiltroEstado[]).map(k => (
-            <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
-          ))}
-        </select>
+        {/* Fila 2: fecha + zona */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative">
+            <input
+              type="date"
+              value={filtroFecha}
+              onChange={e => setFiltroFecha(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            />
+            {filtroFecha && (
+              <button
+                onClick={() => setFiltroFecha('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={filtroZona}
+            onChange={e => setFiltroZona(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg
+              focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+          >
+            <option value="">Todas las zonas</option>
+            {zonas.map(z => (
+              <option key={z.id_zona} value={z.id_zona}>{z.nombre}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Mensajes */}

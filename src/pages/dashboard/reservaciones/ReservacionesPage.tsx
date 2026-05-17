@@ -26,6 +26,10 @@ const ESTADO_LABEL: Record<EstadoReservacion, string> = {
   completada: 'Completada',
 };
 
+function esVencida(r: ReservacionItem): boolean {
+  return r.estado === 'pendiente' && new Date(r.fecha_llegada) < new Date();
+}
+
 function formatFecha(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleString('es-MX', {
@@ -360,18 +364,27 @@ export function ReservacionesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_BADGE[r.estado]}`}>
-                        {ESTADO_LABEL[r.estado]}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${ESTADO_BADGE[r.estado]}`}>
+                          {ESTADO_LABEL[r.estado]}
+                        </span>
+                        {esVencida(r) && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium w-fit bg-gray-100 text-gray-500">
+                            Vencida
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <RowMenu actions={
-                        r.estado === 'pendiente' ? [
-                          { label: 'Editar',     icon: <Pencil className="w-3.5 h-3.5" />,      onClick: () => openEditar(r),     className: 'text-orange-600 hover:bg-orange-50' },
-                          { label: 'Completar',  icon: <CheckCircle className="w-3.5 h-3.5" />, onClick: () => pedirCompletar(r), className: 'text-blue-600 hover:bg-blue-50' },
-                          { label: 'Cancelar',   icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
+                        r.estado === 'pendiente' && !esVencida(r) ? [
+                          { label: 'Editar',    icon: <Pencil className="w-3.5 h-3.5" />,      onClick: () => openEditar(r),     className: 'text-orange-600 hover:bg-orange-50' },
+                          { label: 'Completar', icon: <CheckCircle className="w-3.5 h-3.5" />, onClick: () => pedirCompletar(r), className: 'text-blue-600 hover:bg-blue-50' },
+                          { label: 'Cancelar',  icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
+                        ] : r.estado === 'pendiente' && esVencida(r) ? [
+                          { label: 'Cancelar',  icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
                         ] : r.estado === 'cancelada' ? [
-                          { label: 'Reactivar',  icon: <RotateCcw className="w-3.5 h-3.5" />,   onClick: () => pedirReactivar(r), className: 'text-amber-600 hover:bg-amber-50' },
+                          { label: 'Reactivar', icon: <RotateCcw className="w-3.5 h-3.5" />,   onClick: () => pedirReactivar(r), className: 'text-amber-600 hover:bg-amber-50' },
                         ] : []
                       } />
                     </td>

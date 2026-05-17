@@ -5,8 +5,9 @@ import type {
   ActualizarZonaDto,
 } from '../types/zona.types';
 
-export async function listarZonasPorSucursal(id_sucursal: number): Promise<ZonaItem[]> {
-  return apiGet<ZonaItem[]>(`/api/zonas?id_sucursal=${id_sucursal}`);
+export async function listarZonasPorSucursal(id_sucursal?: number): Promise<ZonaItem[]> {
+  const qs = id_sucursal ? `?id_sucursal=${id_sucursal}` : '';
+  return apiGet<ZonaItem[]>(`/api/zonas${qs}`);
 }
 
 export async function obtenerZona(id: number): Promise<ZonaItem> {

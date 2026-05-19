@@ -1,7 +1,7 @@
-import { type ElementType } from 'react';
+import { type ElementType, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { UserRole } from '../../types/auth.types';
-import { LogOut } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 import { formatRoleLabel } from '../../lib/roles';
 
 export interface NavItem {
@@ -10,8 +10,16 @@ export interface NavItem {
   icon: ElementType;
 }
 
+export interface NavGroup {
+  title: string;
+  icon: ElementType;
+  children: NavItem[];
+}
+
+export type NavEntry = NavItem | NavGroup;
+
 export interface SidebarData {
-  navMain: NavItem[];
+  navMain: NavEntry[];
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -20,6 +28,10 @@ const ROLE_COLORS: Record<UserRole, string> = {
   mesero:  'bg-orange-100 text-orange-700',
   gerente: 'bg-blue-100 text-blue-700',
 };
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return 'children' in entry;
+}
 
 interface SidebarProps {
   isOpen: boolean;
@@ -43,6 +55,21 @@ export function Sidebar({
   isLoggingOut = false,
 }: SidebarProps) {
   const location = useLocation();
+
+  // Inicializar grupos abiertos: abierto si algún hijo está activo
+  const [openGroups, setOpenGroups] = useState<Record<number, boolean>>(() => {
+    const initial: Record<number, boolean> = {};
+    data.navMain.forEach((entry, idx) => {
+      if (isGroup(entry)) {
+        initial[idx] = entry.children.some(c => location.pathname.startsWith(c.url));
+      }
+    });
+    return initial;
+  });
+
+  const toggleGroup = (idx: number) => {
+    setOpenGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   return (
     <>
@@ -76,13 +103,60 @@ export function Sidebar({
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {data.navMain.map(item => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.url;
+          {data.navMain.map((entry, idx) => {
+            if (isGroup(entry)) {
+              const Icon = entry.icon;
+              const anyChildActive = entry.children.some(c => location.pathname.startsWith(c.url));
+              const isOpen = openGroups[idx] ?? false;
+
+              return (
+                <div key={idx}>
+                  <button
+                    onClick={() => toggleGroup(idx)}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                      ${anyChildActive
+                        ? 'bg-orange-50 text-orange-600'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="flex-1 text-left">{entry.title}</span>
+                    <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="ml-4 mt-0.5 mb-1 space-y-0.5 border-l-2 border-gray-100 pl-3">
+                      {entry.children.map(child => {
+                        const ChildIcon = child.icon;
+                        const isActive = location.pathname === child.url;
+                        return (
+                          <Link
+                            key={child.url}
+                            to={child.url}
+                            onClick={onClose}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                              ${isActive
+                                ? 'bg-orange-50 text-orange-600'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              }`}
+                          >
+                            <ChildIcon className="w-4 h-4" />
+                            {child.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            const Icon = entry.icon;
+            const isActive = location.pathname === entry.url;
             return (
               <Link
-                key={item.url}
-                to={item.url}
+                key={entry.url}
+                to={entry.url}
                 onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${isActive
@@ -91,7 +165,7 @@ export function Sidebar({
                   }`}
               >
                 <Icon className="w-5 h-5" />
-                {item.title}
+                {entry.title}
               </Link>
             );
           })}

@@ -20,6 +20,8 @@ import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
 import { TiposPagoPage } from './pages/dashboard/admin/TiposPagoPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
 import { ZonasMesasPage } from './pages/dashboard/admin/ZonasMesasPage';
+import { BodegasAdminPage } from './pages/dashboard/admin/BodegasPage';
+import { BodegasGerentePage } from './pages/dashboard/gerente/BodegasPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
@@ -58,6 +60,7 @@ function App() {
                   <Route path="tipos-pago" element={<TiposPagoPage />} />
                   <Route path="sucursales" element={<SucursalesPage />} />
                   <Route path="zonas-mesas" element={<ZonasMesasPage />} />
+                  <Route path="bodegas" element={<BodegasAdminPage />} />
                 </Route>
               </Route>
 
@@ -80,6 +83,7 @@ function App() {
                   <Route index element={<GerenteHome />} />
                   <Route path="inventario" element={<InventarioPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
+                  <Route path="bodegas" element={<BodegasGerentePage />} />
                 </Route>
               </Route>
             </Route>

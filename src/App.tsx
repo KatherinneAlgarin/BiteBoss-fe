@@ -24,6 +24,9 @@ import { BodegasAdminPage } from './pages/dashboard/admin/BodegasPage';
 import { BodegasGerentePage } from './pages/dashboard/gerente/BodegasPage';
 import { IngredientesAdminPage } from './pages/dashboard/admin/IngredientesPage';
 import { IngredientesGerentePage } from './pages/dashboard/gerente/IngredientesPage';
+import { PedidosProveedorPage } from './pages/dashboard/admin/PedidosProveedorPage';
+import { PedidosProveedorPage as PedidosProveedorGerentePage } from './pages/dashboard/gerente/PedidosProveedorPage';
+import { ProveedoresPage as ProveedoresGerentePage } from './pages/dashboard/gerente/ProveedoresPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
@@ -64,6 +67,7 @@ function App() {
                   <Route path="zonas-mesas" element={<ZonasMesasPage />} />
                   <Route path="bodegas" element={<BodegasAdminPage />} />
                   <Route path="ingredientes" element={<IngredientesAdminPage />} />
+                  <Route path="pedidos-proveedor" element={<PedidosProveedorPage />} />
                 </Route>
               </Route>
 
@@ -88,6 +92,8 @@ function App() {
                   <Route path="reservaciones" element={<ReservacionesPage />} />
                   <Route path="bodegas" element={<BodegasGerentePage />} />
                   <Route path="ingredientes" element={<IngredientesGerentePage />} />
+                  <Route path="proveedores" element={<ProveedoresGerentePage />} />
+                  <Route path="pedidos-proveedor" element={<PedidosProveedorGerentePage />} />
                 </Route>
               </Route>
             </Route>

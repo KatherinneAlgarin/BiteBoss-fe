@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2, Truck, ShoppingCart, Building2 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -13,6 +13,14 @@ const navMain = [
       { title: 'Ingredientes', url: '/dashboard/gerente/ingredientes', icon: FlaskConical },
       { title: 'Bodegas',      url: '/dashboard/gerente/bodegas',      icon: Warehouse },
       { title: 'Inventario',   url: '/dashboard/gerente/inventario',   icon: BarChart2 },
+    ],
+  },
+  {
+    title: 'Proveedores',
+    icon: Truck,
+    children: [
+      { title: 'Gestor Proveedor',  url: '/dashboard/gerente/proveedores',        icon: Building2 },
+      { title: 'Órdenes de compra', url: '/dashboard/gerente/pedidos-proveedor',  icon: ShoppingCart },
     ],
   },
   { title: 'Menú',    url: '/dashboard/gerente/menu',    icon: UtensilsCrossed },

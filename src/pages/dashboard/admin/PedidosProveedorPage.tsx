@@ -94,6 +94,9 @@ export function PedidosProveedorPage() {
 
   const [filtroProveedor, setFiltroProveedor] = useState('');
   const [filtroSucursal, setFiltroSucursal] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
+  const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
 
   const { ingredientes } = useIngredientes();
   const ingredientesMap = useMemo<Map<number, IngredienteItem>>(
@@ -170,8 +173,14 @@ export function PedidosProveedorPage() {
       result = result.filter(p => p.nombre_proveedor.toLowerCase().includes(filtroProveedor.toLowerCase()));
     if (filtroSucursal.trim())
       result = result.filter(p => p.nombre_sucursal.toLowerCase().includes(filtroSucursal.toLowerCase()));
+    if (filtroEstado)
+      result = result.filter(p => p.estado === filtroEstado);
+    if (filtroFechaDesde)
+      result = result.filter(p => p.fecha_pedido >= filtroFechaDesde);
+    if (filtroFechaHasta)
+      result = result.filter(p => p.fecha_pedido.slice(0, 10) <= filtroFechaHasta);
     return result;
-  }, [pedidos, filtroProveedor, filtroSucursal]);
+  }, [pedidos, filtroProveedor, filtroSucursal, filtroEstado, filtroFechaDesde, filtroFechaHasta]);
 
   return (
     <div className="space-y-6">
@@ -187,7 +196,7 @@ export function PedidosProveedorPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3">
+      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -195,7 +204,7 @@ export function PedidosProveedorPage() {
             value={filtroProveedor}
             onChange={e => setFiltroProveedor(e.target.value)}
             placeholder="Buscar proveedor..."
-            className="pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-52"
+            className="pl-9 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-48 bg-gray-50"
           />
         </div>
 
@@ -210,10 +219,42 @@ export function PedidosProveedorPage() {
               value={filtroSucursal}
               onChange={e => setFiltroSucursal(e.target.value)}
               placeholder="Buscar sucursal..."
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-48"
+              className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-44 bg-gray-50"
             />
           </>
         )}
+
+        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+
+        <select
+          value={filtroEstado}
+          onChange={e => setFiltroEstado(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-gray-50 text-gray-700">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="RECIBIDO">Recibido</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+
+        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+
+        <div className="flex items-center gap-2 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
+          <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Desde</span>
+          <input
+            type="date"
+            value={filtroFechaDesde}
+            onChange={e => setFiltroFechaDesde(e.target.value)}
+            className="text-sm text-gray-700 bg-transparent border-0 focus:outline-none"
+          />
+          <span className="text-gray-300 text-sm">|</span>
+          <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Hasta</span>
+          <input
+            type="date"
+            value={filtroFechaHasta}
+            onChange={e => setFiltroFechaHasta(e.target.value)}
+            className="text-sm text-gray-700 bg-transparent border-0 focus:outline-none"
+          />
+        </div>
       </div>
 
       {error && <AlertMessage type="error" message={error} />}

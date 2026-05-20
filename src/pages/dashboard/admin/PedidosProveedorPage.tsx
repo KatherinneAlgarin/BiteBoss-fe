@@ -14,10 +14,11 @@ import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedo
 import type { IngredienteItem } from '../../../types/ingrediente.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
-function ActionMenu({ onVerDetalle, onEditar, loading }: {
+function ActionMenu({ onVerDetalle, onEditar, loading, estado }: {
   onVerDetalle: () => void;
   onEditar: () => void;
   loading: boolean;
+  estado: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -54,11 +55,15 @@ function ActionMenu({ onVerDetalle, onEditar, loading }: {
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
             <Eye className="w-4 h-4 flex-shrink-0" /> Ver detalle
           </button>
-          <div className="border-t border-gray-100 mx-2" />
-          <button onClick={() => { setOpen(false); onEditar(); }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
-            <Pencil className="w-4 h-4 flex-shrink-0" /> Editar orden
-          </button>
+          {estado === 'PENDIENTE' && (
+            <>
+              <div className="border-t border-gray-100 mx-2" />
+              <button onClick={() => { setOpen(false); onEditar(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                <Pencil className="w-4 h-4 flex-shrink-0" /> Editar orden
+              </button>
+            </>
+          )}
         </div>,
         document.body
       )}
@@ -263,6 +268,7 @@ export function PedidosProveedorPage() {
                           onVerDetalle={() => handleVerDetalle(pedido)}
                           onEditar={() => handleAbrirEditar(pedido)}
                           loading={loadingDetalle === pedido.id_pedido_proveedor}
+                          estado={pedido.estado}
                         />
                       </td>
                     </tr>

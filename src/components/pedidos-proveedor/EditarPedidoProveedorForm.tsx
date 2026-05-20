@@ -100,7 +100,7 @@ export function EditarPedidoProveedorForm({ pedido, ingredientesMap, onSubmit, o
     try {
       const dto: EditarPedidoProveedorDto = {
         estado,
-        fecha_entrega: fechaEntrega || null,
+        ...(estado !== 'RECIBIDO' && { fecha_entrega: fechaEntrega || null }),
         detalles: detalles.map((d): CrearPedidoDetalleDto => ({
           id_ingrediente: d.ingrediente.id_ingrediente,
           cantidad: parseFloat(d.cantidad),
@@ -140,8 +140,14 @@ export function EditarPedidoProveedorForm({ pedido, ingredientesMap, onSubmit, o
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fecha entrega <span className="text-gray-400 text-xs">(opcional)</span></label>
-                <input type="date" value={fechaEntrega} onChange={e => setFechaEntrega(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+                {estado === 'RECIBIDO' ? (
+                  <p className="px-3 py-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md">
+                    Se registrará automáticamente al confirmar
+                  </p>
+                ) : (
+                  <input type="date" value={fechaEntrega} onChange={e => setFechaEntrega(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+                )}
               </div>
             </div>
 

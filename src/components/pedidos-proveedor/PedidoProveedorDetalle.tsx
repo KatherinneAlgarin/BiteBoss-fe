@@ -55,6 +55,10 @@ export function PedidoProveedorDetalle({ pedido, onClose }: Props) {
               <p className="text-gray-500">Monto total</p>
               <p className="font-semibold text-gray-900 text-base">${Number(pedido.monto_total).toFixed(2)}</p>
             </div>
+            <div>
+              <p className="text-gray-500">Creado por</p>
+              <p className="font-medium text-gray-800">{pedido.nombre_creador || '—'}</p>
+            </div>
           </div>
 
           {/* Detalles */}

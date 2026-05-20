@@ -94,6 +94,9 @@ export function PedidosProveedorPage() {
 
   const [filtroProveedor, setFiltroProveedor] = useState('');
   const [filtroSucursal, setFiltroSucursal] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
+  const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
 
   const { ingredientes } = useIngredientes();
   const ingredientesMap = useMemo<Map<number, IngredienteItem>>(
@@ -170,8 +173,14 @@ export function PedidosProveedorPage() {
       result = result.filter(p => p.nombre_proveedor.toLowerCase().includes(filtroProveedor.toLowerCase()));
     if (filtroSucursal.trim())
       result = result.filter(p => p.nombre_sucursal.toLowerCase().includes(filtroSucursal.toLowerCase()));
+    if (filtroEstado)
+      result = result.filter(p => p.estado === filtroEstado);
+    if (filtroFechaDesde)
+      result = result.filter(p => p.fecha_pedido >= filtroFechaDesde);
+    if (filtroFechaHasta)
+      result = result.filter(p => p.fecha_pedido.slice(0, 10) <= filtroFechaHasta);
     return result;
-  }, [pedidos, filtroProveedor, filtroSucursal]);
+  }, [pedidos, filtroProveedor, filtroSucursal, filtroEstado, filtroFechaDesde, filtroFechaHasta]);
 
   return (
     <div className="space-y-6">
@@ -214,6 +223,37 @@ export function PedidosProveedorPage() {
             />
           </>
         )}
+
+        <select
+          value={filtroEstado}
+          onChange={e => setFiltroEstado(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+          <option value="RECIBIDO">RECIBIDO</option>
+          <option value="CANCELADO">CANCELADO</option>
+        </select>
+
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500 mb-0.5">Desde</span>
+            <input
+              type="date"
+              value={filtroFechaDesde}
+              onChange={e => setFiltroFechaDesde(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500 mb-0.5">Hasta</span>
+            <input
+              type="date"
+              value={filtroFechaHasta}
+              onChange={e => setFiltroFechaHasta(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            />
+          </div>
+        </div>
       </div>
 
       {error && <AlertMessage type="error" message={error} />}

@@ -1,9 +1,10 @@
 // services/producto.service.ts
 import { apiGet, apiPatch, apiPost } from './api';
-import type { Producto } from '../types/producto.types';
+import type { Producto, ProductoSucursal } from '../types/producto.types';
 
-export async function getProductosCatalogo(): Promise<Producto[]> {
-  return apiGet<Producto[]>('/api/productos');
+export async function getProductosCatalogo(idSucursal?: number): Promise<Producto[]> {
+  const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
+  return apiGet<Producto[]>(`/api/productos${query}`);
 }
 
 /** @deprecated use getProductosCatalogo – sucursal is resolved from the JWT on the server */
@@ -16,7 +17,8 @@ export interface CrearProductoDto {
   descripcion?: string;
   precio: number;
   id_categoria: number;
-  id_sucursal: number;
+  id_sucursal?: number;
+  ids_sucursales?: number[];
   activo?: boolean;
 }
 
@@ -26,6 +28,7 @@ export interface ActualizarProductoDto {
   precio?: number;
   id_categoria?: number;
   activo?: boolean;
+  ids_sucursales?: number[];
 }
 
 export async function crearProducto(dto: CrearProductoDto): Promise<Producto> {
@@ -38,6 +41,10 @@ export async function actualizarProducto(id: number, dto: ActualizarProductoDto)
 
 export async function obtenerProducto(id: number): Promise<Producto> {
   return apiGet<Producto>(`/api/productos/${id}`);
+}
+
+export async function obtenerSucursalesDeProducto(id: number): Promise<ProductoSucursal[]> {
+  return apiGet<ProductoSucursal[]>(`/api/productos/${id}/sucursales`);
 }
 
 export interface Categoria {

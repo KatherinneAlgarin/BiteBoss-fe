@@ -6,22 +6,28 @@ import {
   crearProducto,
   actualizarProducto,
   listarCategorias,
+  obtenerSucursalesDeProducto,
   type CrearProductoDto,
   type ActualizarProductoDto,
   type Categoria,
 } from '../../../services/producto.service';
+import { listarSucursales } from '../../../services/sucursal.service';
 import type { Producto } from '../../../types/producto.types';
+import type { SucursalItem } from '../../../types/sucursal.types';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 
 export function MenuPage() {
-  const { id_sucursal } = useAuth();
+  const { id_sucursal, role } = useAuth();
+  const isAdmin = role === 'admin';
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingProductos, setLoadingProductos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -35,6 +41,14 @@ export function MenuPage() {
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState<string>('all');
+  const [selectedSucursal, setSelectedSucursal] = useState<string>('all');
+  const [idsSucursalesCrear, setIdsSucursalesCrear] = useState<number[]>(id_sucursal ? [id_sucursal] : []);
+
+  useEffect(() => {
+    if (!editingId) {
+      setIdsSucursalesCrear(id_sucursal ? [id_sucursal] : []);
+    }
+  }, [id_sucursal, editingId]);
 
   const filteredProductos = productos.filter(producto => {
     const search = searchTerm.trim().toLowerCase();
@@ -48,29 +62,59 @@ export function MenuPage() {
       selectedCategoria === 'all' ||
       producto.id_categoria === Number(selectedCategoria);
 
-    return matchesSearch && matchesCategoria;
+    const matchesSucursal =
+      selectedSucursal === 'all' ||
+      (producto.ids_sucursales ?? []).includes(Number(selectedSucursal));
+
+    return matchesSearch && matchesCategoria && matchesSucursal;
   });
 
-  // Load data
+  const loadProductos = async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) setLoadingProductos(true);
+
+    try {
+      const filtroSucursal = isAdmin && selectedSucursal !== 'all'
+        ? Number(selectedSucursal)
+        : undefined;
+      const prods = await getProductosCatalogo(filtroSucursal);
+      setProductos(prods);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error cargando productos');
+    } finally {
+      if (!silent) setLoadingProductos(false);
+    }
+  };
+
+  // Initial page load (form + catalogs)
   useEffect(() => {
-    const loadData = async () => {
+    const loadInitialData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [prods, cats] = await Promise.all([
-          getProductosCatalogo(),
+        const [cats, sucursalesActivas] = await Promise.all([
           listarCategorias(),
+          isAdmin ? listarSucursales(true) : Promise.resolve([] as SucursalItem[]),
         ]);
-        setProductos(prods);
+
         setCategorias(cats);
+        setSucursales(sucursalesActivas);
+        await loadProductos({ silent: true });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error cargando datos');
       } finally {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+
+    loadInitialData();
+  }, [isAdmin]);
+
+  // Refresh only product list when branch filter changes
+  useEffect(() => {
+    if (loading) return;
+    void loadProductos();
+  }, [selectedSucursal]);
 
   const handleEdit = (producto: Producto) => {
     setEditingId(producto.id_producto);
@@ -79,6 +123,20 @@ export function MenuPage() {
     setPrecio(producto.precio.toString());
     setId_categoria(producto.id_categoria.toString());
     setActivo(producto.activo ?? true);
+
+    if (!isAdmin) return;
+
+    void (async () => {
+      try {
+        const sucursalesProducto = await obtenerSucursalesDeProducto(producto.id_producto);
+        const ids = sucursalesProducto
+          .filter(sp => sp.activo)
+          .map(sp => sp.id_sucursal);
+        setIdsSucursalesCrear(ids);
+      } catch {
+        setError('No se pudieron cargar las sucursales del producto');
+      }
+    })();
   };
 
   const handleCancelEdit = () => {
@@ -88,6 +146,7 @@ export function MenuPage() {
     setPrecio('');
     setId_categoria('');
     setActivo(true);
+    setIdsSucursalesCrear(id_sucursal ? [id_sucursal] : []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +178,15 @@ export function MenuPage() {
           precio: parseFloat(precio),
           id_categoria: parseInt(id_categoria),
           activo,
+          ...(isAdmin ? { ids_sucursales: idsSucursalesCrear } : {}),
         };
+
+        if (isAdmin && idsSucursalesCrear.length === 0) {
+          setError('Debe seleccionar al menos una sucursal para actualizar el producto');
+          setSubmitting(false);
+          return;
+        }
+
         const updated = await actualizarProducto(editingId, updates);
         setProductos(prods =>
           prods.map(p => (p.id_producto === editingId ? updated : p))
@@ -128,16 +195,21 @@ export function MenuPage() {
         handleCancelEdit();
       } else {
         // Create
-        if (!id_sucursal) {
-          setError('No se pudo determinar la sucursal');
+        const sucursalesDestino = isAdmin
+          ? idsSucursalesCrear
+          : (id_sucursal ? [id_sucursal] : []);
+
+        if (sucursalesDestino.length === 0) {
+          setError('Debe seleccionar al menos una sucursal para crear el producto');
           return;
         }
+
         const newProd: CrearProductoDto = {
           nombre: nombre.trim(),
           descripcion: descripcion.trim(),
           precio: parseFloat(precio),
           id_categoria: parseInt(id_categoria),
-          id_sucursal,
+          ids_sucursales: sucursalesDestino,
           activo,
         };
         const created = await crearProducto(newProd);
@@ -218,6 +290,35 @@ export function MenuPage() {
                 ))}
               </select>
             </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sucursales
+                </label>
+                <div className="max-h-36 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
+                  {sucursales.map(sucursal => (
+                    <label key={sucursal.id_sucursal} className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={idsSucursalesCrear.includes(sucursal.id_sucursal)}
+                        onChange={e => {
+                          setIdsSucursalesCrear(prev => {
+                            if (e.target.checked) {
+                              return Array.from(new Set([...prev, sucursal.id_sucursal]));
+                            }
+                            return prev.filter(id => id !== sucursal.id_sucursal);
+                          });
+                        }}
+                        disabled={submitting}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span>{sucursal.nombre}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Selecciona una o más sucursales para este producto.</p>
+              </div>
+            )}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -274,8 +375,28 @@ export function MenuPage() {
                 ))}
               </select>
             </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar sucursal</label>
+                <select
+                  value={selectedSucursal}
+                  onChange={e => setSelectedSucursal(e.target.value)}
+                  className="input-field"
+                  disabled={submitting}
+                >
+                  <option value="all">Todas las sucursales</option>
+                  {sucursales.map(sucursal => (
+                    <option key={sucursal.id_sucursal} value={sucursal.id_sucursal}>
+                      {sucursal.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-          {productos.length === 0 ? (
+          {loadingProductos ? (
+            <p className="text-gray-500 text-center py-8">Actualizando productos...</p>
+          ) : productos.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No hay productos aún</p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -305,6 +426,21 @@ export function MenuPage() {
                         </span>
                       )}
                     </div>
+                    {isAdmin && (producto.ids_sucursales ?? []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {(producto.ids_sucursales ?? []).map(idSucursal => {
+                          const sucursal = sucursales.find(s => s.id_sucursal === idSucursal);
+                          return (
+                            <span
+                              key={`${producto.id_producto}-sucursal-${idSucursal}`}
+                              className="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded"
+                            >
+                              {sucursal?.nombre ?? `Sucursal ${idSucursal}`}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => handleEdit(producto)}

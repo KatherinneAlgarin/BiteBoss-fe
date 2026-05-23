@@ -1,6 +1,14 @@
 // services/producto.service.ts
-import { apiGet, apiPatch, apiPost } from './api';
-import type { Producto, ProductoSucursal } from '../types/producto.types';
+import { apiDelete, apiGet, apiPatch, apiPost } from './api';
+import type {
+  Producto,
+  ProductoSucursal,
+  ProductoIngrediente,
+  ProductoIngredienteInput,
+  ProductoComboComponente,
+  ProductoComboComponenteInput,
+  ProductoDependenciasDesactivacion,
+} from '../types/producto.types';
 
 export async function getProductosCatalogo(idSucursal?: number): Promise<Producto[]> {
   const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
@@ -19,6 +27,8 @@ export interface CrearProductoDto {
   id_categoria: number;
   id_sucursal?: number;
   ids_sucursales?: number[];
+  ingredientes?: ProductoIngredienteInput[];
+  productos_combo?: ProductoComboComponenteInput[];
   activo?: boolean;
 }
 
@@ -29,6 +39,8 @@ export interface ActualizarProductoDto {
   id_categoria?: number;
   activo?: boolean;
   ids_sucursales?: number[];
+  ingredientes?: ProductoIngredienteInput[];
+  productos_combo?: ProductoComboComponenteInput[];
 }
 
 export async function crearProducto(dto: CrearProductoDto): Promise<Producto> {
@@ -45,6 +57,23 @@ export async function obtenerProducto(id: number): Promise<Producto> {
 
 export async function obtenerSucursalesDeProducto(id: number): Promise<ProductoSucursal[]> {
   return apiGet<ProductoSucursal[]>(`/api/productos/${id}/sucursales`);
+}
+
+export async function obtenerIngredientesDeProducto(id: number): Promise<ProductoIngrediente[]> {
+  return apiGet<ProductoIngrediente[]>(`/api/productos/${id}/ingredientes`);
+}
+
+export async function obtenerComponentesCombo(id: number): Promise<ProductoComboComponente[]> {
+  return apiGet<ProductoComboComponente[]>(`/api/productos/${id}/componentes-combo`);
+}
+
+export async function obtenerDependenciasDesactivacionProducto(id: number): Promise<ProductoDependenciasDesactivacion> {
+  return apiGet<ProductoDependenciasDesactivacion>(`/api/productos/${id}/dependencias-desactivacion`);
+}
+
+export async function desactivarProducto(id: number, forzar = false): Promise<void> {
+  const query = forzar ? '?forzar=true' : '';
+  await apiDelete<void>(`/api/productos/${id}${query}`);
 }
 
 export interface Categoria {

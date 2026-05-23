@@ -5,14 +5,20 @@ import {
   getProductosCatalogo,
   crearProducto,
   actualizarProducto,
+  desactivarProducto,
   listarCategorias,
   obtenerSucursalesDeProducto,
+  obtenerIngredientesDeProducto,
+  obtenerComponentesCombo,
+  obtenerDependenciasDesactivacionProducto,
   type CrearProductoDto,
   type ActualizarProductoDto,
   type Categoria,
 } from '../../../services/producto.service';
 import { listarSucursales } from '../../../services/sucursal.service';
-import type { Producto } from '../../../types/producto.types';
+import { listarIngredientes } from '../../../services/ingrediente.service';
+import type { Producto, ProductoIngredienteInput, ProductoComboComponenteInput } from '../../../types/producto.types';
+import type { IngredienteItem } from '../../../types/ingrediente.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -26,6 +32,7 @@ export function MenuPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
+  const [ingredientesDisponibles, setIngredientesDisponibles] = useState<IngredienteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingProductos, setLoadingProductos] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +50,9 @@ export function MenuPage() {
   const [selectedCategoria, setSelectedCategoria] = useState<string>('all');
   const [selectedSucursal, setSelectedSucursal] = useState<string>('all');
   const [idsSucursalesCrear, setIdsSucursalesCrear] = useState<number[]>(id_sucursal ? [id_sucursal] : []);
+  const [ingredientesReceta, setIngredientesReceta] = useState<Array<{ id_ingrediente: number | ''; cantidad: string }>>([]);
+  const [esCombo, setEsCombo] = useState(false);
+  const [componentesCombo, setComponentesCombo] = useState<Array<{ id_producto_hijo: number | ''; cantidad: string }>>([]);
 
   useEffect(() => {
     if (!editingId) {
@@ -97,8 +107,11 @@ export function MenuPage() {
           isAdmin ? listarSucursales(true) : Promise.resolve([] as SucursalItem[]),
         ]);
 
+        const ingredientes = await listarIngredientes();
+
         setCategorias(cats);
         setSucursales(sucursalesActivas);
+        setIngredientesDisponibles(ingredientes.filter(item => item.activo));
         await loadProductos({ silent: true });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error cargando datos');
@@ -124,17 +137,65 @@ export function MenuPage() {
     setId_categoria(producto.id_categoria.toString());
     setActivo(producto.activo ?? true);
 
-    if (!isAdmin) return;
-
     void (async () => {
       try {
-        const sucursalesProducto = await obtenerSucursalesDeProducto(producto.id_producto);
-        const ids = sucursalesProducto
-          .filter(sp => sp.activo)
-          .map(sp => sp.id_sucursal);
-        setIdsSucursalesCrear(ids);
+        const ingredientesPromise = obtenerIngredientesDeProducto(producto.id_producto);
+        const componentesComboPromise = obtenerComponentesCombo(producto.id_producto);
+
+        if (isAdmin) {
+          const [sucursalesProducto, ingredientesProducto, componentesProducto] = await Promise.all([
+            obtenerSucursalesDeProducto(producto.id_producto),
+            ingredientesPromise,
+            componentesComboPromise,
+          ]);
+
+          const ids = sucursalesProducto
+            .filter(sp => sp.activo)
+            .map(sp => sp.id_sucursal);
+          setIdsSucursalesCrear(ids);
+
+          setIngredientesReceta(
+            ingredientesProducto
+              .filter(item => item.activo ?? true)
+              .map(item => ({
+                id_ingrediente: item.id_ingrediente,
+                cantidad: String(item.cantidad),
+              }))
+          );
+          const componentesActivos = componentesProducto.filter(item => item.activo ?? true);
+          setEsCombo(componentesActivos.length > 0 || !!producto.es_combo);
+          setComponentesCombo(
+            componentesActivos.map(item => ({
+              id_producto_hijo: item.id_producto_hijo,
+              cantidad: String(item.cantidad),
+            }))
+          );
+          return;
+        }
+
+        const [ingredientesProducto, componentesProducto] = await Promise.all([
+          ingredientesPromise,
+          componentesComboPromise,
+        ]);
+
+        setIngredientesReceta(
+          ingredientesProducto
+            .filter(item => item.activo ?? true)
+            .map(item => ({
+              id_ingrediente: item.id_ingrediente,
+              cantidad: String(item.cantidad),
+            }))
+        );
+        const componentesActivos = componentesProducto.filter(item => item.activo ?? true);
+        setEsCombo(componentesActivos.length > 0 || !!producto.es_combo);
+        setComponentesCombo(
+          componentesActivos.map(item => ({
+            id_producto_hijo: item.id_producto_hijo,
+            cantidad: String(item.cantidad),
+          }))
+        );
       } catch {
-        setError('No se pudieron cargar las sucursales del producto');
+        setError('No se pudieron cargar las sucursales, ingredientes o componentes del producto');
       }
     })();
   };
@@ -147,6 +208,108 @@ export function MenuPage() {
     setId_categoria('');
     setActivo(true);
     setIdsSucursalesCrear(id_sucursal ? [id_sucursal] : []);
+    setIngredientesReceta([]);
+    setEsCombo(false);
+    setComponentesCombo([]);
+  };
+
+  const buildIngredientesPayload = (): { payload: ProductoIngredienteInput[]; error?: string } => {
+    const payload: ProductoIngredienteInput[] = [];
+    const ids = new Set<number>();
+
+    for (const item of ingredientesReceta) {
+      if (item.id_ingrediente === '' && !item.cantidad.trim()) {
+        continue;
+      }
+
+      const idIngrediente = Number(item.id_ingrediente);
+      const cantidad = Number(item.cantidad);
+
+      if (!Number.isInteger(idIngrediente) || idIngrediente <= 0) {
+        return { payload: [], error: 'Selecciona un ingrediente válido en la receta.' };
+      }
+
+      if (!Number.isFinite(cantidad) || cantidad <= 0) {
+        return { payload: [], error: 'La cantidad de cada ingrediente debe ser mayor a 0.' };
+      }
+
+      if (ids.has(idIngrediente)) {
+        return { payload: [], error: 'No puedes repetir el mismo ingrediente en la receta.' };
+      }
+
+      ids.add(idIngrediente);
+      payload.push({ id_ingrediente: idIngrediente, cantidad });
+    }
+
+    return { payload };
+  };
+
+  const buildComponentesComboPayload = (): { payload: ProductoComboComponenteInput[]; error?: string } => {
+    const payload: ProductoComboComponenteInput[] = [];
+    const ids = new Set<number>();
+
+    for (const item of componentesCombo) {
+      if (item.id_producto_hijo === '' && !item.cantidad.trim()) {
+        continue;
+      }
+
+      const idProductoHijo = Number(item.id_producto_hijo);
+      const cantidad = Number(item.cantidad);
+
+      if (!Number.isInteger(idProductoHijo) || idProductoHijo <= 0) {
+        return { payload: [], error: 'Selecciona un producto hijo válido para el combo.' };
+      }
+
+      if (editingId && idProductoHijo === editingId) {
+        return { payload: [], error: 'Un combo no puede incluirse a sí mismo.' };
+      }
+
+      if (!Number.isFinite(cantidad) || cantidad <= 0) {
+        return { payload: [], error: 'La cantidad de cada producto del combo debe ser mayor a 0.' };
+      }
+
+      if (ids.has(idProductoHijo)) {
+        return { payload: [], error: 'No puedes repetir productos dentro del combo.' };
+      }
+
+      ids.add(idProductoHijo);
+      payload.push({ id_producto_hijo: idProductoHijo, cantidad });
+    }
+
+    if (esCombo && payload.length === 0) {
+      return { payload: [], error: 'Debes agregar al menos un producto hijo para guardar un combo.' };
+    }
+
+    return { payload };
+  };
+
+  const handleDesactivar = async (producto: Producto) => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const dependencias = await obtenerDependenciasDesactivacionProducto(producto.id_producto);
+      if (dependencias.tiene_pedidos_activos) {
+        const confirmarForzado = window.confirm(
+          `${dependencias.mensaje_advertencia ?? 'El producto tiene pedidos activos.'}\n\n¿Deseas continuar con la desactivación?`
+        );
+
+        if (!confirmarForzado) return;
+        await desactivarProducto(producto.id_producto, true);
+      } else {
+        const confirmar = window.confirm('¿Seguro que deseas desactivar este producto?');
+        if (!confirmar) return;
+        await desactivarProducto(producto.id_producto);
+      }
+
+      setSuccess('Producto desactivado correctamente');
+      await loadProductos();
+      if (editingId === producto.id_producto) {
+        handleCancelEdit();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo desactivar el producto');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,6 +331,18 @@ export function MenuPage() {
       return;
     }
 
+    const { payload: ingredientesPayload, error: ingredientesError } = buildIngredientesPayload();
+    if (ingredientesError) {
+      setError(ingredientesError);
+      return;
+    }
+
+    const { payload: componentesComboPayload, error: componentesComboError } = buildComponentesComboPayload();
+    if (componentesComboError) {
+      setError(componentesComboError);
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (editingId) {
@@ -178,6 +353,8 @@ export function MenuPage() {
           precio: parseFloat(precio),
           id_categoria: parseInt(id_categoria),
           activo,
+          ingredientes: ingredientesPayload,
+          productos_combo: esCombo ? componentesComboPayload : [],
           ...(isAdmin ? { ids_sucursales: idsSucursalesCrear } : {}),
         };
 
@@ -187,10 +364,8 @@ export function MenuPage() {
           return;
         }
 
-        const updated = await actualizarProducto(editingId, updates);
-        setProductos(prods =>
-          prods.map(p => (p.id_producto === editingId ? updated : p))
-        );
+        await actualizarProducto(editingId, updates);
+        await loadProductos({ silent: true });
         setSuccess('Producto actualizado exitosamente');
         handleCancelEdit();
       } else {
@@ -210,10 +385,12 @@ export function MenuPage() {
           precio: parseFloat(precio),
           id_categoria: parseInt(id_categoria),
           ids_sucursales: sucursalesDestino,
+          ingredientes: ingredientesPayload,
+          productos_combo: esCombo ? componentesComboPayload : [],
           activo,
         };
-        const created = await crearProducto(newProd);
-        setProductos(prods => [...prods, created]);
+        await crearProducto(newProd);
+        await loadProductos({ silent: true });
         setSuccess('Producto creado exitosamente');
         handleCancelEdit();
       }
@@ -236,7 +413,7 @@ export function MenuPage() {
       {error && <AlertMessage type="error" message={error} />}
       {success && <AlertMessage type="success" message={success} />}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Form */}
         <div className="card">
           <h2 className="text-lg font-semibold mb-4">
@@ -319,6 +496,192 @@ export function MenuPage() {
                 <p className="mt-1 text-xs text-gray-500">Selecciona una o más sucursales para este producto.</p>
               </div>
             )}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ingredientes (opcional)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIngredientesReceta(prev => [...prev, { id_ingrediente: '', cantidad: '' }])}
+                  disabled={submitting || ingredientesDisponibles.length === 0}
+                  className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 disabled:opacity-50"
+                >
+                  Agregar ingrediente
+                </button>
+              </div>
+              {ingredientesReceta.length === 0 ? (
+                <p className="text-xs text-gray-500 border border-dashed border-gray-300 rounded-md p-3">
+                  Este producto puede guardarse sin ingredientes. Si agregas receta, se usará para futuros descuentos de inventario.
+                </p>
+              ) : (
+                <div className="space-y-2 border border-gray-300 rounded-md p-2 max-h-48 overflow-y-auto">
+                  {ingredientesReceta.map((item, idx) => {
+                    const ingredienteSeleccionado = ingredientesDisponibles.find(i => i.id_ingrediente === item.id_ingrediente);
+                    const idsYaUsados = ingredientesReceta
+                      .filter((_, rowIndex) => rowIndex !== idx)
+                      .map(row => row.id_ingrediente)
+                      .filter((id): id is number => typeof id === 'number');
+
+                    return (
+                      <div key={`receta-${idx}`} className="grid grid-cols-12 gap-2 items-center">
+                        <select
+                          value={item.id_ingrediente}
+                          onChange={e => {
+                            const value = e.target.value ? Number(e.target.value) : '';
+                            setIngredientesReceta(prev => prev.map((row, rowIndex) =>
+                              rowIndex === idx ? { ...row, id_ingrediente: value } : row
+                            ));
+                          }}
+                          disabled={submitting}
+                          className="col-span-7 input-field"
+                        >
+                          <option value="">Ingrediente...</option>
+                          {ingredientesDisponibles.map(ingrediente => (
+                            <option
+                              key={ingrediente.id_ingrediente}
+                              value={ingrediente.id_ingrediente}
+                              disabled={idsYaUsados.includes(ingrediente.id_ingrediente)}
+                            >
+                              {ingrediente.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={item.cantidad}
+                          onChange={e => {
+                            const value = e.target.value;
+                            setIngredientesReceta(prev => prev.map((row, rowIndex) =>
+                              rowIndex === idx ? { ...row, cantidad: value } : row
+                            ));
+                          }}
+                          placeholder="Cantidad"
+                          disabled={submitting}
+                          className="col-span-3 input-field"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIngredientesReceta(prev => prev.filter((_, rowIndex) => rowIndex !== idx))}
+                          disabled={submitting}
+                          className="col-span-2 text-xs px-2 py-2 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                        >
+                          Quitar
+                        </button>
+                        <p className="col-span-12 text-[11px] text-gray-500 -mt-1">
+                          Unidad: {ingredienteSeleccionado?.unidad_medida ?? '—'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="border border-gray-300 rounded-md p-3 space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={esCombo}
+                  onChange={e => {
+                    const checked = e.target.checked;
+                    setEsCombo(checked);
+                    if (!checked) {
+                      setComponentesCombo([]);
+                    }
+                  }}
+                  disabled={submitting}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">Este producto es un combo</span>
+              </label>
+
+              {esCombo && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-600">
+                      Define productos hijos del combo. El precio del combo se maneja de forma independiente.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setComponentesCombo(prev => [...prev, { id_producto_hijo: '', cantidad: '' }])}
+                      disabled={submitting}
+                      className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+                    >
+                      Agregar hijo
+                    </button>
+                  </div>
+
+                  {componentesCombo.length === 0 ? (
+                    <p className="text-xs text-gray-500 border border-dashed border-gray-300 rounded-md p-2">
+                      Aun no has agregado productos hijos para este combo.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {componentesCombo.map((item, idx) => {
+                        const idsUsados = componentesCombo
+                          .filter((_, rowIndex) => rowIndex !== idx)
+                          .map(row => row.id_producto_hijo)
+                          .filter((id): id is number => typeof id === 'number');
+
+                        return (
+                          <div key={`combo-${idx}`} className="grid grid-cols-12 gap-2 items-center">
+                            <select
+                              value={item.id_producto_hijo}
+                              onChange={e => {
+                                const value = e.target.value ? Number(e.target.value) : '';
+                                setComponentesCombo(prev => prev.map((row, rowIndex) =>
+                                  rowIndex === idx ? { ...row, id_producto_hijo: value } : row
+                                ));
+                              }}
+                              disabled={submitting}
+                              className="col-span-7 input-field"
+                            >
+                              <option value="">Producto hijo...</option>
+                              {productos
+                                .filter(p => p.id_producto !== editingId && p.activo)
+                                .map(prod => (
+                                  <option
+                                    key={prod.id_producto}
+                                    value={prod.id_producto}
+                                    disabled={idsUsados.includes(prod.id_producto)}
+                                  >
+                                    {prod.nombre}
+                                  </option>
+                                ))}
+                            </select>
+                            <input
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={item.cantidad}
+                              onChange={e => {
+                                const value = e.target.value;
+                                setComponentesCombo(prev => prev.map((row, rowIndex) =>
+                                  rowIndex === idx ? { ...row, cantidad: value } : row
+                                ));
+                              }}
+                              placeholder="Cantidad"
+                              disabled={submitting}
+                              className="col-span-3 input-field"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setComponentesCombo(prev => prev.filter((_, rowIndex) => rowIndex !== idx))}
+                              disabled={submitting}
+                              className="col-span-2 text-xs px-2 py-2 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -349,7 +712,7 @@ export function MenuPage() {
         </div>
 
         {/* Product List */}
-        <div className="lg:col-span-2 card">
+        <div className="lg:col-span-2 card flex flex-col h-[680px]">
           <h2 className="text-lg font-semibold mb-4">Productos ({filteredProductos.length})</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <Input
@@ -399,7 +762,7 @@ export function MenuPage() {
           ) : productos.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No hay productos aún</p>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 flex-1 min-h-0 overflow-y-auto">
               {filteredProductos.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No se encontraron productos</p>
               ) : (
@@ -420,6 +783,11 @@ export function MenuPage() {
                       <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
                         {producto.categoria_nombre ?? 'Sin categoría'}
                       </span>
+                      {producto.es_combo && (
+                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
+                          Combo
+                        </span>
+                      )}
                       {!producto.activo && (
                         <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
                           Inactivo
@@ -442,13 +810,24 @@ export function MenuPage() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleEdit(producto)}
-                    disabled={submitting}
-                    className="ml-2 px-3 py-1 text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 rounded transition-colors disabled:opacity-50"
-                  >
-                    Editar
-                  </button>
+                  <div className="ml-2 flex flex-col gap-1">
+                    <button
+                      onClick={() => handleEdit(producto)}
+                      disabled={submitting}
+                      className="px-3 py-1 text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 rounded transition-colors disabled:opacity-50"
+                    >
+                      Editar
+                    </button>
+                    {producto.activo && (
+                      <button
+                        onClick={() => void handleDesactivar(producto)}
+                        disabled={submitting}
+                        className="px-3 py-1 text-sm bg-red-100 text-red-600 hover:bg-red-200 rounded transition-colors disabled:opacity-50"
+                      >
+                        Desactivar
+                      </button>
+                    )}
+                  </div>
                 </div>
                 ))
               )}

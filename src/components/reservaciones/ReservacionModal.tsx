@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, Clock } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { crearReservacion, actualizarReservacion } from '../../services/reservacion.service';
 import { listarZonasPorSucursal } from '../../services/zona.service';
 import { listarMesasPorZona } from '../../services/mesa.service';
 import type { ZonaItem, MesaItem, ReservacionFormData, ReservacionItem } from '../../types/reservacion.types';
+import { ModalShell } from '../ui/ModalShell';
 
 export type ReservacionModalMode = 'crear' | 'editar';
 
@@ -273,21 +274,12 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
      ${errors[field] ? 'border-red-400 bg-red-50' : 'border-gray-300'}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">{TITLE[mode]}</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form (scrollable) */}
+    <ModalShell
+      title={TITLE[mode]}
+      onClose={onClose}
+      maxWidthClass="max-w-lg"
+      panelClassName="max-h-[90vh] flex flex-col overflow-hidden"
+    >
         <form id="reservacion-form" onSubmit={handleSubmit} noValidate className="overflow-y-auto px-6 py-5 space-y-4">
           {serverError && (
             <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -490,7 +482,6 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
             {submitting ? 'Guardando...' : SUBMIT_LABEL[mode]}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

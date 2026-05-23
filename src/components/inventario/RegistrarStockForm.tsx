@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { IngredienteItem } from '../../types/ingrediente.types';
 import type { BodegaItem } from '../../types/bodega.types';
 import type { RegistrarStockIngredienteDto } from '../../types/inventario.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   id_ingrediente: string;
@@ -77,14 +78,8 @@ export function RegistrarStockForm({ ingredientes, bodegas, loadingIngredientes,
     setForm(prev => ({ ...prev, [field]: e.target.value }));
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Registrar stock inicial</h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell title="Registrar stock inicial" onClose={onCancel} maxWidthClass="max-w-md">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ingrediente</label>
             <select value={form.id_ingrediente} onChange={f('id_ingrediente')} disabled={loadingIngredientes}
@@ -154,7 +149,6 @@ export function RegistrarStockForm({ ingredientes, bodegas, loadingIngredientes,
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

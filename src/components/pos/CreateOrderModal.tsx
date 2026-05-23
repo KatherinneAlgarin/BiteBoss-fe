@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { AlertMessage } from '../ui/AlertMessage';
+import { ModalShell } from '../ui/ModalShell';
 import type { CartItem } from './CartSummary';
 
 export type TipoOrden = 'dine-in' | 'takeout' | 'delivery';
@@ -59,9 +60,8 @@ export function CreateOrderModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
-        <div className="p-6">
+    <ModalShell title="Confirmar pedido" onClose={handleClose} maxWidthClass="max-w-md">
+        <div className="px-6 py-5">
           <h2 className="text-xl font-bold text-gray-900 mb-1">Confirmar pedido</h2>
           <p className="text-sm text-gray-500 mb-6">
             {items.length} {items.length === 1 ? 'producto' : 'productos'} · Total:{' '}
@@ -122,7 +122,6 @@ export function CreateOrderModal({
             </div>
           </form>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

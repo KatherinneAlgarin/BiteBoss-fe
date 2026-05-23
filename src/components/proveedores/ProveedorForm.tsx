@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useProveedores } from '../../hooks/useProveedores';
 import type { ProveedorListItem } from '../../types/proveedor.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   id_proveedor?: number;
@@ -109,21 +110,13 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            {proveedor ? 'Editar Proveedor' : 'Crear Nuevo Proveedor'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell
+      title={proveedor ? 'Editar Proveedor' : 'Crear Nuevo Proveedor'}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
           {submitError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
               {submitError}
@@ -138,7 +131,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               type="text"
               value={form.nombre}
               onChange={(e) => handleChange('nombre', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                 errors.nombre ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Nombre del proveedor"
@@ -156,7 +149,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               type="email"
               value={form.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="contacto@proveedor.com"
@@ -174,7 +167,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               type="tel"
               value={form.telefono}
               onChange={(e) => handleChange('telefono', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="555-1234"
             />
           </div>
@@ -187,7 +180,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               value={form.direccion}
               onChange={(e) => handleChange('direccion', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="Dirección del proveedor"
             />
           </div>
@@ -198,7 +191,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               id="activo"
               checked={form.activo}
               onChange={(e) => handleChange('activo', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-orange-500 focus:ring-orange-400 border-gray-300 rounded"
             />
             <label htmlFor="activo" className="ml-2 text-sm text-gray-700">
               Activo
@@ -216,7 +209,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -224,7 +217,6 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

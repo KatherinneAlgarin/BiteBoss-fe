@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type {
   ZonaItem,
   CrearZonaDto,
   ActualizarZonaDto,
 } from '../../types/zona.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   nombre: string;
@@ -99,18 +100,13 @@ export function ZonaForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            {zona ? 'Editar Zona' : 'Nueva Zona'}
-          </h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell
+      title={zona ? 'Editar Zona' : 'Nueva Zona'}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
           {submitError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
               {submitError}
@@ -161,7 +157,6 @@ export function ZonaForm({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { ModalShell } from './ModalShell';
 
 interface Props {
   isOpen: boolean;
@@ -60,24 +61,18 @@ export function ConfirmModal({
     : 'text-amber-500';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className={`w-5 h-5 ${iconClass}`} />
-            <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          </div>
-          {!loading && (
-            <button
-              onClick={onCancel}
-              className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-              aria-label="Cerrar"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+    <ModalShell
+      title={title}
+      onClose={onCancel}
+      maxWidthClass="max-w-sm"
+      hideCloseButton={loading}
+      headerContent={
+        <div className="flex items-center gap-2">
+          <AlertTriangle className={`w-5 h-5 ${iconClass}`} />
+          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
         </div>
+      }
+    >
 
         {/* Body */}
         <div className="px-5 py-4 space-y-3">
@@ -109,7 +104,6 @@ export function ConfirmModal({
             {loading ? 'Procesando...' : confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

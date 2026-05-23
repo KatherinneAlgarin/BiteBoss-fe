@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
 import type { TipoOrdenItem } from '../../types/tipo-orden.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface TiposOrdenListProps {
   tipos: TipoOrdenItem[];
@@ -317,9 +318,8 @@ export function TiposOrdenList({
       </div>
 
       {confirming && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
+        <ModalShell title="Desactivar tipo de orden" onClose={() => { setConfirming(null); setConfirmError(null); }} maxWidthClass="max-w-md">
+            <div className="px-6 py-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Desactivar tipo de orden</h2>
               <p className="text-sm text-gray-700">
                 ¿Seguro que quieres desactivar <span className="font-semibold">"{confirming.nombre}"</span>? Podrás volver a activarlos más adelante desde la lista.
@@ -351,14 +351,12 @@ export function TiposOrdenList({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {parentError && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
+        <ModalShell title="Tipo de orden padre inactivo" onClose={() => setParentError(null)} maxWidthClass="max-w-md">
+            <div className="px-6 py-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Tipo de orden padre inactivo</h2>
               <p className="text-sm text-gray-700 mb-2">
                 No puedes activar <span className="font-semibold">"{parentError.child.nombre}"</span> porque su tipo padre <span className="font-semibold">"{parentError.parent.nombre}"</span> está inactivo.
@@ -387,8 +385,7 @@ export function TiposOrdenList({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </>
   );

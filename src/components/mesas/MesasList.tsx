@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle } from 'lucide-react';
 import type { MesaItem } from '../../types/mesa.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface MesasListProps {
   mesas: MesaItem[];
@@ -180,9 +181,8 @@ export function MesasList({
       </div>
 
       {confirming && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
+        <ModalShell title="Desactivar mesa" onClose={() => { setConfirming(null); setConfirmError(null); }} maxWidthClass="max-w-md">
+            <div className="px-6 py-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Desactivar mesa</h2>
               <p className="text-sm text-gray-700">
                 ¿Seguro que quieres desactivar <span className="font-semibold">"Mesa {confirming.numero}"</span>?
@@ -215,8 +215,7 @@ export function MesasList({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </>
   );

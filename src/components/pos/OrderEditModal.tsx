@@ -7,6 +7,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { AlertMessage } from '../ui/AlertMessage';
+import { ModalShell } from '../ui/ModalShell';
 import { ProductItem } from './ProductItem';
 
 interface OrderEditModalProps {
@@ -100,9 +101,13 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
   const { subtotal, impuesto, total } = calculateTotals(orden.detalles);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Editar Orden #{orden.numero_orden}</h2>
+    <ModalShell
+      title={`Editar Orden #${orden.numero_orden}`}
+      onClose={onClose}
+      maxWidthClass="max-w-2xl"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+      <div className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
 
         {error && <AlertMessage type="error" message={error} />}
 
@@ -112,7 +117,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
             <select
               value={orden.tipo_orden}
               onChange={(e) => handleTipoOrdenChange(e.target.value as any)}
-              className="mt-1 block w-full border-gray-300 rounded-md"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               <option value="dine-in">Consumir en el local</option>
               <option value="takeout">Para llevar</option>
@@ -159,7 +164,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
               <select
                 value={selectedMetodo}
                 onChange={(e) => setSelectedMetodo(e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 <option value="">Seleccionar método</option>
                 {metodos.filter(m => m.disponible).map((m) => (
@@ -169,7 +174,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
             )}
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={handleCancelar} disabled={loading}>
               Cancelar Orden
             </Button>
@@ -178,9 +183,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
             </Button>
           </div>
         </div>
-
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500">X</button>
       </div>
-    </div>
+    </ModalShell>
   );
 }

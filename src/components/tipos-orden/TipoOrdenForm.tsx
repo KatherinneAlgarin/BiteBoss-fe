@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { X, Loader2, Info } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import type {
   TipoOrdenItem,
   CrearTipoOrdenDto,
   ActualizarTipoOrdenDto,
 } from '../../types/tipo-orden.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   nombre: string;
@@ -114,20 +115,15 @@ export function TipoOrdenForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            {tipo ? 'Editar Tipo de Orden' : 'Crear Nuevo Tipo de Orden'}
-          </h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell
+      title={tipo ? 'Editar Tipo de Orden' : 'Crear Nuevo Tipo de Orden'}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 flex gap-2">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-medium">Cómo funcionan los tipos de orden:</p>
               <ul className="list-disc list-inside space-y-0.5">
@@ -152,7 +148,7 @@ export function TipoOrdenForm({
               type="text"
               value={form.nombre}
               onChange={(e) => handleChange('nombre', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                 errors.nombre ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Nombre del tipo de orden"
@@ -169,7 +165,7 @@ export function TipoOrdenForm({
             <select
               value={form.id_tipo_orden_padre ?? ''}
               onChange={(e) => handleChange('id_tipo_orden_padre', e.target.value === '' ? null : Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
             >
               <option value="">Sin padre (es un tipo principal)</option>
               {opcionesPadre.map(t => (
@@ -186,7 +182,7 @@ export function TipoOrdenForm({
               id="requiere_mesa"
               checked={form.requiere_mesa}
               onChange={(e) => handleChange('requiere_mesa', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-orange-500 focus:ring-orange-400 border-gray-300 rounded"
             />
             <label htmlFor="requiere_mesa" className="ml-2 text-sm text-gray-700">
               Requiere mesa
@@ -204,7 +200,7 @@ export function TipoOrdenForm({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -212,7 +208,6 @@ export function TipoOrdenForm({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

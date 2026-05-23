@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 import type { InventarioIngredienteItem, TransferirStockDto } from '../../types/inventario.types';
 import type { BodegaItem } from '../../types/bodega.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface TransferirStockFormProps {
   item: InventarioIngredienteItem;
@@ -50,14 +51,8 @@ export function TransferirStockForm({ item, bodegas, loadingBodegas, onSubmit, o
   const stockRestante = !isNaN(cantidadNum) && cantidadNum > 0 ? item.stock_actual - cantidadNum : null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Transferir stock</h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell title="Transferir stock" onClose={onCancel} maxWidthClass="max-w-md">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* Resumen del origen */}
           <div className="bg-gray-50 rounded-lg p-3 text-sm">
             <p className="font-medium text-gray-900">{item.nombre_ingrediente}</p>
@@ -124,7 +119,6 @@ export function TransferirStockForm({ item, bodegas, loadingBodegas, onSubmit, o
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

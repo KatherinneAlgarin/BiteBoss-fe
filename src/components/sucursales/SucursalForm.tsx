@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, Loader2, Info } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { obtenerSucursal } from '../../services/sucursal.service';
 import type {
   SucursalItem,
@@ -9,6 +9,7 @@ import type {
 } from '../../types/sucursal.types';
 import type { TipoOrdenItem } from '../../types/tipo-orden.types';
 import type { TipoPagoItem } from '../../types/tipo-pago.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   nombre: string;
@@ -158,20 +159,15 @@ export function SucursalForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            {sucursal ? 'Editar Sucursal' : 'Nueva Sucursal'}
-          </h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <ModalShell
+      title={sucursal ? 'Editar Sucursal' : 'Nueva Sucursal'}
+      onClose={onCancel}
+      maxWidthClass="max-w-2xl"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-6 max-h-[calc(90vh-73px)]">
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 flex gap-2">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
               Una sucursal necesita al menos un <span className="font-semibold">tipo de orden</span> y un{' '}
               <span className="font-semibold">método de pago</span>. Las zonas se gestionan en su propio módulo.
@@ -200,7 +196,7 @@ export function SucursalForm({
                 type="text"
                 value={form.nombre}
                 onChange={(e) => handleChange('nombre', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                   errors.nombre ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Nombre de la sucursal"
@@ -214,7 +210,7 @@ export function SucursalForm({
                 value={form.direccion}
                 onChange={(e) => handleChange('direccion', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="Dirección física de la sucursal"
               />
             </div>
@@ -255,15 +251,14 @@ export function SucursalForm({
             <button
               type="submit"
               disabled={loading || loadingDetalle}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 flex items-center"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-md disabled:opacity-50 flex items-center"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {sucursal ? 'Guardar cambios' : 'Crear'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 

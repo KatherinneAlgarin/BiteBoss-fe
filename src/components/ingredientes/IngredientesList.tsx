@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, AlertTriangle, MoreVertical } from 'lucide-react';
 import type { IngredienteItem, EnUsoIngrediente } from '../../types/ingrediente.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface IngredientesListProps {
   ingredientes: IngredienteItem[];
@@ -208,11 +209,11 @@ export function IngredientesList({ ingredientes, loading, error, onRefetch, onCr
       </div>
 
       {confirmando && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <ModalShell title="Desactivar ingrediente" onClose={() => { setConfirmando(null); setConfirmError(null); }} maxWidthClass="max-w-md">
+          <div className="px-6 py-5">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Desactivar ingrediente</h2>
             <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex gap-2 mb-4">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div className="text-sm text-amber-800">
                 <p className="font-medium">Este ingrediente está en uso en los siguientes productos:</p>
                 <ul className="mt-1 list-disc list-inside text-amber-700">
@@ -236,7 +237,7 @@ export function IngredientesList({ ingredientes, loading, error, onRefetch, onCr
               </button>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
     </>
   );

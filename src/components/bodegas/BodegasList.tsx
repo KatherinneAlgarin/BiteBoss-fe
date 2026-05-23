@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, AlertTriangle, MoreVertical } from 'lucide-react';
 import type { BodegaItem } from '../../types/bodega.types';
 import { TIPOS_BODEGA } from '../../types/bodega.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface BodegasListProps {
   bodegas: BodegaItem[];
@@ -269,12 +270,11 @@ export function BodegasList({
       </div>
 
       {confirmando && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
+        <ModalShell title="Desactivar bodega" onClose={() => { setConfirmando(null); setConfirmError(null); }} maxWidthClass="max-w-md">
+            <div className="px-6 py-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Desactivar bodega</h2>
               <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex gap-2 mb-4">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800">
                   <p className="font-medium">Esta bodega tiene productos con stock activo.</p>
                   <p className="mt-1 text-amber-700">¿Desea desactivarla de todas formas?</p>
@@ -305,8 +305,7 @@ export function BodegasList({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </>
   );

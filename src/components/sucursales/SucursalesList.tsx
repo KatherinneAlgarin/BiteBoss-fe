@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import type { SucursalItem, DependenciasSucursal } from '../../types/sucursal.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface SucursalesListProps {
   sucursales: SucursalItem[];
@@ -226,12 +227,12 @@ function DeactivateDialog({ state, loading, error, onConfirm, onCancel }: Deacti
   const requiereEliminar = dependencias.requiere_eliminar_zonas;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            {bloqueado ? 'No se puede desactivar' : 'Desactivar sucursal'}
-          </h2>
+    <ModalShell
+      title={bloqueado ? 'No se puede desactivar' : 'Desactivar sucursal'}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+    >
+        <div className="px-6 py-5">
 
           {bloqueado ? (
             <div className="text-sm text-gray-700">
@@ -243,7 +244,7 @@ function DeactivateDialog({ state, loading, error, onConfirm, onCancel }: Deacti
           ) : requiereEliminar ? (
             <div className="space-y-3 text-sm text-gray-700">
               <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-amber-800">
                     Las zonas y mesas asociadas a esta sucursal se eliminarán
@@ -293,7 +294,6 @@ function DeactivateDialog({ state, loading, error, onConfirm, onCancel }: Deacti
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

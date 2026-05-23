@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle } from 'lucide-react';
 import type { TipoPagoItem, DependenciasDesactivacionTipoPago } from '../../types/tipo-pago.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface TiposPagoListProps {
   tipos: TipoPagoItem[];
@@ -204,9 +205,8 @@ export function TiposPagoList({
       </div>
 
       {confirming && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
-            <div className="p-6">
+        <ModalShell title="Desactivar método de pago" onClose={() => { setConfirming(null); setConfirmError(null); setDependencias(null); }} maxWidthClass="max-w-lg">
+            <div className="px-6 py-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Desactivar método de pago</h2>
               <p className="text-sm text-gray-700">
                 Vas a desactivar <span className="font-semibold">"{confirming.nombre}"</span>.
@@ -264,8 +264,7 @@ export function TiposPagoList({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </>
   );

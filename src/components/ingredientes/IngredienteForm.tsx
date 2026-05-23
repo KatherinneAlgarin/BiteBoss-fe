@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { X, Loader2, ChevronDown } from 'lucide-react';
+import { Loader2, ChevronDown } from 'lucide-react';
 import type { IngredienteItem, CrearIngredienteDto, ActualizarIngredienteDto } from '../../types/ingrediente.types';
 import { UNIDADES_MEDIDA } from '../../types/ingrediente.types';
 import type { BodegaItem } from '../../types/bodega.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface FormState {
   nombre: string;
@@ -103,14 +104,13 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
   const bodegasActivas = bodegas.filter(b => b.activo);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">{isEditing ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}</h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalShell
+      title={isEditing ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+      panelClassName="max-h-[90vh] overflow-hidden"
+    >
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
             <input type="text" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
@@ -193,7 +193,6 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

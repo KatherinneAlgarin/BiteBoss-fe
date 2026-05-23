@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Loader2, Plus, Trash2, Search } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useProveedores } from '../../hooks/useProveedores';
 import { useIngredientes } from '../../hooks/useIngredientes';
@@ -7,6 +7,7 @@ import { listarSucursales } from '../../services/sucursal.service';
 import type { CrearPedidoDetalleDto, CrearPedidoProveedorDto } from '../../types/pedido-proveedor.types';
 import type { IngredienteItem } from '../../types/ingrediente.types';
 import type { SucursalItem } from '../../types/sucursal.types';
+import { ModalShell } from '../ui/ModalShell';
 
 interface DetalleRow {
   ingrediente: IngredienteItem;
@@ -134,13 +135,12 @@ export function PedidoProveedorForm({ onSubmit, onCancel }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Nueva orden de compra</h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-        </div>
-
+    <ModalShell
+      title="Nueva orden de compra"
+      onClose={onCancel}
+      maxWidthClass="max-w-2xl"
+      panelClassName="max-h-[90vh] flex flex-col overflow-hidden"
+    >
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-4">
             {/* Proveedor */}
@@ -293,7 +293,6 @@ export function PedidoProveedorForm({ onSubmit, onCancel }: Props) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 }

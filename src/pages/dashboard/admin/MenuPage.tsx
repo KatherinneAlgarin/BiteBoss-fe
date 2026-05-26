@@ -6,15 +6,15 @@ import {
   crearProducto,
   actualizarProducto,
   desactivarProducto,
-  listarCategorias,
   obtenerSucursalesDeProducto,
   obtenerIngredientesDeProducto,
   obtenerComponentesCombo,
   obtenerDependenciasDesactivacionProducto,
   type CrearProductoDto,
   type ActualizarProductoDto,
-  type Categoria,
 } from '../../../services/producto.service';
+import { listarCategorias } from '../../../services/categoria.service';
+import type { CategoriaItem } from '../../../types/categoria.types';
 import { listarSucursales } from '../../../services/sucursal.service';
 import { listarIngredientes } from '../../../services/ingrediente.service';
 import type { Producto, ProductoIngredienteInput, ProductoComboComponenteInput } from '../../../types/producto.types';
@@ -30,7 +30,7 @@ export function MenuPage() {
   const isAdmin = role === 'admin';
 
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaItem[]>([]);
   const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
   const [ingredientesDisponibles, setIngredientesDisponibles] = useState<IngredienteItem[]>([]);
   const [loading, setLoading] = useState(true);

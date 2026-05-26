@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, ShoppingCart, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, ShoppingCart, Building2, Settings, Tag } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -14,8 +14,15 @@ const navMain = [
       { title: 'Órdenes de compra', url: '/dashboard/admin/pedidos-proveedor', icon: ShoppingCart },
     ],
   },
-  { title: 'Tipos de Orden', url: '/dashboard/admin/tipos-orden', icon: ListOrdered },
-  { title: 'Tipos de Pago',  url: '/dashboard/admin/tipos-pago',  icon: CreditCard },
+  {
+    title: 'Configuraciones',
+    icon: Settings,
+    children: [
+      { title: 'Categorías',     url: '/dashboard/admin/categorias',  icon: Tag },
+      { title: 'Tipos de Orden', url: '/dashboard/admin/tipos-orden', icon: ListOrdered },
+      { title: 'Tipos de Pago',  url: '/dashboard/admin/tipos-pago',  icon: CreditCard },
+    ],
+  },
   { title: 'Sucursales',     url: '/dashboard/admin/sucursales',  icon: Store },
   { title: 'Zonas y Mesas',  url: '/dashboard/admin/zonas-mesas', icon: LayoutGrid },
   {

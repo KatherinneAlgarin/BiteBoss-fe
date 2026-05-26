@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, MoreVertical } from 'lucide-react';
-import type { TipoPagoItem, DependenciasDesactivacionTipoPago } from '../../types/tipo-pago.types';
+import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, MoreVertical, Store } from 'lucide-react';
+import type { CategoriaItem, ProductosActivosCategoria } from '../../types/categoria.types';
 import { ModalShell } from '../ui/ModalShell';
 
-interface TiposPagoListProps {
-  tipos: TipoPagoItem[];
+interface CategoriasListProps {
+  categorias: CategoriaItem[];
   loading: boolean;
   error: string | null;
   onRefetch: () => void;
   onCreate: () => void;
-  onEdit: (tipo: TipoPagoItem) => void;
-  onFetchDependenciasDesactivacion: (id: number) => Promise<DependenciasDesactivacionTipoPago>;
+  onEdit: (categoria: CategoriaItem) => void;
+  onFetchProductosActivos: (id: number) => Promise<ProductosActivosCategoria>;
   onDeactivate: (id: number) => Promise<void>;
   onActivate: (id: number) => Promise<void>;
 }
@@ -19,13 +19,13 @@ interface TiposPagoListProps {
 interface MenuPos { top: number; left: number }
 
 function ActionMenu({
-  tipo,
+  categoria,
   onEdit,
   onDesactivar,
   onActivar,
   loadingId,
 }: {
-  tipo: TipoPagoItem;
+  categoria: CategoriaItem;
   onEdit: () => void;
   onDesactivar: () => void;
   onActivar: () => void;
@@ -79,8 +79,10 @@ function ActionMenu({
             <Edit className="w-4 h-4 flex-shrink-0" />
             Editar
           </button>
+
           <div className="border-t border-gray-100 mx-2" />
-          {tipo.activo ? (
+
+          {categoria.activo ? (
             <button
               onClick={() => { setOpen(false); onDesactivar(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
@@ -104,48 +106,48 @@ function ActionMenu({
   );
 }
 
-export function TiposPagoList({
-  tipos,
+export function CategoriasList({
+  categorias,
   loading,
   error,
   onRefetch,
   onCreate,
   onEdit,
-  onFetchDependenciasDesactivacion,
+  onFetchProductosActivos,
   onDeactivate,
   onActivate,
-}: TiposPagoListProps) {
-  const [confirming, setConfirming] = useState<TipoPagoItem | null>(null);
+}: CategoriasListProps) {
+  const [confirming, setConfirming] = useState<CategoriaItem | null>(null);
+  const [productosActivos, setProductosActivos] = useState<ProductosActivosCategoria | null>(null);
+  const [loadingProductos, setLoadingProductos] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [activatingId, setActivatingId] = useState<number | null>(null);
   const [activateError, setActivateError] = useState<string | null>(null);
-  const [loadingDependencias, setLoadingDependencias] = useState(false);
-  const [dependencias, setDependencias] = useState<DependenciasDesactivacionTipoPago | null>(null);
 
-  const handleOpenConfirm = async (tipo: TipoPagoItem) => {
+  const handleOpenConfirm = async (categoria: CategoriaItem) => {
     try {
       setConfirmError(null);
-      setDependencias(null);
-      setLoadingDependencias(true);
-      const deps = await onFetchDependenciasDesactivacion(tipo.id_tipo_pago);
-      setDependencias(deps);
-      setConfirming(tipo);
+      setProductosActivos(null);
+      setLoadingProductos(true);
+      const result = await onFetchProductosActivos(categoria.id_categoria);
+      setProductosActivos(result);
+      setConfirming(categoria);
     } catch (err) {
       setConfirmError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
-      setLoadingDependencias(false);
+      setLoadingProductos(false);
     }
   };
 
   const handleConfirm = async () => {
     if (!confirming) return;
     try {
-      setBusyId(confirming.id_tipo_pago);
+      setBusyId(confirming.id_categoria);
       setConfirmError(null);
-      await onDeactivate(confirming.id_tipo_pago);
+      await onDeactivate(confirming.id_categoria);
       setConfirming(null);
-      setDependencias(null);
+      setProductosActivos(null);
     } catch (err) {
       setConfirmError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -153,11 +155,11 @@ export function TiposPagoList({
     }
   };
 
-  const handleActivate = async (tipo: TipoPagoItem) => {
+  const handleActivate = async (categoria: CategoriaItem) => {
     try {
       setActivateError(null);
-      setActivatingId(tipo.id_tipo_pago);
-      await onActivate(tipo.id_tipo_pago);
+      setActivatingId(categoria.id_categoria);
+      await onActivate(categoria.id_categoria);
     } catch (err) {
       setActivateError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -169,7 +171,7 @@ export function TiposPagoList({
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Cargando métodos de pago...</span>
+        <span className="ml-2 text-gray-600">Cargando categorías...</span>
       </div>
     );
   }
@@ -179,7 +181,7 @@ export function TiposPagoList({
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <div className="flex items-center">
           <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-700">Error al cargar métodos de pago: {error}</span>
+          <span className="text-red-700">Error al cargar categorías: {error}</span>
         </div>
         <button onClick={onRefetch} className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
           Reintentar
@@ -206,54 +208,58 @@ export function TiposPagoList({
 
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Métodos de Pago</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Categorías</h2>
           <button
             onClick={onCreate}
             className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nuevo Método de Pago
+            Nueva Categoría
           </button>
         </div>
 
-        {loadingDependencias && (
+        {loadingProductos && (
           <div className="px-6 py-3 text-sm text-gray-500 border-b border-gray-100 flex items-center">
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Validando impacto de desactivación...
+            Verificando productos asociados...
           </div>
         )}
 
-        {tipos.length === 0 ? (
+        {categorias.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">No hay métodos de pago registrados</p>
+            <p className="text-sm">No hay categorías registradas</p>
           </div>
         ) : (
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {tipos.map((tipo) => (
+            {categorias.map((cat) => (
               <div
-                key={tipo.id_tipo_pago}
+                key={cat.id_categoria}
                 className={`relative flex flex-col gap-3 rounded-xl border p-4 transition-shadow hover:shadow-md ${
-                  tipo.activo ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
+                  cat.activo ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className={`text-base font-semibold leading-snug ${tipo.activo ? 'text-gray-900' : 'text-gray-400'}`}>
-                    {tipo.nombre}
+                  <span className={`text-base font-semibold leading-snug ${cat.activo ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {cat.nombre}
                   </span>
                   <ActionMenu
-                    tipo={tipo}
-                    onEdit={() => onEdit(tipo)}
-                    onDesactivar={() => handleOpenConfirm(tipo)}
-                    onActivar={() => handleActivate(tipo)}
-                    loadingId={busyId === tipo.id_tipo_pago || activatingId === tipo.id_tipo_pago}
+                    categoria={cat}
+                    onEdit={() => onEdit(cat)}
+                    onDesactivar={() => handleOpenConfirm(cat)}
+                    onActivar={() => handleActivate(cat)}
+                    loadingId={busyId === cat.id_categoria || activatingId === cat.id_categoria}
                   />
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                    <Store className="w-3 h-3" />
+                    {cat.cantidad_sucursales} sucursal{cat.cantidad_sucursales !== 1 ? 'es' : ''}
+                  </span>
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    tipo.activo ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
+                    cat.activo ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
                   }`}>
-                    {tipo.activo ? 'Activo' : 'Inactivo'}
+                    {cat.activo ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
               </div>
@@ -264,8 +270,8 @@ export function TiposPagoList({
 
       {confirming && (
         <ModalShell
-          title="Desactivar método de pago"
-          onClose={() => { setConfirming(null); setConfirmError(null); setDependencias(null); }}
+          title="Desactivar categoría"
+          onClose={() => { setConfirming(null); setConfirmError(null); setProductosActivos(null); }}
           maxWidthClass="max-w-lg"
         >
           <div className="px-6 py-5">
@@ -273,29 +279,16 @@ export function TiposPagoList({
               Vas a desactivar <span className="font-semibold">"{confirming.nombre}"</span>.
             </p>
 
-            {dependencias && (
-              <div className="mt-4 space-y-3">
-                <div className="text-sm text-gray-700">
-                  Está activo en <span className="font-semibold">{dependencias.sucursales_activas_count}</span>{' '}
-                  sucursal{dependencias.sucursales_activas_count !== 1 ? 'es' : ''}.
-                </div>
+            {productosActivos && productosActivos.cantidad > 0 && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md text-sm">
+                Esta categoría tiene <span className="font-semibold">{productosActivos.cantidad}</span> producto(s) activo(s).
+                Al desactivarla dejarán de aparecer agrupados en el POS.
+              </div>
+            )}
 
-                {dependencias.sucursales_sin_metodos.length > 0 ? (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                    <p className="font-medium mb-1">No se puede desactivar.</p>
-                    <p>Estas sucursales se quedarían sin métodos de pago activos:</p>
-                    <ul className="list-disc list-inside mt-1">
-                      {dependencias.sucursales_sin_metodos.map((s) => (
-                        <li key={s.id_sucursal}>{s.nombre}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md text-sm">
-                    Al confirmar, también se desactivarán automáticamente las asignaciones activas de este método
-                    en todas las sucursales que lo tenían habilitado.
-                  </div>
-                )}
+            {productosActivos && productosActivos.cantidad === 0 && (
+              <div className="mt-4 bg-gray-50 border border-gray-200 text-gray-700 px-4 py-3 rounded-md text-sm">
+                No hay productos activos en esta categoría.
               </div>
             )}
 
@@ -308,7 +301,7 @@ export function TiposPagoList({
             <div className="flex justify-end space-x-3 pt-6">
               <button
                 type="button"
-                onClick={() => { setConfirming(null); setConfirmError(null); setDependencias(null); }}
+                onClick={() => { setConfirming(null); setConfirmError(null); setProductosActivos(null); }}
                 disabled={busyId !== null}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md disabled:opacity-50"
               >
@@ -317,7 +310,7 @@ export function TiposPagoList({
               <button
                 type="button"
                 onClick={handleConfirm}
-                disabled={busyId !== null || (dependencias ? !dependencias.puede_desactivar : true)}
+                disabled={busyId !== null}
                 className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-md disabled:opacity-50 inline-flex items-center"
               >
                 {busyId !== null && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

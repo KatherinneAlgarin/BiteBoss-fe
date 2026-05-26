@@ -18,6 +18,7 @@ import { MenuPage } from './pages/dashboard/admin/MenuPage';
 import { InventarioPage } from './pages/dashboard/admin/InventarioPage';
 import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
 import { TiposPagoPage } from './pages/dashboard/admin/TiposPagoPage';
+import { CategoriasPage } from './pages/dashboard/admin/CategoriasPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
 import { ZonasMesasPage } from './pages/dashboard/admin/ZonasMesasPage';
 import { BodegasAdminPage } from './pages/dashboard/admin/BodegasPage';
@@ -68,6 +69,7 @@ function App() {
                   <Route path="bodegas" element={<BodegasAdminPage />} />
                   <Route path="ingredientes" element={<IngredientesAdminPage />} />
                   <Route path="pedidos-proveedor" element={<PedidosProveedorPage />} />
+                  <Route path="categorias" element={<CategoriasPage />} />
                 </Route>
               </Route>
 

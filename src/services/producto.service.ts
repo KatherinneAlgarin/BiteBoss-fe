@@ -76,12 +76,3 @@ export async function desactivarProducto(id: number, forzar = false): Promise<vo
   await apiDelete<void>(`/api/productos/${id}${query}`);
 }
 
-export interface Categoria {
-  id_categoria: number;
-  nombre: string;
-  activo: boolean;
-}
-
-export async function listarCategorias(): Promise<Categoria[]> {
-  return apiGet<Categoria[]>('/api/productos/categorias/listar');
-}

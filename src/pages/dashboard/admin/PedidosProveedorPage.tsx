@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, Plus, Search, Pencil, MoreVertical, Loader2 } from 'lucide-react';
+import { Eye, Plus, Search, Pencil, MoreVertical, Loader2, CheckCircle } from 'lucide-react';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { PedidoProveedorForm } from '../../../components/pedidos-proveedor/PedidoProveedorForm';
 import { PedidoProveedorDetalle } from '../../../components/pedidos-proveedor/PedidoProveedorDetalle';
 import { EditarPedidoProveedorForm } from '../../../components/pedidos-proveedor/EditarPedidoProveedorForm';
+import { ConfirmarRecepcionForm } from '../../../components/pedidos-proveedor/ConfirmarRecepcionForm';
 import { useAuth } from '../../../hooks/useAuth';
 import { useIngredientes } from '../../../hooks/useIngredientes';
 import { listarSucursales } from '../../../services/sucursal.service';
-import { listarPedidos, crearPedido, obtenerPedido, editarPedido } from '../../../services/pedido-proveedor.service';
-import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedorDto } from '../../../types/pedido-proveedor.types';
+import { listarPedidos, crearPedido, obtenerPedido, editarPedido, confirmarRecepcion } from '../../../services/pedido-proveedor.service';
+import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedorDto, ConfirmarRecepcionDto } from '../../../types/pedido-proveedor.types';
 import type { IngredienteItem } from '../../../types/ingrediente.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
-function ActionMenu({ onVerDetalle, onEditar, loading, estado }: {
+function ActionMenu({ onVerDetalle, onEditar, onRecibir, loading, estado }: {
   onVerDetalle: () => void;
   onEditar: () => void;
+  onRecibir: () => void;
   loading: boolean;
   estado: string;
 }) {
@@ -61,6 +63,11 @@ function ActionMenu({ onVerDetalle, onEditar, loading, estado }: {
               <button onClick={() => { setOpen(false); onEditar(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                 <Pencil className="w-4 h-4 flex-shrink-0" /> Editar orden
+              </button>
+              <div className="border-t border-gray-100 mx-2" />
+              <button onClick={() => { setOpen(false); onRecibir(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" /> Confirmar recepción
               </button>
             </>
           )}
@@ -107,6 +114,7 @@ export function PedidosProveedorPage() {
   const [showForm, setShowForm] = useState(false);
   const [pedidoDetalle, setPedidoDetalle] = useState<PedidoProveedorItem | null>(null);
   const [pedidoEditar, setPedidoEditar] = useState<PedidoProveedorItem | null>(null);
+  const [pedidoRecibir, setPedidoRecibir] = useState<PedidoProveedorItem | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState<number | null>(null);
 
   useEffect(() => {
@@ -164,6 +172,25 @@ export function PedidosProveedorPage() {
     if (!pedidoEditar) return;
     await editarPedido(pedidoEditar.id_pedido_proveedor, dto);
     setPedidoEditar(null);
+    await loadPedidos();
+  };
+
+  const handleAbrirRecibir = async (pedido: PedidoProveedorItem) => {
+    setLoadingDetalle(pedido.id_pedido_proveedor);
+    try {
+      const completo = await obtenerPedido(pedido.id_pedido_proveedor);
+      setPedidoRecibir(completo);
+    } catch {
+      /* silencioso */
+    } finally {
+      setLoadingDetalle(null);
+    }
+  };
+
+  const handleRecibir = async (dto: ConfirmarRecepcionDto) => {
+    if (!pedidoRecibir) return;
+    await confirmarRecepcion(pedidoRecibir.id_pedido_proveedor, dto);
+    setPedidoRecibir(null);
     await loadPedidos();
   };
 
@@ -308,6 +335,7 @@ export function PedidosProveedorPage() {
                         <ActionMenu
                           onVerDetalle={() => handleVerDetalle(pedido)}
                           onEditar={() => handleAbrirEditar(pedido)}
+                          onRecibir={() => handleAbrirRecibir(pedido)}
                           loading={loadingDetalle === pedido.id_pedido_proveedor}
                           estado={pedido.estado}
                         />
@@ -341,6 +369,14 @@ export function PedidosProveedorPage() {
           ingredientesMap={ingredientesMap}
           onSubmit={handleEditar}
           onCancel={() => setPedidoEditar(null)}
+        />
+      )}
+
+      {pedidoRecibir && (
+        <ConfirmarRecepcionForm
+          pedido={pedidoRecibir}
+          onSubmit={handleRecibir}
+          onCancel={() => setPedidoRecibir(null)}
         />
       )}
     </div>

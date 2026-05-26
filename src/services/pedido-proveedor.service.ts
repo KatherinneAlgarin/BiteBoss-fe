@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiPatch } from './api';
-import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedorDto } from '../types/pedido-proveedor.types';
+import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedorDto, ConfirmarRecepcionDto } from '../types/pedido-proveedor.types';
 
 export async function listarPedidos(params?: { id_sucursal?: number; id_proveedor?: number }): Promise<PedidoProveedorItem[]> {
   const query = new URLSearchParams();
@@ -19,4 +19,8 @@ export async function crearPedido(dto: CrearPedidoProveedorDto): Promise<PedidoP
 
 export async function editarPedido(id: number, dto: EditarPedidoProveedorDto): Promise<PedidoProveedorItem> {
   return apiPatch<PedidoProveedorItem>(`/api/pedidos-proveedor/${id}`, dto);
+}
+
+export async function confirmarRecepcion(id: number, dto: ConfirmarRecepcionDto): Promise<PedidoProveedorItem> {
+  return apiPost<PedidoProveedorItem>(`/api/pedidos-proveedor/${id}/recibir`, dto);
 }

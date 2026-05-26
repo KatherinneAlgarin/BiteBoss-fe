@@ -18,7 +18,7 @@ interface Props {
   onCancel: () => void;
 }
 
-const ESTADOS = ['PENDIENTE', 'RECIBIDO', 'CANCELADO'] as const;
+const ESTADOS = ['PENDIENTE', 'CANCELADO'] as const;
 
 export function EditarPedidoProveedorForm({ pedido, ingredientesMap, onSubmit, onCancel }: Props) {
   const { ingredientes, loading: loadingIngredientes } = useIngredientes();

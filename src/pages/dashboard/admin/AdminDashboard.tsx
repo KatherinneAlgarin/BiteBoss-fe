@@ -1,16 +1,16 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, ShoppingCart, Building2, Settings, Tag } from 'lucide-react';
+import { Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, TrendingUp, ShoppingCart, Building2, Settings, Tag } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard',      url: '/dashboard/admin',             icon: LayoutDashboard },
-  { title: 'Usuarios',       url: '/dashboard/admin/usuarios',    icon: Users },
+  { title: 'KPIs',         url: '/dashboard/admin',             icon: TrendingUp },
+  { title: 'Usuarios',     url: '/dashboard/admin/usuarios',    icon: Users },
   {
     title: 'Proveedores',
     icon: Truck,
     children: [
-      { title: 'Gestor Proveedor', url: '/dashboard/admin/proveedores',        icon: Building2 },
+      { title: 'Gestor Proveedor',  url: '/dashboard/admin/proveedores',       icon: Building2 },
       { title: 'Órdenes de compra', url: '/dashboard/admin/pedidos-proveedor', icon: ShoppingCart },
     ],
   },
@@ -23,8 +23,8 @@ const navMain = [
       { title: 'Tipos de Pago',  url: '/dashboard/admin/tipos-pago',  icon: CreditCard },
     ],
   },
-  { title: 'Sucursales',     url: '/dashboard/admin/sucursales',  icon: Store },
-  { title: 'Zonas y Mesas',  url: '/dashboard/admin/zonas-mesas', icon: LayoutGrid },
+  { title: 'Sucursales',    url: '/dashboard/admin/sucursales',  icon: Store },
+  { title: 'Zonas y Mesas', url: '/dashboard/admin/zonas-mesas', icon: LayoutGrid },
   {
     title: 'Almacén',
     icon: Package,
@@ -34,9 +34,9 @@ const navMain = [
       { title: 'Inventario',   url: '/dashboard/admin/inventario',   icon: BarChart2 },
     ],
   },
-  { title: 'Menú',  url: '/dashboard/admin/menu',  icon: UtensilsCrossed },
-  { title: 'Caja',  url: '/dashboard/admin/caja',  icon: DollarSign },
-  { title: 'Perfil', url: '/dashboard/profile',    icon: UserCircle },
+  { title: 'Menú',   url: '/dashboard/admin/menu',  icon: UtensilsCrossed },
+  { title: 'Caja',   url: '/dashboard/admin/caja',  icon: DollarSign },
+  { title: 'Perfil', url: '/dashboard/profile',     icon: UserCircle },
 ];
 
 export function AdminDashboard() {

@@ -19,6 +19,8 @@ import { InventarioPage } from './pages/dashboard/admin/InventarioPage';
 import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
 import { TiposPagoPage } from './pages/dashboard/admin/TiposPagoPage';
 import { CategoriasPage } from './pages/dashboard/admin/CategoriasPage';
+import { KPIsPage as KPIsAdminPage } from './pages/dashboard/admin/KPIsPage';
+import { KPIsPage as KPIsGerentePage } from './pages/dashboard/gerente/KPIsPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
 import { ZonasMesasPage } from './pages/dashboard/admin/ZonasMesasPage';
 import { BodegasAdminPage } from './pages/dashboard/admin/BodegasPage';
@@ -57,7 +59,7 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['admin']} />}>
                 <Route path="/dashboard/admin" element={<AdminDashboard />}>
-                  <Route index element={<AdminHome />} />
+                  <Route index element={<KPIsAdminPage />} />
                   <Route path="usuarios" element={<UsuariosPage />} />
                   <Route path="proveedores" element={<ProveedoresPage />} />
                   <Route path="menu" element={<MenuPage />} />
@@ -75,21 +77,21 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
                 <Route path="/dashboard/cajero" element={<CajeroDashboard />}>
-                  <Route index element={<CajeroHome />} />
+                  <Route index element={<POSPage />} />
                   <Route path="ordenes" element={<POSPage />} />
                 </Route>
               </Route>
 
               <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
                 <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
-                  <Route index element={<MeseroHome />} />
+                  <Route index element={<ReservacionesPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
                 </Route>
               </Route>
 
               <Route element={<RoleRoute allowedRoles={['admin', 'gerente']} />}>
                 <Route path="/dashboard/gerente" element={<GerenteDashboard />}>
-                  <Route index element={<GerenteHome />} />
+                  <Route index element={<KPIsGerentePage />} />
                   <Route path="inventario" element={<InventarioPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
                   <Route path="bodegas" element={<BodegasGerentePage />} />

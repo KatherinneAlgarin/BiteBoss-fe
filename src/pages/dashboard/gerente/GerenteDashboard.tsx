@@ -1,10 +1,10 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2, Truck, ShoppingCart, Building2 } from 'lucide-react';
+import { ClipboardList, UtensilsCrossed, UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2, TrendingUp, Truck, ShoppingCart, Building2 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Dashboard',     url: '/dashboard/gerente',               icon: LayoutDashboard },
+  { title: 'KPIs',         url: '/dashboard/gerente',               icon: TrendingUp },
   { title: 'Reservaciones', url: '/dashboard/gerente/reservaciones', icon: CalendarDays },
   {
     title: 'Almacén',
@@ -19,8 +19,8 @@ const navMain = [
     title: 'Proveedores',
     icon: Truck,
     children: [
-      { title: 'Gestor Proveedor',  url: '/dashboard/gerente/proveedores',        icon: Building2 },
-      { title: 'Órdenes de compra', url: '/dashboard/gerente/pedidos-proveedor',  icon: ShoppingCart },
+      { title: 'Gestor Proveedor',  url: '/dashboard/gerente/proveedores',       icon: Building2 },
+      { title: 'Órdenes de compra', url: '/dashboard/gerente/pedidos-proveedor', icon: ShoppingCart },
     ],
   },
   { title: 'Menú',    url: '/dashboard/gerente/menu',    icon: UtensilsCrossed },

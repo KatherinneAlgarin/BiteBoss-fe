@@ -150,7 +150,7 @@ export function PedidoProveedorForm({ onSubmit, onCancel }: Props) {
                 disabled={loadingProveedores}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent disabled:bg-gray-100">
                 <option value="">{loadingProveedores ? 'Cargando...' : 'Selecciona un proveedor'}</option>
-                {proveedores.map(p => (
+                {proveedores.filter(p => p.activo).map(p => (
                   <option key={p.id_proveedor} value={p.id_proveedor}>{p.nombre}</option>
                 ))}
               </select>

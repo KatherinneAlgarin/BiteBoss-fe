@@ -21,10 +21,14 @@ function buildInitialForm(tipo?: TipoOrdenItem): FormState {
   };
 }
 
+const CONTAINS_LETTER = /[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/;
+
 function validateForm(form: FormState): Partial<Record<keyof FormState, string>> {
   const errors: Partial<Record<keyof FormState, string>> = {};
   if (!form.nombre.trim()) {
     errors.nombre = 'El nombre es requerido';
+  } else if (!CONTAINS_LETTER.test(form.nombre)) {
+    errors.nombre = 'El nombre debe contener al menos una letra';
   }
   return errors;
 }
@@ -142,7 +146,7 @@ export function TipoOrdenForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre *
+              Nombre <span className="text-red-500">*</span>
             </label>
             <input
               type="text"

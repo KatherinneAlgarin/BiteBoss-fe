@@ -58,7 +58,11 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
 
   const validate = (): boolean => {
     const errs: FormErrors = {};
-    if (!form.nombre.trim()) errs.nombre = 'El nombre es requerido.';
+    if (!form.nombre.trim()) {
+      errs.nombre = 'El nombre es requerido.';
+    } else if (!/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/.test(form.nombre)) {
+      errs.nombre = 'El nombre debe contener al menos una letra.';
+    }
     if (!form.unidad_medida) errs.unidad_medida = 'La unidad de medida es requerida.';
     if (!isEditing && form.conStock) {
       if (!form.id_bodega) errs.id_bodega = 'Selecciona una bodega.';
@@ -112,14 +116,14 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
     >
         <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 max-h-[calc(90vh-73px)]">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
             <input type="text" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
               className="input-field w-full" placeholder="Ej. Harina de trigo" />
             {errors.nombre && <p className="mt-1 text-xs text-red-600">{errors.nombre}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Unidad de medida</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Unidad de medida <span className="text-red-500">*</span></label>
             <select value={form.unidad_medida} onChange={e => setForm(f => ({ ...f, unidad_medida: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
               <option value="">Selecciona una unidad</option>
@@ -139,7 +143,7 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
               {form.conStock && (
                 <div className="p-4 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bodega</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bodega <span className="text-red-500">*</span></label>
                     <select value={form.id_bodega ?? ''} onChange={e => setForm(f => ({ ...f, id_bodega: e.target.value ? Number(e.target.value) : null }))}
                       disabled={loadingBodegas}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent disabled:bg-gray-100">
@@ -151,21 +155,21 @@ export function IngredienteForm({ ingrediente, bodegas, loadingBodegas, onCreate
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad <span className="text-red-500">*</span></label>
                       <input type="number" min="0.01" step="0.01" value={form.cantidad}
                         onChange={e => setForm(f => ({ ...f, cantidad: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" placeholder="0" />
                       {errors.cantidad && <p className="mt-1 text-xs text-red-600">{errors.cantidad}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Stock mín.</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Stock mín. <span className="text-red-500">*</span></label>
                       <input type="number" min="0" step="0.01" value={form.stock_minimo}
                         onChange={e => setForm(f => ({ ...f, stock_minimo: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" placeholder="0" />
                       {errors.stock_minimo && <p className="mt-1 text-xs text-red-600">{errors.stock_minimo}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Stock máx.</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Stock máx. <span className="text-red-500">*</span></label>
                       <input type="number" min="0" step="0.01" value={form.stock_maximo}
                         onChange={e => setForm(f => ({ ...f, stock_maximo: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" placeholder="0" />

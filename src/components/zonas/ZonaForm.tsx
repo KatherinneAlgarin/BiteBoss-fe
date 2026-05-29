@@ -62,7 +62,11 @@ export function ZonaForm({
 
   const validate = (): FormErrors => {
     const next: FormErrors = {};
-    if (!form.nombre.trim()) next.nombre = 'El nombre es requerido';
+    if (!form.nombre.trim()) {
+      next.nombre = 'El nombre es requerido';
+    } else if (!/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/.test(form.nombre)) {
+      next.nombre = 'El nombre debe contener al menos una letra';
+    }
     return next;
   };
 
@@ -114,7 +118,7 @@ export function ZonaForm({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={form.nombre}

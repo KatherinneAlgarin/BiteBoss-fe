@@ -4,6 +4,9 @@ import { useProveedores } from '../../hooks/useProveedores';
 import type { ProveedorListItem } from '../../types/proveedor.types';
 import { ModalShell } from '../ui/ModalShell';
 
+const PHONE_REGEX = /^\+?[\d\s\-()./]{7,20}$/;
+const CONTAINS_LETTER = /[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/;
+
 interface FormState {
   id_proveedor?: number;
   nombre: string;
@@ -29,6 +32,8 @@ function validateForm(form: FormState): Partial<Record<keyof FormState, string>>
 
   if (!form.nombre.trim()) {
     errors.nombre = 'El nombre es requerido';
+  } else if (!CONTAINS_LETTER.test(form.nombre)) {
+    errors.nombre = 'El nombre debe contener al menos una letra';
   }
 
   const tieneEmail = form.email.trim().length > 0;
@@ -40,6 +45,10 @@ function validateForm(form: FormState): Partial<Record<keyof FormState, string>>
 
   if (tieneEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
     errors.email = 'El email no tiene un formato válido';
+  }
+
+  if (tieneTelefono && !PHONE_REGEX.test(form.telefono.trim())) {
+    errors.telefono = 'El teléfono no tiene un formato válido (ej: +503 7000-1234)';
   }
 
   return errors;
@@ -125,7 +134,7 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre *
+              Nombre <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -167,10 +176,16 @@ export function ProveedorForm({ proveedor, onSuccess, onCancel }: ProveedorFormP
               type="tel"
               value={form.telefono}
               onChange={(e) => handleChange('telefono', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="555-1234"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                errors.telefono ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Ej: +503 7000-1234"
             />
+            {errors.telefono && (
+              <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>
+            )}
           </div>
+          <p className="text-xs text-gray-500 -mt-2">* Al menos email o teléfono es requerido</p>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -63,7 +63,11 @@ export function BodegaForm({
 
   const validate = (): boolean => {
     const errs: FormErrors = {};
-    if (!form.nombre.trim()) errs.nombre = 'El nombre es requerido.';
+    if (!form.nombre.trim()) {
+      errs.nombre = 'El nombre es requerido.';
+    } else if (!/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/.test(form.nombre)) {
+      errs.nombre = 'El nombre debe contener al menos una letra.';
+    }
     if (!form.tipo) errs.tipo = 'El tipo es requerido.';
     if (!form.id_sucursal) errs.id_sucursal = 'La sucursal es requerida.';
     setErrors(errs);
@@ -101,7 +105,7 @@ export function BodegaForm({
     <ModalShell title={isEditing ? 'Editar Bodega' : 'Nueva Bodega'} onClose={onCancel} maxWidthClass="max-w-md">
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={form.nombre}
@@ -113,7 +117,7 @@ export function BodegaForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo <span className="text-red-500">*</span></label>
             <select
               value={form.tipo}
               onChange={(e) => setForm(f => ({ ...f, tipo: e.target.value as TipoBodega | '' }))}
@@ -140,12 +144,14 @@ export function BodegaForm({
 
           {isAdmin && (
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sucursal <span className="text-red-500">*</span>
+              </label>
               <SucursalSelect
                 sucursales={sucursales}
                 value={form.id_sucursal}
                 onChange={(id) => setForm(f => ({ ...f, id_sucursal: id }))}
                 loading={loadingSucursales}
-                label="Sucursal"
                 placeholder="Selecciona una sucursal"
                 soloActivas
               />

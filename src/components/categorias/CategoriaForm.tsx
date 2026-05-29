@@ -11,9 +11,15 @@ function buildInitialForm(categoria?: CategoriaItem): FormState {
   return { nombre: categoria?.nombre ?? '' };
 }
 
+const CONTAINS_LETTER = /[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/;
+
 function validateForm(form: FormState): Partial<Record<keyof FormState, string>> {
   const errors: Partial<Record<keyof FormState, string>> = {};
-  if (!form.nombre.trim()) errors.nombre = 'El nombre es requerido';
+  if (!form.nombre.trim()) {
+    errors.nombre = 'El nombre es requerido';
+  } else if (!CONTAINS_LETTER.test(form.nombre)) {
+    errors.nombre = 'El nombre debe contener al menos una letra';
+  }
   return errors;
 }
 
@@ -74,7 +80,7 @@ export function CategoriaForm({ categoria, onCreate, onUpdate, onSuccess, onCanc
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
           <input
             type="text"
             value={form.nombre}

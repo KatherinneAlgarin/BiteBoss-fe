@@ -297,16 +297,16 @@ export function ReservacionesPage() {
 
       {/* Filtros */}
       <div className="flex flex-col gap-3">
-        {/* Fila 1: búsqueda + estado */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        {/* Fila única: búsqueda + estado + fecha + zona */}
+        <div className="flex flex-wrap gap-3">
+          <div className="relative w-52">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar por nombre o teléfono..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
+              placeholder="Buscar cliente..."
+              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg
                 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             {busqueda && (
@@ -329,10 +329,7 @@ export function ReservacionesPage() {
               <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
             ))}
           </select>
-        </div>
 
-        {/* Fila 2: fecha + zona */}
-        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
             <input
               type="date"

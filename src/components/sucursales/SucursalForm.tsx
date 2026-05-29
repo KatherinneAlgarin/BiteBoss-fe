@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Loader2, Info } from 'lucide-react';
 import { obtenerSucursal } from '../../services/sucursal.service';
 import type {
@@ -116,7 +116,11 @@ export function SucursalForm({
 
   const validate = (): FormErrors => {
     const next: FormErrors = {};
-    if (!form.nombre.trim()) next.nombre = 'El nombre es requerido';
+    if (!form.nombre.trim()) {
+      next.nombre = 'El nombre es requerido';
+    } else if (!/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/.test(form.nombre)) {
+      next.nombre = 'El nombre debe contener al menos una letra';
+    }
     if (form.tipos_orden.length === 0) next.tipos_orden = 'Selecciona al menos un tipo de orden';
     if (form.tipos_pago.length === 0) next.tipos_pago = 'Selecciona al menos un método de pago';
     return next;
@@ -191,7 +195,7 @@ export function SucursalForm({
             <legend className="sr-only">Datos básicos</legend>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={form.nombre}
@@ -217,7 +221,7 @@ export function SucursalForm({
           </fieldset>
 
           <CheckboxGroup
-            label="Tipos de orden vinculados *"
+            label={<>Tipos de orden vinculados <span className="text-red-500">*</span></>}
             emptyMessage={loadingCatalogos ? 'Cargando...' : 'No hay tipos de orden registrados'}
             options={tiposOrdenSeleccionables.map(t => ({
               id: t.id_tipo_orden,
@@ -230,7 +234,7 @@ export function SucursalForm({
           />
 
           <CheckboxGroup
-            label="Métodos de pago aceptados *"
+            label={<>Métodos de pago aceptados <span className="text-red-500">*</span></>}
             emptyMessage={loadingCatalogos ? 'Cargando...' : 'No hay tipos de pago registrados'}
             options={tiposPagoSeleccionables.map(t => ({ id: t.id_tipo_pago, label: t.nombre }))}
             selected={form.tipos_pago}
@@ -263,7 +267,7 @@ export function SucursalForm({
 }
 
 interface CheckboxGroupProps {
-  label: string;
+  label: ReactNode;
   emptyMessage: string;
   options: { id: number; label: string }[];
   selected: number[];

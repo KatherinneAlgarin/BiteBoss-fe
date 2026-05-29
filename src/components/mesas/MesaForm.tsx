@@ -128,7 +128,7 @@ export function MesaForm({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Zona *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Zona <span className="text-red-500">*</span></label>
             <select
               value={form.id_zona}
               onChange={(e) => handleChange('id_zona', e.target.value === '' ? '' : Number(e.target.value))}
@@ -148,7 +148,7 @@ export function MesaForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Número *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Número <span className="text-red-500">*</span></label>
             <input
               type="number"
               min={1}
@@ -163,7 +163,7 @@ export function MesaForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad (personas) *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad (personas) <span className="text-red-500">*</span></label>
             <input
               type="number"
               min={1}

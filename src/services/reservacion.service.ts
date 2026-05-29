@@ -3,13 +3,15 @@ import type { ReservacionItem, CrearReservacionPayload, ActualizarReservacionPay
 
 export async function listarReservaciones(
   estado?: EstadoReservacion,
-  fecha?: string,
+  fechaInicio?: string,
+  fechaFin?: string,
   id_zona?: number,
 ): Promise<ReservacionItem[]> {
   const params = new URLSearchParams();
-  if (estado)  params.set('estado', estado);
-  if (fecha)   params.set('fecha', fecha);
-  if (id_zona) params.set('zona', String(id_zona));
+  if (estado)      params.set('estado', estado);
+  if (fechaInicio) params.set('fecha_inicio', fechaInicio);
+  if (fechaFin)    params.set('fecha_fin', fechaFin);
+  if (id_zona)     params.set('zona', String(id_zona));
   const qs = params.toString();
   return apiGet<ReservacionItem[]>(`/api/reservaciones${qs ? `?${qs}` : ''}`);
 }

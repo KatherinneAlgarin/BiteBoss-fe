@@ -4,18 +4,45 @@ import { listarReservaciones, cancelarReservacion, reactivarReservacion, complet
 import { listarZonasPorSucursal } from '../../../services/zona.service';
 import { ReservacionModal, type ReservacionModalMode } from '../../../components/reservaciones/ReservacionModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
-import { useAuth } from '../../../hooks/useAuth';
 import type { ReservacionItem, EstadoReservacion } from '../../../types/reservacion.types';
 import type { ZonaItem } from '../../../types/zona.types';
 
 type FiltroEstado = EstadoReservacion | 'todas';
+type Periodo = 'hoy' | 'semana' | 'mes' | null;
 
 const FILTRO_LABEL: Record<FiltroEstado, string> = {
   pendiente:  'Pendientes',
   cancelada:  'Canceladas',
   completada: 'Completadas',
-  todas:      'Todas',
+  todas:      'Todos los estados',
 };
+
+function toISO(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function getRangoDesde(periodo: Periodo, mes?: number): { inicio: string; fin: string } | null {
+  if (!periodo) return null;
+  const hoy = new Date();
+  if (periodo === 'hoy') {
+    const s = toISO(hoy);
+    return { inicio: s, fin: s };
+  }
+  if (periodo === 'semana') {
+    const fin = new Date(hoy);
+    fin.setDate(hoy.getDate() + 6);
+    return { inicio: toISO(hoy), fin: toISO(fin) };
+  }
+  // mes: siempre año actual, mes elegido (1-12)
+  const year  = hoy.getFullYear();
+  const month = mes ?? (hoy.getMonth() + 1);
+  const inicio = new Date(year, month - 1, 1);
+  const fin    = new Date(year, month, 0);
+  return { inicio: toISO(inicio), fin: toISO(fin) };
+}
 
 const ESTADO_BADGE: Record<EstadoReservacion, string> = {
   pendiente:  'bg-amber-100 text-amber-700',
@@ -128,13 +155,7 @@ function RowMenu({ actions }: { actions: MenuAction[] }) {
   );
 }
 
-function hoyStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 export function ReservacionesPage() {
-  const { role } = useAuth();
 
   const [reservaciones, setReservaciones] = useState<ReservacionItem[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -142,7 +163,9 @@ export function ReservacionesPage() {
   const [successMsg, setSuccessMsg]       = useState('');
 
   const [filtroEstado, setFiltroEstado]   = useState<FiltroEstado>('pendiente');
-  const [filtroFecha, setFiltroFecha]     = useState<string>(role === 'mesero' ? hoyStr() : '');
+  const [periodo, setPeriodo]             = useState<Periodo>('hoy');
+  const [mesSeleccionado, setMesSeleccionado] = useState<number>(new Date().getMonth() + 1);
+  const [filtroFecha, setFiltroFecha]     = useState<string>('');
   const [filtroZona, setFiltroZona]       = useState<string>('');
   const [zonas, setZonas]                 = useState<ZonaItem[]>([]);
   const [busqueda, setBusqueda]           = useState('');
@@ -159,18 +182,28 @@ export function ReservacionesPage() {
   const estadoParam = filtroEstado === 'todas' ? undefined : filtroEstado;
   const zonaParam   = filtroZona ? Number(filtroZona) : undefined;
 
+  const rangoActivo = useMemo(() => {
+    if (filtroFecha) return { inicio: filtroFecha, fin: filtroFecha };
+    return getRangoDesde(periodo, mesSeleccionado);
+  }, [filtroFecha, periodo, mesSeleccionado]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await listarReservaciones(estadoParam, filtroFecha || undefined, zonaParam);
+      const data = await listarReservaciones(
+        estadoParam,
+        rangoActivo?.inicio,
+        rangoActivo?.fin,
+        zonaParam,
+      );
       setReservaciones(data);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Error al cargar las reservaciones');
     } finally {
       setLoading(false);
     }
-  }, [estadoParam, filtroFecha, zonaParam]);
+  }, [estadoParam, rangoActivo, zonaParam]);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -297,7 +330,60 @@ export function ReservacionesPage() {
 
       {/* Filtros */}
       <div className="flex flex-col gap-3">
-        {/* Fila única: búsqueda + estado + fecha + zona */}
+        {/* Fila 1: períodos rápidos */}
+        <div className="flex flex-wrap items-center gap-2">
+          {(['hoy', 'semana', 'mes'] as Periodo[]).map(p => (
+            <button
+              key={p}
+              onClick={() => { setPeriodo(p); setFiltroFecha(''); }}
+              className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                periodo === p && !filtroFecha
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Semana' : 'Mes'}
+            </button>
+          ))}
+
+          {/* Selector de mes: aparece al instante cuando "Mes" está activo */}
+          {periodo === 'mes' && !filtroFecha && (
+            <select
+              value={mesSeleccionado}
+              onChange={e => setMesSeleccionado(Number(e.target.value))}
+              className="px-2.5 py-1.5 text-sm border border-orange-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white font-medium"
+            >
+              {MESES.map((nombre, i) => (
+                <option key={i + 1} value={i + 1}>{nombre}</option>
+              ))}
+            </select>
+          )}
+
+          <span className="text-gray-300 text-sm">|</span>
+
+          {/* Input fecha manual */}
+          <div className="relative">
+            <input
+              type="date"
+              value={filtroFecha}
+              onChange={e => { setFiltroFecha(e.target.value); setPeriodo(null); }}
+              className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white ${
+                filtroFecha ? 'border-orange-400' : 'border-gray-300'
+              }`}
+            />
+            {filtroFecha && (
+              <button
+                onClick={() => { setFiltroFecha(''); setPeriodo('hoy'); }}
+                className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Fila 2: búsqueda + estado + zona */}
         <div className="flex flex-wrap gap-3">
           <div className="relative w-52">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -329,24 +415,6 @@ export function ReservacionesPage() {
               <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
             ))}
           </select>
-
-          <div className="relative">
-            <input
-              type="date"
-              value={filtroFecha}
-              onChange={e => setFiltroFecha(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-            />
-            {filtroFecha && (
-              <button
-                onClick={() => setFiltroFecha('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
 
           <select
             value={filtroZona}

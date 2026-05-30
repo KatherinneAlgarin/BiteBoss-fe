@@ -24,6 +24,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d: KpiMetodoPago = payload[0].payload;

@@ -11,6 +11,7 @@ import { ProfilePage } from './pages/dashboard/ProfilePage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
+import { AdminHome } from './pages/dashboard/admin/AdminHome';
 import { CajaHubPage } from './pages/dashboard/caja/CajaHubPage';
 import { UsuariosPage } from './pages/dashboard/admin/UsuariosPage';
 import { ProveedoresPage } from './pages/dashboard/admin/ProveedoresPage';
@@ -34,7 +35,9 @@ import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
+import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
+import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
 import { ReservacionesPage } from './pages/dashboard/reservaciones/ReservacionesPage';
 import { PedidosTiempoRealPage } from './pages/caja/PedidosTiempoRealPage';
 // Import diagnostics for development

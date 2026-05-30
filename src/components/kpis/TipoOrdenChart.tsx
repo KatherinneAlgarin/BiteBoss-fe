@@ -22,6 +22,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d: KpiTipoOrden = payload[0].payload;
@@ -35,6 +36,7 @@ function CustomTooltip({ active, payload }: any) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderLabel({ cx, cy, midAngle, innerRadius, outerRadius, porcentaje }: any) {
   if (porcentaje < 5) return null;
   const RADIAN = Math.PI / 180;

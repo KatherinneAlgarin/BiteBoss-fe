@@ -180,6 +180,7 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
         setLoadingZonas(false);
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   useEffect(() => {
@@ -198,7 +199,7 @@ export function ReservacionModal({ isOpen, mode, reservacion, onClose, onSuccess
     if (form.id_mesa && !filtradas.find(m => String(m.id_mesa) === form.id_mesa)) {
       setForm(prev => ({ ...prev, id_mesa: '' }));
     }
-  }, [form.cantidad_personas, todasMesas]);
+  }, [form.cantidad_personas, todasMesas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;

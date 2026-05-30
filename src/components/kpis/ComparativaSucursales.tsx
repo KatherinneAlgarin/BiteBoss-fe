@@ -27,6 +27,7 @@ interface SucursalCardProps {
 
 function SucursalCard({ sucursal, onSelect }: SucursalCardProps) {
   const { resumen, top_producto, metodo_predominante, tendencia } = sucursal;
+  const maxTotal = Math.max(...tendencia.map(d => d.total), 1);
 
   return (
     <div
@@ -59,7 +60,7 @@ function SucursalCard({ sucursal, onSelect }: SucursalCardProps) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={tendencia}>
               <Tooltip
-                formatter={(v) => [formatCurrency(Number(v ?? 0)), 'Ventas']}
+                formatter={(v: number) => [formatCurrency(v), 'Ventas']}
                 contentStyle={{ fontSize: 10, borderRadius: 6 }}
               />
               <Line

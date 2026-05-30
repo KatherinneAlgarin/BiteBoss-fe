@@ -29,7 +29,8 @@ interface CreateOrderModalProps {
 
 function formatOrderLabel(order: OrdenResumen) {
   const mesa = order.mesa_numero ? `Mesa ${order.mesa_numero}` : 'Sin mesa';
-  return `${mesa} · Pedido #${order.numero_orden} · $${order.total.toFixed(2)}`;
+  const zona = order.zona_nombre ? `Zona ${order.zona_nombre} · ` : '';
+  return `${zona}${mesa} · Pedido #${order.numero_orden} · $${order.total.toFixed(2)}`;
 }
 
 export function CreateOrderModal({
@@ -53,6 +54,7 @@ export function CreateOrderModal({
   const [selectedMesaId, setSelectedMesaId] = useState<number | null>(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState<number | null>(null);
   const [selectedMetodo, setSelectedMetodo] = useState('');
+  const [busquedaCuenta, setBusquedaCuenta] = useState('');
   const [loadingData, setLoadingData] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
@@ -69,6 +71,23 @@ export function CreateOrderModal({
     [pedidosMesa, selectedPedidoId]
   );
 
+  const pedidosMesaFiltrados = useMemo(() => {
+    const term = busquedaCuenta.trim().toLowerCase();
+    if (!term) return pedidosMesa;
+
+    return pedidosMesa.filter(pedido => {
+      const zona = (pedido.zona_nombre ?? '').toLowerCase();
+      const numeroPedido = String(pedido.numero_orden ?? '').toLowerCase();
+      const mesaNumero = pedido.mesa_numero != null ? String(pedido.mesa_numero) : '';
+      const textoMesa = `mesa ${mesaNumero}`.toLowerCase();
+
+      return zona.includes(term)
+        || numeroPedido.includes(term)
+        || mesaNumero.includes(term)
+        || textoMesa.includes(term);
+    });
+  }, [busquedaCuenta, pedidosMesa]);
+
   const metodosDisponibles = useMemo(
     () => metodosPago.filter(metodo => metodo.disponible),
     [metodosPago]
@@ -82,6 +101,7 @@ export function CreateOrderModal({
     setSelectedMesaId(null);
     setSelectedPedidoId(null);
     setSelectedMetodo('');
+    setBusquedaCuenta('');
     setMessageError(null);
   };
 
@@ -188,6 +208,15 @@ export function CreateOrderModal({
       setSelectedMesaId(mesas[0].id_mesa);
     }
   }, [mesas, requiresMesa, selectedMesaId, selectedTipoOrden]);
+
+  useEffect(() => {
+    if (mode !== 'cerrar-cuenta') return;
+
+    const stillVisible = pedidosMesaFiltrados.some(pedido => pedido.id_pedido === selectedPedidoId);
+    if (!stillVisible) {
+      setSelectedPedidoId(pedidosMesaFiltrados[0]?.id_pedido ?? null);
+    }
+  }, [mode, pedidosMesaFiltrados, selectedPedidoId]);
 
   if (!isOpen) return null;
 
@@ -303,7 +332,7 @@ export function CreateOrderModal({
     <ModalShell title={title} onClose={handleClose} maxWidthClass="max-w-2xl" panelClassName="max-h-[90vh] overflow-hidden">
       <div className="max-h-[calc(90vh-73px)] overflow-y-auto px-6 py-5">
         <div className="mb-5">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          {mode === 'crear-orden' && <h2 className="text-xl font-bold text-gray-900">{title}</h2>}
           {mode === 'crear-orden' ? (
             <p className="mt-1 text-sm text-gray-500">
               {items.length} {items.length === 1 ? 'producto' : 'productos'} · Total:{' '}
@@ -426,15 +455,26 @@ export function CreateOrderModal({
           {mode === 'cerrar-cuenta' && (
             <>
               <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Buscar cuenta</label>
+                <input
+                  value={busquedaCuenta}
+                  onChange={e => setBusquedaCuenta(e.target.value)}
+                  placeholder="Filtra por zona, pedido o mesa"
+                  disabled={submitting || loadingData}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Cuenta de mesa</label>
                 <select
                   value={selectedPedidoId ?? ''}
                   onChange={e => setSelectedPedidoId(e.target.value ? Number(e.target.value) : null)}
-                  disabled={submitting || loadingData || pedidosMesa.length === 0}
+                  disabled={submitting || loadingData || pedidosMesaFiltrados.length === 0}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 >
                   <option value="">Selecciona una cuenta</option>
-                  {pedidosMesa.map(pedido => (
+                  {pedidosMesaFiltrados.map(pedido => (
                     <option key={pedido.id_pedido} value={pedido.id_pedido}>
                       {formatOrderLabel(pedido)}
                     </option>
@@ -445,6 +485,9 @@ export function CreateOrderModal({
                 )}
                 {pedidosMesa.length === 0 && !loadingData && (
                   <p className="mt-1 text-xs text-amber-700">No hay cuentas abiertas con mesa para cobrar.</p>
+                )}
+                {pedidosMesa.length > 0 && pedidosMesaFiltrados.length === 0 && !loadingData && (
+                  <p className="mt-1 text-xs text-amber-700">No hay resultados con ese filtro.</p>
                 )}
               </div>
 

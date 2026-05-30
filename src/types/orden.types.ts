@@ -26,6 +26,8 @@ export type OrdenResumen = {
   fecha_cerrado?: string;
   usuario_nombre?: string | null;
   mesa_numero?: number | null;
+  id_zona?: number | null;
+  zona_nombre?: string | null;
   nombre_cliente: string;
   apellido_cliente?: string;
   detalles?: Array<{

@@ -5,27 +5,37 @@ interface DateRangePickerProps {
   onChange: (range: DateRange) => void;
 }
 
-function toISO(date: Date): string {
-  return date.toISOString().slice(0, 10);
+function toLocalISO(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getHoy(): DateRange {
-  const d = toISO(new Date());
+  const d = toLocalISO(new Date());
   return { inicio: d, fin: d };
 }
 
 function getSemana(): DateRange {
-  const fin = new Date();
-  const inicio = new Date();
-  inicio.setDate(fin.getDate() - 6);
-  return { inicio: toISO(inicio), fin: toISO(fin) };
+  const hoy = new Date();
+  const diaSemana = hoy.getDay(); // 0 = domingo, 1 = lunes, ...
+  const offsetLunes = (diaSemana + 6) % 7;
+
+  const inicio = new Date(hoy);
+  inicio.setDate(hoy.getDate() - offsetLunes);
+
+  const fin = new Date(inicio);
+  fin.setDate(inicio.getDate() + 6);
+
+  return { inicio: toLocalISO(inicio), fin: toLocalISO(fin) };
 }
 
 function getMes(): DateRange {
   const now = new Date();
   const inicio = new Date(now.getFullYear(), now.getMonth(), 1);
   const fin = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { inicio: toISO(inicio), fin: toISO(fin) };
+  return { inicio: toLocalISO(inicio), fin: toLocalISO(fin) };
 }
 
 const PRESETS = [

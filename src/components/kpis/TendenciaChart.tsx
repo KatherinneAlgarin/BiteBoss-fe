@@ -14,9 +14,9 @@ interface TendenciaChartProps {
   titulo?: string;
 }
 
-function formatFecha(fecha: string): string {
+function formatFecha(fecha: string, hora?: string): string {
   const [, mes, dia] = fecha.split('-');
-  return `${dia}/${mes}`;
+  return hora ? hora : `${dia}/${mes}`;
 }
 
 function formatCurrency(value: number): string {
@@ -28,9 +28,11 @@ function formatCurrency(value: number): string {
 }
 
 export function TendenciaChart({ data, titulo = 'Tendencia de Ventas' }: TendenciaChartProps) {
+  const isHourly = data.some(d => Boolean(d.hora));
+
   const chartData = data.map(d => ({
     ...d,
-    fechaLabel: formatFecha(d.fecha),
+    fechaLabel: formatFecha(d.fecha, d.hora),
   }));
 
   return (
@@ -59,7 +61,7 @@ export function TendenciaChart({ data, titulo = 'Tendencia de Ventas' }: Tendenc
             />
             <Tooltip
               formatter={(value: number) => [formatCurrency(value), 'Ventas']}
-              labelFormatter={label => `Fecha: ${label}`}
+              labelFormatter={label => `${isHourly ? 'Hora' : 'Fecha'}: ${label}`}
               contentStyle={{
                 fontSize: 12,
                 borderRadius: 8,

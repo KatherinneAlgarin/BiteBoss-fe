@@ -2,13 +2,20 @@ import { useState, useCallback } from 'react';
 import { obtenerVentas, obtenerComparativa } from '../services/kpi.service';
 import type { KpiVentasResponse, KpiSucursalResumen, DateRange } from '../types/kpi.types';
 
+function toLocalISO(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function getMesActual(): DateRange {
   const now = new Date();
   const inicio = new Date(now.getFullYear(), now.getMonth(), 1);
   const fin = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    inicio: inicio.toISOString().slice(0, 10),
-    fin: fin.toISOString().slice(0, 10),
+    inicio: toLocalISO(inicio),
+    fin: toLocalISO(fin),
   };
 }
 

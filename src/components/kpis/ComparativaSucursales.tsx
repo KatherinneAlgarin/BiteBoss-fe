@@ -20,6 +20,10 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+function esTendenciaPorHora(tendencia: KpiSucursalResumen['tendencia']): boolean {
+  return tendencia.some(item => Boolean(item.hora));
+}
+
 interface SucursalCardProps {
   sucursal: KpiSucursalResumen;
   onSelect: () => void;
@@ -27,6 +31,7 @@ interface SucursalCardProps {
 
 function SucursalCard({ sucursal, onSelect }: SucursalCardProps) {
   const { resumen, top_producto, metodo_predominante, tendencia } = sucursal;
+  const tendenciaPorHora = esTendenciaPorHora(tendencia);
 
   return (
     <div
@@ -101,7 +106,7 @@ function SucursalCard({ sucursal, onSelect }: SucursalCardProps) {
       </div>
 
       {/* Trend indicator */}
-      {tendencia.length >= 2 && (() => {
+      {!tendenciaPorHora && tendencia.length >= 2 && (() => {
         const last = tendencia[tendencia.length - 1].total;
         const prev = tendencia[tendencia.length - 2].total;
         const diff = last - prev;

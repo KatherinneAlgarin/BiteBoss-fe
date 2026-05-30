@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2, TrendingUp, Truck, ShoppingCart, Building2, ReceiptText } from 'lucide-react';
+import { UserCircle, Package, CalendarDays, Warehouse, FlaskConical, BarChart2, TrendingUp, Truck, ShoppingCart, Building2, ReceiptText, MonitorPlay } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -23,6 +23,7 @@ const navMain = [
       { title: 'Órdenes de compra', url: '/dashboard/gerente/pedidos-proveedor', icon: ShoppingCart },
     ],
   },
+  { title: 'Pedidos en vivo', url: '/pedidos-en-vivo', icon: MonitorPlay, openInNewTab: true },
   { title: 'Cortes Caja', url: '/dashboard/gerente/cortes-caja', icon: ReceiptText },
   { title: 'Perfil',  url: '/dashboard/profile',         icon: UserCircle },
 ];

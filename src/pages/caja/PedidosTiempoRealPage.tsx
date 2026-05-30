@@ -12,6 +12,13 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: ty
   CANCELADO: { label: 'Cancelados', className: 'bg-red-50 text-red-700 border-red-200', icon: CircleAlert },
 };
 
+const ORDER_STATUS_CARD_STYLES: Record<string, string> = {
+  NUEVO: 'bg-orange-50/70 border-orange-200',
+  EN_PROCESO: 'bg-amber-50 border-amber-300 shadow-[0_10px_24px_rgba(251,191,36,0.18)]',
+  ENTREGADO: 'bg-emerald-50/75 border-emerald-200',
+  CANCELADO: 'bg-red-50/75 border-red-200',
+};
+
 function parseOrderDateMs(value?: string, now = Date.now()) {
   if (!value) return null;
 
@@ -276,17 +283,18 @@ export function PedidosTiempoRealPage() {
                       column.orders.map(order => {
                         const isHighlighted = highlightedIds.includes(order.id_pedido);
                         const isSelected = selectedOrderId === order.id_pedido;
+                        const statusStyle = ORDER_STATUS_CARD_STYLES[order.estado_operativo] ?? 'bg-white border-white/60';
                         const orderCardClassName = isSelected
-                          ? 'border-orange-500 outline outline-2 outline-orange-200'
+                          ? `${statusStyle} border-orange-500 outline outline-2 outline-orange-200`
                           : isHighlighted
-                            ? 'border-orange-400 outline outline-2 outline-orange-100'
-                            : 'border-white/60';
+                            ? `${statusStyle} border-orange-400 outline outline-2 outline-orange-100`
+                            : statusStyle;
 
                         return (
                         <article
                           key={order.id_pedido}
                           onClick={() => setSelectedOrderId(order.id_pedido)}
-                          className={`cursor-pointer rounded-2xl border bg-white px-4 py-4 shadow-sm transition-all min-h-65 flex flex-col ${orderCardClassName}`}
+                          className={`cursor-pointer rounded-2xl border px-4 py-4 shadow-sm transition-all min-h-65 flex flex-col ${orderCardClassName}`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>

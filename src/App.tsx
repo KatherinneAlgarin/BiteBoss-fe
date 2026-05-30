@@ -77,7 +77,7 @@ function App() {
                 </Route>
               </Route>
 
-              <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
+              <Route element={<RoleRoute allowedRoles={['admin', 'cajero', 'gerente']} />}>
                 <Route path="/caja/terminal" element={<POSPage />} />
                 <Route path="/pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
               </Route>

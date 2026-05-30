@@ -8,6 +8,7 @@ export interface NavItem {
   title: string;
   url: string;
   icon: ElementType;
+  openInNewTab?: boolean;
 }
 
 export interface NavGroup {
@@ -177,19 +178,33 @@ export function Sidebar({
             const Icon = entry.icon;
             const isActive = location.pathname === entry.url;
             return (
-              <Link
-                key={entry.url}
-                to={entry.url}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${isActive
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-              >
-                <Icon className="w-5 h-5" />
-                {entry.title}
-              </Link>
+              entry.openInNewTab ? (
+                <a
+                  key={entry.url}
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <Icon className="w-5 h-5" />
+                  {entry.title}
+                </a>
+              ) : (
+                <Link
+                  key={entry.url}
+                  to={entry.url}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    ${isActive
+                      ? 'bg-orange-50 text-orange-600'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {entry.title}
+                </Link>
+              )
             );
           })}
         </nav>

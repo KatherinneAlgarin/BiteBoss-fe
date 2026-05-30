@@ -15,6 +15,7 @@ function openWindow(path: string, name: string, idSucursal?: number | null) {
 export function CajaHubPage() {
   const { displayName, role, id_sucursal: idSucursal } = useAuth();
   const isAdmin = role === 'admin';
+  const esCajero = role === 'cajero';
 
   const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
   const [selectedSucursal, setSelectedSucursal] = useState<number | null>(idSucursal);
@@ -63,11 +64,19 @@ export function CajaHubPage() {
   }, [sucursalEfectiva, sucursales]);
 
   const abrirCaja = async () => {
-    if (!sucursalEfectiva) return;
+    if (!sucursalEfectiva) {
+      setErrorCaja('No se detectó una sucursal asignada para abrir la caja.');
+      return;
+    }
 
     try {
       setErrorCaja(null);
       const sesion = await obtenerSesionCajaActiva();
+      if (sesion.sesion?.estado === 'PENDIENTE') {
+        setErrorCaja('Hay una revisión pendiente de tu cierre de caja. No puedes abrir la caja hasta que sea autorizada o denegada.');
+        return;
+      }
+
       if (!sesion.activa) {
         setCodigoEmpleado('');
         setShowCodigoModal(true);
@@ -100,6 +109,53 @@ export function CajaHubPage() {
     }
   };
 
+  const codigoModal = showCodigoModal ? (
+    <ModalShell title="Abrir caja" onClose={() => setShowCodigoModal(false)} maxWidthClass="max-w-md">
+      <div className="space-y-4 p-6">
+        <p className="text-sm text-gray-600">Ingresa tu código de empleado para iniciar sesión de caja.</p>
+        <div>
+          <label htmlFor="codigo-empleado-caja" className="mb-1 block text-sm font-medium text-gray-700">Código de empleado</label>
+          <input
+            id="codigo-empleado-caja"
+            value={codigoEmpleado}
+            onChange={e => setCodigoEmpleado(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="Ej. 1234"
+            autoFocus
+          />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Button type="button" variant="secondary" fullWidth onClick={() => setShowCodigoModal(false)} disabled={abriendoCaja}>
+            Cancelar
+          </Button>
+          <Button type="button" fullWidth onClick={() => void confirmarAperturaCaja()} isLoading={abriendoCaja}>
+            Abrir caja
+          </Button>
+        </div>
+      </div>
+    </ModalShell>
+  ) : null;
+
+  if (esCajero) {
+    return (
+      <div className="max-w-md">
+        {errorCaja && (
+          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {errorCaja}
+          </div>
+        )}
+        <Button type="button" onClick={() => void abrirCaja()}>
+          Abrir caja
+          <ArrowUpRight className="ml-2 h-4 w-4" />
+        </Button>
+
+        {codigoModal}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-orange-100 bg-linear-to-br from-white via-orange-50 to-amber-100 p-6 shadow-[0_20px_60px_rgba(249,115,22,0.12)]">
@@ -108,7 +164,9 @@ export function CajaHubPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Caja</p>
             <h1 className="mt-1 text-3xl font-black text-gray-950">Centro de operaciones</h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">
-              Abre la terminal de caja o el monitor en vivo en pestañas separadas. La experiencia está pensada para trabajo rápido tipo cadena de servicio.
+              {esCajero
+                ? 'Abre la terminal de caja para operar pedidos y cobros en tu sucursal.'
+                : 'Abre la terminal de caja o el monitor en vivo en pestañas separadas. La experiencia está pensada para trabajo rápido tipo cadena de servicio.'}
             </p>
           </div>
           <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
@@ -142,7 +200,9 @@ export function CajaHubPage() {
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-sm text-gray-600">
-            Solo puedes abrir POS/tablero para tu sucursal asignada.
+            {esCajero
+              ? 'Solo puedes abrir caja para tu sucursal asignada.'
+              : 'Solo puedes abrir POS/tablero para tu sucursal asignada.'}
           </div>
         )}
 
@@ -153,7 +213,7 @@ export function CajaHubPage() {
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={`grid gap-4 ${esCajero ? 'lg:grid-cols-1' : 'lg:grid-cols-2'}`}>
         <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
           <div className="flex items-start gap-3">
             <div className="rounded-2xl bg-orange-100 p-3 text-orange-600">
@@ -172,58 +232,37 @@ export function CajaHubPage() {
               Abrir caja
               <ArrowUpRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button type="button" variant="secondary" onClick={() => openWindow('/pedidos-en-vivo', 'biteboss-pedidos-vivo', sucursalEfectiva)}>
-              Abrir tablero vivo
-            </Button>
+            {!esCajero && (
+              <Button type="button" variant="secondary" onClick={() => openWindow('/pedidos-en-vivo', 'biteboss-pedidos-vivo', sucursalEfectiva)}>
+                Abrir tablero vivo
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/80 bg-gray-950 p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-white/10 p-3 text-orange-300">
-              <ReceiptText className="h-6 w-6" />
+        {!esCajero && (
+          <div className="rounded-3xl border border-white/80 bg-gray-950 p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-white/10 p-3 text-orange-300">
+                <ReceiptText className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold">Pedidos en tiempo real</h2>
+                <p className="mt-1 text-sm text-gray-300">
+                  Visualiza estados de cocina y despacho con actualización automática.
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold">Pedidos en tiempo real</h2>
-              <p className="mt-1 text-sm text-gray-300">
-                Visualiza estados de cocina y despacho con actualización automática.
-              </p>
-            </div>
-          </div>
 
-          <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm text-gray-200">
-            <Sparkles className="h-4 w-4 text-orange-300" />
-            Se abre en una pestaña aparte para monitoreo continuo.
+            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm text-gray-200">
+              <Sparkles className="h-4 w-4 text-orange-300" />
+              Se abre en una pestaña aparte para monitoreo continuo.
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {showCodigoModal && (
-        <ModalShell title="Abrir caja" onClose={() => setShowCodigoModal(false)} maxWidthClass="max-w-md">
-          <div className="space-y-4 p-6">
-            <p className="text-sm text-gray-600">Ingresa tu código de empleado para iniciar sesión de caja.</p>
-            <div>
-              <label htmlFor="codigo-empleado-caja" className="mb-1 block text-sm font-medium text-gray-700">Código de empleado</label>
-              <input
-                id="codigo-empleado-caja"
-                value={codigoEmpleado}
-                onChange={e => setCodigoEmpleado(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="Ej. CJA-001"
-                autoFocus
-              />
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" variant="secondary" fullWidth onClick={() => setShowCodigoModal(false)} disabled={abriendoCaja}>
-                Cancelar
-              </Button>
-              <Button type="button" fullWidth onClick={() => void confirmarAperturaCaja()} isLoading={abriendoCaja}>
-                Abrir caja
-              </Button>
-            </div>
-          </div>
-        </ModalShell>
-      )}
+      {codigoModal}
     </div>
   );
 }

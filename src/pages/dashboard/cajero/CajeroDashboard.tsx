@@ -1,10 +1,11 @@
 import { Outlet } from 'react-router-dom';
-import { Store } from 'lucide-react';
+import { Store, UserCircle } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
   { title: 'Caja', url: '/dashboard/cajero/caja', icon: Store },
+  { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
 ];
 
 export function CajeroDashboard() {

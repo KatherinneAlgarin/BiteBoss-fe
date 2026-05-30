@@ -1,14 +1,109 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  BarChart2,
+  Building2,
+  CalendarDays,
+  CreditCard,
+  DollarSign,
+  FlaskConical,
+  LayoutGrid,
+  ListOrdered,
+  Package,
+  ReceiptText,
+  Settings,
+  ShoppingCart,
+  Store,
+  Tag,
+  TrendingUp,
+  Truck,
+  UserCircle,
+  Users,
+  UtensilsCrossed,
+  Warehouse,
+} from 'lucide-react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import type { NavEntry } from '../../components/dashboard/Sidebar';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { AlertMessage } from '../../components/ui/AlertMessage';
 import { PasswordChangeFields } from '../../components/auth/PasswordChangeFields';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+import type { UserRole } from '../../types/auth.types';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+const NAV_BY_ROLE: Record<UserRole, NavEntry[]> = {
+  admin: [
+    { title: 'KPIs', url: '/dashboard/admin', icon: TrendingUp },
+    { title: 'Usuarios', url: '/dashboard/admin/usuarios', icon: Users },
+    {
+      title: 'Proveedores',
+      icon: Truck,
+      children: [
+        { title: 'Gestor Proveedor', url: '/dashboard/admin/proveedores', icon: Building2 },
+        { title: 'Órdenes de compra', url: '/dashboard/admin/pedidos-proveedor', icon: ShoppingCart },
+      ],
+    },
+    {
+      title: 'Configuraciones',
+      icon: Settings,
+      children: [
+        { title: 'Categorías', url: '/dashboard/admin/categorias', icon: Tag },
+        { title: 'Tipos de Orden', url: '/dashboard/admin/tipos-orden', icon: ListOrdered },
+        { title: 'Tipos de Pago', url: '/dashboard/admin/tipos-pago', icon: CreditCard },
+      ],
+    },
+    { title: 'Sucursales', url: '/dashboard/admin/sucursales', icon: Store },
+    { title: 'Zonas y Mesas', url: '/dashboard/admin/zonas-mesas', icon: LayoutGrid },
+    {
+      title: 'Almacén',
+      icon: Package,
+      children: [
+        { title: 'Ingredientes', url: '/dashboard/admin/ingredientes', icon: FlaskConical },
+        { title: 'Bodegas', url: '/dashboard/admin/bodegas', icon: Warehouse },
+        { title: 'Inventario', url: '/dashboard/admin/inventario', icon: BarChart2 },
+      ],
+    },
+    { title: 'Menú', url: '/dashboard/admin/menu', icon: UtensilsCrossed },
+    { title: 'Caja', url: '/dashboard/admin/caja', icon: DollarSign },
+    { title: 'Cortes Caja', url: '/dashboard/admin/cortes-caja', icon: ReceiptText },
+    { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
+  ],
+  gerente: [
+    { title: 'KPIs', url: '/dashboard/gerente', icon: TrendingUp },
+    { title: 'Reservaciones', url: '/dashboard/gerente/reservaciones', icon: CalendarDays },
+    {
+      title: 'Almacén',
+      icon: Package,
+      children: [
+        { title: 'Ingredientes', url: '/dashboard/gerente/ingredientes', icon: FlaskConical },
+        { title: 'Bodegas', url: '/dashboard/gerente/bodegas', icon: Warehouse },
+        { title: 'Inventario', url: '/dashboard/gerente/inventario', icon: BarChart2 },
+      ],
+    },
+    {
+      title: 'Proveedores',
+      icon: Truck,
+      children: [
+        { title: 'Gestor Proveedor', url: '/dashboard/gerente/proveedores', icon: Building2 },
+        { title: 'Órdenes de compra', url: '/dashboard/gerente/pedidos-proveedor', icon: ShoppingCart },
+      ],
+    },
+    { title: 'Cortes Caja', url: '/dashboard/gerente/cortes-caja', icon: ReceiptText },
+    { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
+  ],
+  mesero: [
+    { title: 'Reservaciones', url: '/dashboard/mesero/reservaciones', icon: CalendarDays },
+    { title: 'Pedidos en vivo', url: '/dashboard/mesero/pedidos-en-vivo', icon: ReceiptText },
+    { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
+  ],
+  cajero: [
+    { title: 'Caja', url: '/dashboard/cajero/caja', icon: Store },
+    { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
+  ],
+};
 
 export function ProfilePage() {
   const { session, logout, role } = useAuth();
@@ -113,19 +208,10 @@ export function ProfilePage() {
   return (
     <DashboardLayout
       user={{ name: currentName, email: userEmail, role }}
-      data={{ navMain: [] }}
+      data={{ navMain: NAV_BY_ROLE[role] }}
       onLogout={logout}
     >
       <div className="max-w-lg mx-auto">
-        <div className="mb-6">
-          <Link
-            to="/dashboard"
-            className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors"
-          >
-            ← Volver al panel
-          </Link>
-        </div>
-
         <div className="card">
           <div className="mb-7">
             <h2 className="text-2xl font-bold text-gray-900">Mi perfil</h2>

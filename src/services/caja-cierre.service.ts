@@ -29,3 +29,7 @@ export async function autorizarCierreCaja(id: number): Promise<CajaCierreListado
 export async function rechazarCierreCaja(id: number, motivo_rechazo: string): Promise<CajaCierreListadoItem> {
   return apiPatch<CajaCierreListadoItem>(`/api/caja-cierres/${id}/rechazar`, { motivo_rechazo });
 }
+
+export async function reautorizarCierreCaja(id: number): Promise<CajaCierreListadoItem> {
+  return apiPatch<CajaCierreListadoItem>(`/api/caja-cierres/${id}/reautorizar`, {});
+}

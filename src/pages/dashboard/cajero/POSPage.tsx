@@ -1,6 +1,6 @@
 // pages/dashboard/cajero/POSPage.tsx
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useProductos } from '../../../hooks/useProductos';
 import { useAuth } from '../../../hooks/useAuth';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
@@ -11,13 +11,15 @@ import { Button } from '../../../components/ui/Button';
 import { listarSucursales } from '../../../services/sucursal.service';
 import { CreateOrderModal, type CheckoutMode } from '../../../components/pos/CreateOrderModal';
 import { CajaCierreModal } from '../../../components/pos/CajaCierreModal';
+import { obtenerSesionCajaActiva } from '../../../services/caja-cierre.service';
 import type { Producto } from '../../../types/producto.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
 export function POSPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { id_sucursal: idSucursalUsuario, displayName, role } = useAuth();
+  const { id_sucursal: idSucursalUsuario, role } = useAuth();
   const isAdmin = role === 'admin';
 
   const idSucursalFromQuery = useMemo(() => {
@@ -40,6 +42,9 @@ export function POSPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>('crear-orden');
   const [cierreCajaOpen, setCierreCajaOpen] = useState(false);
+  const [validandoAccesoCaja, setValidandoAccesoCaja] = useState(true);
+  const [cajaBloqueada, setCajaBloqueada] = useState(false);
+  const [mensajeBloqueoCaja, setMensajeBloqueoCaja] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -71,6 +76,29 @@ export function POSPage() {
       setSelectedSucursal(idSucursalFromQuery);
     }
   }, [idSucursalFromQuery, isAdmin]);
+
+  const verificarAccesoCaja = useCallback(async () => {
+    try {
+      const sesion = await obtenerSesionCajaActiva();
+      const bloqueada = sesion.sesion?.estado === 'PENDIENTE';
+      setCajaBloqueada(bloqueada);
+      setMensajeBloqueoCaja(bloqueada
+        ? 'Hay una revisión pendiente de tu cierre de caja. No puedes abrir la caja hasta que sea autorizada o denegada.'
+        : null
+      );
+    } catch {
+      setCajaBloqueada(false);
+      setMensajeBloqueoCaja(null);
+    } finally {
+      setValidandoAccesoCaja(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void verificarAccesoCaja();
+    const interval = window.setInterval(() => void verificarAccesoCaja(), 15000);
+    return () => window.clearInterval(interval);
+  }, [verificarAccesoCaja]);
 
   useEffect(() => {
     setCart([]);
@@ -139,6 +167,43 @@ export function POSPage() {
     return found?.nombre ?? `Sucursal ${sucursalEfectiva}`;
   }, [sucursalEfectiva, sucursales]);
 
+  const volverAlPanel = useCallback(() => {
+    navigate(isAdmin ? '/dashboard/admin/caja' : '/dashboard/cajero');
+  }, [isAdmin, navigate]);
+
+  if (validandoAccesoCaja) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(255,247,237,0.96)_42%,rgba(255,237,213,0.9))] px-4 text-gray-900">
+        <div className="w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-6 text-center shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+          <LoadingSpinner />
+          <p className="mt-4 text-sm text-gray-600">Validando acceso a caja...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (cajaBloqueada) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(255,247,237,0.96)_42%,rgba(255,237,213,0.9))] px-4 text-gray-900">
+        <div className="w-full max-w-lg rounded-3xl border border-orange-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(249,115,22,0.12)] backdrop-blur">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Caja bloqueada</p>
+          <h1 className="mt-2 text-3xl font-black text-gray-950">Cierre pendiente</h1>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {mensajeBloqueoCaja ?? 'Tu cierre de caja está pendiente de resolución.'}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-gray-600">
+            Cuando el cierre sea autorizado o denegado podrás volver a ingresar a la caja.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <Button type="button" variant="secondary" onClick={volverAlPanel}>
+              Volver al panel
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(255,247,237,0.96)_42%,rgba(255,237,213,0.9))] text-gray-900">
       <div className="mx-auto max-w-400 px-4 py-4 lg:px-6 lg:py-6">
@@ -147,9 +212,6 @@ export function POSPage() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Caja / POS</p>
               <h1 className="text-3xl font-black text-gray-950">Terminal de ventas</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                {displayName ? `${displayName} · ` : ''}Selecciona productos, arma el pedido y envíalo a cocina.
-              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
               <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">{nombreSucursalActiva}</span>
@@ -180,6 +242,8 @@ export function POSPage() {
             onSuccess={(message) => {
               setCierreCajaOpen(false);
               setSuccessMessage(message);
+              setCajaBloqueada(true);
+              setMensajeBloqueoCaja(message);
               window.setTimeout(() => setSuccessMessage(null), 4000);
             }}
           />
@@ -189,7 +253,6 @@ export function POSPage() {
           <div className="min-h-0 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur flex flex-col">
             <div className="border-b border-orange-100 px-5 py-4">
               <h2 className="text-lg font-semibold text-gray-900">Menú rápido</h2>
-              <p className="text-sm text-gray-500">Interfaz pensada para venta rápida tipo restaurante de cadena.</p>
             </div>
             <div className="flex-1 min-h-0 p-4">
               {loading ? (

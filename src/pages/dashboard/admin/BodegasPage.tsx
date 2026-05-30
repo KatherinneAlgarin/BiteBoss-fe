@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useBodegas } from '../../../hooks/useBodegas';
 import { useSucursales } from '../../../hooks/useSucursales';
 import { useAuth } from '../../../hooks/useAuth';
@@ -14,12 +14,33 @@ export function BodegasAdminPage() {
   const [sucursalFiltro, setSucursalFiltro] = useState<number | null>(
     isAdmin ? null : (sucursalUsuario ?? null)
   );
+  const [busqueda, setBusqueda] = useState('');
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null);
   const [selectedBodega, setSelectedBodega] = useState<BodegaItem | undefined>(undefined);
 
   const { bodegas, loading, error, refetch, createBodega, updateBodega, deactivateBodega, activateBodega, checkStock } =
     useBodegas(sucursalFiltro ?? undefined);
   const { sucursales, loading: loadingSucursales } = useSucursales();
+
+  const bodegasFiltradas = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return bodegas;
+
+    return bodegas.filter(bodega => {
+      const estado = bodega.activo ? 'activa' : 'inactiva';
+      const tipo = bodega.tipo.toLowerCase();
+      const sucursal = (bodega.sucursal ?? '').toLowerCase();
+      const descripcion = (bodega.descripcion ?? '').toLowerCase();
+
+      return (
+        bodega.nombre.toLowerCase().includes(termino) ||
+        tipo.includes(termino) ||
+        sucursal.includes(termino) ||
+        descripcion.includes(termino) ||
+        estado.includes(termino)
+      );
+    });
+  }, [bodegas, busqueda]);
 
   const handleCreate = () => {
     setSelectedBodega(undefined);
@@ -52,6 +73,19 @@ export function BodegasAdminPage() {
         <p className="text-gray-500 text-sm mt-1">Administra las bodegas de las sucursales</p>
       </div>
 
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <label htmlFor="busqueda-bodegas" className="mb-2 block text-sm font-medium text-gray-700">
+          Buscar bodegas
+        </label>
+        <input
+          id="busqueda-bodegas"
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          placeholder="Buscar por nombre, tipo, descripción, sucursal o estado"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+      </div>
+
       {isAdmin && (
         <div className="bg-white rounded-lg shadow p-4">
           <SucursalSelect
@@ -68,7 +102,7 @@ export function BodegasAdminPage() {
       )}
 
       <BodegasList
-        bodegas={bodegas}
+        bodegas={bodegasFiltradas}
         loading={loading}
         error={error}
         onRefetch={refetch}

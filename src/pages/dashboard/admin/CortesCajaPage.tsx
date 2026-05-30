@@ -5,6 +5,7 @@ import { ModalShell } from '../../../components/ui/ModalShell';
 import {
   autorizarCierreCaja,
   listarCierresCaja,
+  reautorizarCierreCaja,
   rechazarCierreCaja,
 } from '../../../services/caja-cierre.service';
 import type { CajaCierreListadoItem, EstadoCajaSesion } from '../../../types/caja-cierre.types';
@@ -13,11 +14,18 @@ const ESTADOS: EstadoCajaSesion[] = ['ABIERTA', 'PENDIENTE', 'AUTORIZADA', 'RECH
 
 export function CortesCajaPage() {
   const [estado, setEstado] = useState<EstadoCajaSesion | ''>('PENDIENTE');
+  const [idFiltro, setIdFiltro] = useState('');
+  const [fechaFiltro, setFechaFiltro] = useState('');
+  const [cajeroFiltro, setCajeroFiltro] = useState('');
   const [items, setItems] = useState<CajaCierreListadoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [selectedDetalle, setSelectedDetalle] = useState<CajaCierreListadoItem | null>(null);
+  const [rechazoTarget, setRechazoTarget] = useState<CajaCierreListadoItem | null>(null);
+  const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [rechazando, setRechazando] = useState(false);
+  const [reautorizando, setReautorizando] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -38,6 +46,37 @@ export function CortesCajaPage() {
 
   const pendientes = useMemo(() => items.filter(item => item.estado === 'PENDIENTE').length, [items]);
 
+  const cajerosDisponibles = useMemo(
+    () => Array.from(new Set(items.map(item => item.cajero_nombre ?? String(item.id_usuario_cajero)))),
+    [items]
+  );
+
+  const itemsFiltrados = useMemo(() => {
+    const idBuscado = idFiltro.trim();
+    const fechaBuscada = fechaFiltro.trim();
+    const cajeroBuscado = cajeroFiltro.trim();
+
+    return items.filter(item => {
+      const textoCajero = item.cajero_nombre ?? String(item.id_usuario_cajero);
+      const fechaApertura = new Date(item.fecha_apertura);
+      const fechaLocal = Number.isNaN(fechaApertura.getTime())
+        ? ''
+        : `${fechaApertura.getFullYear()}-${String(fechaApertura.getMonth() + 1).padStart(2, '0')}-${String(fechaApertura.getDate()).padStart(2, '0')}`;
+
+      const matchesId = !idBuscado || String(item.id_caja_sesion).includes(idBuscado);
+      const matchesFecha = !fechaBuscada || fechaLocal === fechaBuscada;
+      const matchesCajero = !cajeroBuscado || textoCajero === cajeroBuscado;
+
+      return matchesId && matchesFecha && matchesCajero;
+    });
+  }, [cajeroFiltro, fechaFiltro, idFiltro, items]);
+
+  const limpiarFiltros = () => {
+    setIdFiltro('');
+    setFechaFiltro('');
+    setCajeroFiltro('');
+  };
+
   const aprobar = async (id: number) => {
     setActionLoadingId(id);
     try {
@@ -50,17 +89,44 @@ export function CortesCajaPage() {
     }
   };
 
-  const rechazar = async (id: number) => {
-    const motivo = window.prompt('Motivo de rechazo');
-    if (!motivo?.trim()) return;
+  const abrirRechazo = (item: CajaCierreListadoItem) => {
+    setRechazoTarget(item);
+    setMotivoRechazo('');
+  };
 
-    setActionLoadingId(id);
+  const confirmarRechazo = async () => {
+    if (!rechazoTarget) return;
+    if (!motivoRechazo.trim()) {
+      setError('El motivo de rechazo es requerido.');
+      return;
+    }
+
+    setRechazando(true);
+    setActionLoadingId(rechazoTarget.id_caja_sesion);
     try {
-      await rechazarCierreCaja(id, motivo.trim());
+      await rechazarCierreCaja(rechazoTarget.id_caja_sesion, motivoRechazo.trim());
+      setRechazoTarget(null);
+      setMotivoRechazo('');
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar el corte');
     } finally {
+      setRechazando(false);
+      setActionLoadingId(null);
+    }
+  };
+
+  const reautorizar = async (id: number) => {
+    setReautorizando(true);
+    setActionLoadingId(id);
+    try {
+      await reautorizarCierreCaja(id);
+      setSelectedDetalle(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo reautorizar el corte');
+    } finally {
+      setReautorizando(false);
       setActionLoadingId(null);
     }
   };
@@ -68,23 +134,58 @@ export function CortesCajaPage() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-2xl font-black text-gray-900">Cortes de caja</h1>
             <p className="text-sm text-gray-600">Revisa solicitudes de cierre de cajeros y autoriza o rechaza.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">Pendientes: {pendientes}</span>
-            <select
-              value={estado}
-              onChange={e => setEstado((e.target.value as EstadoCajaSesion) || '')}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">Todos</option>
-              {ESTADOS.map(item => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-120">
+            <div className="flex items-center gap-2 lg:justify-end">
+              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">Pendientes: {pendientes}</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Mostrando: {itemsFiltrados.length}</span>
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Limpiar filtros
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <input
+                value={idFiltro}
+                onChange={e => setIdFiltro(e.target.value.replace(/\D/g, ''))}
+                placeholder="Filtrar por ID"
+                inputMode="numeric"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="date"
+                value={fechaFiltro}
+                onChange={e => setFechaFiltro(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <select
+                value={cajeroFiltro}
+                onChange={e => setCajeroFiltro(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">Todos los cajeros</option>
+                {cajerosDisponibles.map(item => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+              <select
+                value={estado}
+                onChange={e => setEstado((e.target.value as EstadoCajaSesion) || '')}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">Todos los estados</option>
+                {ESTADOS.map(item => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -94,7 +195,7 @@ export function CortesCajaPage() {
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         {loading ? (
           <p className="text-sm text-gray-500">Cargando cortes...</p>
-        ) : items.length === 0 ? (
+        ) : itemsFiltrados.length === 0 ? (
           <p className="text-sm text-gray-500">No hay cortes para mostrar.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -112,7 +213,7 @@ export function CortesCajaPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map(item => (
+                {itemsFiltrados.map(item => (
                   <tr key={item.id_caja_sesion} className="border-t border-gray-100 text-gray-700">
                     <td className="py-2 pr-3">#{item.id_caja_sesion}</td>
                     <td className="py-2 pr-3">{item.sucursal_nombre ?? item.id_sucursal}</td>
@@ -142,7 +243,7 @@ export function CortesCajaPage() {
                           <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => void rechazar(item.id_caja_sesion)}
+                            onClick={() => abrirRechazo(item)}
                             disabled={actionLoadingId === item.id_caja_sesion}
                           >
                             Rechazar
@@ -180,6 +281,25 @@ export function CortesCajaPage() {
               <p><span className="font-semibold">Apertura:</span> {new Date(selectedDetalle.fecha_apertura).toLocaleString('es-ES')}</p>
               <p><span className="font-semibold">Total:</span> ${Number(selectedDetalle.total_monto ?? 0).toFixed(2)}</p>
               <p><span className="font-semibold">Declarado:</span> {selectedDetalle.monto_declarado != null ? `$${Number(selectedDetalle.monto_declarado).toFixed(2)}` : '—'}</p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-semibold text-gray-900">Observación del cajero</h3>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
+                  {selectedDetalle.observacion_solicitud?.trim() ? selectedDetalle.observacion_solicitud : 'Sin observación'}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-semibold text-gray-900">Observación de revisión</h3>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
+                  {selectedDetalle.motivo_rechazo?.trim() ? selectedDetalle.motivo_rechazo : 'Sin observación'}
+                </p>
+                <p className="mt-2 text-xs text-gray-500">
+                  {selectedDetalle.revisor_nombre ? `Revisó: ${selectedDetalle.revisor_nombre}` : 'Sin revisor asignado'}
+                </p>
+              </div>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -237,6 +357,70 @@ export function CortesCajaPage() {
                   <p className="text-sm text-gray-500">Sin transacciones para mostrar.</p>
                 )}
               </div>
+            </div>
+
+            {selectedDetalle.estado === 'RECHAZADA' && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => void reautorizar(selectedDetalle.id_caja_sesion)}
+                  isLoading={reautorizando && actionLoadingId === selectedDetalle.id_caja_sesion}
+                >
+                  Reautorizar corte
+                </Button>
+              </div>
+            )}
+          </div>
+        </ModalShell>
+      )}
+
+      {rechazoTarget && (
+        <ModalShell
+          title={`Rechazar corte #${rechazoTarget.id_caja_sesion}`}
+          onClose={() => {
+            setRechazoTarget(null);
+            setMotivoRechazo('');
+          }}
+          maxWidthClass="max-w-xl"
+        >
+          <div className="space-y-4 p-6">
+            <p className="text-sm text-gray-600">
+              Indica el motivo del rechazo para registrar la revisión pendiente correctamente.
+            </p>
+            <div>
+              <label htmlFor="motivo-rechazo" className="mb-1 block text-sm font-medium text-gray-700">
+                Motivo de rechazo
+              </label>
+              <textarea
+                id="motivo-rechazo"
+                value={motivoRechazo}
+                onChange={e => setMotivoRechazo(e.target.value)}
+                className="min-h-28 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Escribe el motivo del rechazo"
+                autoFocus
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                onClick={() => {
+                  setRechazoTarget(null);
+                  setMotivoRechazo('');
+                }}
+                disabled={rechazando}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                fullWidth
+                onClick={() => void confirmarRechazo()}
+                isLoading={rechazando}
+              >
+                Rechazar corte
+              </Button>
             </div>
           </div>
         </ModalShell>

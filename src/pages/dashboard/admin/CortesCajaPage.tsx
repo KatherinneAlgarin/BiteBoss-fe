@@ -3,6 +3,7 @@ import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { Button } from '../../../components/ui/Button';
 import { FilterPanel } from '../../../components/ui/FilterPanel';
 import { ModalShell } from '../../../components/ui/ModalShell';
+import { TableLoadingState } from '../../../components/ui/TableLoadingState';
 import {
   autorizarCierreCaja,
   listarCierresCaja,
@@ -192,7 +193,7 @@ export function CortesCajaPage() {
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         {loading ? (
-          <p className="text-sm text-gray-500">Cargando cortes...</p>
+          <TableLoadingState message="Cargando cortes..." />
         ) : itemsFiltrados.length === 0 ? (
           <p className="text-sm text-gray-500">No hay cortes para mostrar.</p>
         ) : (

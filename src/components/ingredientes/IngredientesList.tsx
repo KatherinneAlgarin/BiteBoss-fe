@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, AlertTriangle, MoreVertical } from 'lucide-react';
+import { Plus, Edit, Power, PowerOff, Loader2, AlertTriangle, MoreVertical } from 'lucide-react';
 import type { IngredienteItem, EnUsoIngrediente } from '../../types/ingrediente.types';
 import { ModalShell } from '../ui/ModalShell';
+import { TableErrorState } from '../ui/TableErrorState';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { TableLoadingState } from '../ui/TableLoadingState';
 
 interface IngredientesListProps {
   ingredientes: IngredienteItem[];
@@ -133,21 +136,8 @@ export function IngredientesList({ ingredientes, loading, error, onRefetch, onCr
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-      <span className="ml-2 text-gray-600">Cargando ingredientes...</span>
-    </div>
-  );
-
   if (error) return (
-    <div className="bg-red-50 border border-red-200 rounded-md p-4">
-      <div className="flex items-center">
-        <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-        <span className="text-red-700">Error al cargar ingredientes: {error}</span>
-      </div>
-      <button onClick={onRefetch} className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Reintentar</button>
-    </div>
+    <TableErrorState message={`Error al cargar ingredientes: ${error}`} onRetry={onRefetch} />
   );
 
   return (
@@ -168,8 +158,10 @@ export function IngredientesList({ ingredientes, loading, error, onRefetch, onCr
           </button>
         </div>
 
-        {ingredientes.length === 0 ? (
-          <div className="text-center py-12"><p className="text-gray-500">No hay ingredientes registrados</p></div>
+        {loading ? (
+          <TableLoadingState message="Cargando ingredientes..." />
+        ) : ingredientes.length === 0 ? (
+          <TableEmptyState message="No hay ingredientes registrados" />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

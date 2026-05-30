@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Loader2, AlertCircle, MoreVertical, Pencil, ToggleLeft, ToggleRight, Search, X } from 'lucide-react';
+import { Plus, MoreVertical, Pencil, ToggleLeft, ToggleRight, Search, X } from 'lucide-react';
 import { useProveedores } from '../../hooks/useProveedores';
 import { FilterPanel } from '../ui/FilterPanel';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { TableErrorState } from '../ui/TableErrorState';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { TableLoadingState } from '../ui/TableLoadingState';
 import type { ProveedorListItem } from '../../types/proveedor.types';
 
 interface ActionMenuProps {
@@ -56,7 +59,7 @@ function ActionMenu({ proveedor, onEdit, onToggleActivo }: ActionMenuProps) {
             onClick={() => { setOpen(false); onEdit(); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
           >
-            <Pencil className="w-4 h-4 flex-shrink-0" />
+            <Pencil className="w-4 h-4 shrink-0" />
             Editar
           </button>
           <div className="border-t border-gray-100 mx-2" />
@@ -69,8 +72,8 @@ function ActionMenu({ proveedor, onEdit, onToggleActivo }: ActionMenuProps) {
             }`}
           >
             {proveedor.activo
-              ? <ToggleLeft className="w-4 h-4 flex-shrink-0" />
-              : <ToggleRight className="w-4 h-4 flex-shrink-0" />
+              ? <ToggleLeft className="w-4 h-4 shrink-0" />
+              : <ToggleRight className="w-4 h-4 shrink-0" />
             }
             {proveedor.activo ? 'Desactivar' : 'Activar'}
           </button>
@@ -106,20 +109,7 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
   }, [proveedores, busqueda, soloActivos]);
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="flex items-center">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-700">Error al cargar proveedores: {error}</span>
-        </div>
-        <button
-          onClick={refetch}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
+    return <TableErrorState message={`Error al cargar proveedores: ${error}`} onRetry={refetch} />;
   }
 
   return (
@@ -167,27 +157,24 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-            <span className="ml-2 text-gray-600">Cargando proveedores...</span>
-          </div>
+          <TableLoadingState message="Cargando proveedores..." />
         ) : proveedoresFiltrados.length === 0 ? (
-          <div className="text-center py-12">
-            {proveedores.length === 0 ? (
-              <>
-                <p className="text-gray-500 mb-4">No hay proveedores registrados</p>
+          proveedores.length === 0 ? (
+            <TableEmptyState
+              message="No hay proveedores registrados"
+              action={(
                 <button
                   onClick={onCreate}
-                  className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
+                  className="inline-flex items-center rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Crear el primero
                 </button>
-              </>
-            ) : (
-              <p className="text-gray-500">Sin resultados para tu búsqueda</p>
-            )}
-          </div>
+              )}
+            />
+          ) : (
+            <TableEmptyState message="Sin resultados para tu búsqueda" />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 text-sm">

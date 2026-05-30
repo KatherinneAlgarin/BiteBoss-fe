@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { CalendarPlus, Loader2, AlertCircle, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle, MoreVertical } from 'lucide-react';
+import { CalendarPlus, CalendarX, Search, Pencil, X, RotateCcw, CheckCircle, MoreVertical } from 'lucide-react';
 import { listarReservaciones, cancelarReservacion, reactivarReservacion, completarReservacion } from '../../../services/reservacion.service';
 import { listarZonasPorSucursal } from '../../../services/zona.service';
 import { ReservacionModal, type ReservacionModalMode } from '../../../components/reservaciones/ReservacionModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import { FilterPanel } from '../../../components/ui/FilterPanel';
+import { TableErrorState } from '../../../components/ui/TableErrorState';
+import { TableEmptyState } from '../../../components/ui/TableEmptyState';
+import { TableLoadingState } from '../../../components/ui/TableLoadingState';
 import type { ReservacionItem, EstadoReservacion } from '../../../types/reservacion.types';
 import type { ZonaItem } from '../../../types/zona.types';
 
@@ -43,12 +47,6 @@ function getRangoDesde(periodo: Periodo, mes?: number): { inicio: string; fin: s
   const fin    = new Date(year, month, 0);
   return { inicio: toISO(inicio), fin: toISO(fin) };
 }
-
-const ESTADO_BADGE: Record<EstadoReservacion, string> = {
-  pendiente:  'bg-amber-100 text-amber-700',
-  cancelada:  'bg-red-100 text-red-700',
-  completada: 'bg-blue-100 text-blue-700',
-};
 
 const ESTADO_LABEL: Record<EstadoReservacion, string> = {
   pendiente:  'Pendiente',
@@ -285,150 +283,115 @@ export function ReservacionesPage() {
     });
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-      </div>
-    );
-  }
-
-  if (loadError && reservaciones.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 text-red-600">
-        <AlertCircle className="w-8 h-8" />
-        <p className="text-sm">{loadError}</p>
-        <button
-          onClick={() => void loadData()}
-          className="text-sm font-medium underline underline-offset-2 hover:text-red-700"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Reservaciones</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {reservacionesFiltradas.length} resultado{reservacionesFiltradas.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={openCrear}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium
-            rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          <CalendarPlus className="w-4 h-4" />
-          Nueva reservación
-        </button>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-col gap-3">
-        {/* Fila 1: períodos rápidos */}
-        <div className="flex flex-wrap items-center gap-2">
-          {(['hoy', 'semana', 'mes'] as Periodo[]).map(p => (
-            <button
-              key={p}
-              onClick={() => { setPeriodo(p); setFiltroFecha(''); }}
-              className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-                periodo === p && !filtroFecha
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Semana' : 'Mes'}
-            </button>
-          ))}
+      <FilterPanel
+        title="Buscar reservaciones"
+        description="Filtra por cliente, estado, zona y periodo."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {(['hoy', 'semana', 'mes'] as Periodo[]).map(p => (
+              <button
+                key={p}
+                onClick={() => { setPeriodo(p); setFiltroFecha(''); }}
+                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                  periodo === p && !filtroFecha
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Semana' : 'Mes'}
+              </button>
+            ))}
 
-          {/* Selector de mes: aparece al instante cuando "Mes" está activo */}
-          {periodo === 'mes' && !filtroFecha && (
+            {periodo === 'mes' && !filtroFecha && (
+              <select
+                value={mesSeleccionado}
+                onChange={e => setMesSeleccionado(Number(e.target.value))}
+                className="px-2.5 py-1.5 text-sm border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white font-medium"
+              >
+                {MESES.map((nombre, i) => (
+                  <option key={i + 1} value={i + 1}>{nombre}</option>
+                ))}
+              </select>
+            )}
+
+            <span className="text-gray-300 text-sm">|</span>
+
+            <div className="relative">
+              <input
+                type="date"
+                value={filtroFecha}
+                onChange={e => { setFiltroFecha(e.target.value); setPeriodo(null); }}
+                className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white ${
+                  filtroFecha ? 'border-orange-400' : 'border-gray-300'
+                }`}
+              />
+              {filtroFecha && (
+                <button
+                  onClick={() => { setFiltroFecha(''); setPeriodo('hoy'); }}
+                  className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <div className="relative w-52">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                placeholder="Buscar cliente..."
+                className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              {busqueda && (
+                <button
+                  onClick={() => setBusqueda('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
             <select
-              value={mesSeleccionado}
-              onChange={e => setMesSeleccionado(Number(e.target.value))}
-              className="px-2.5 py-1.5 text-sm border border-orange-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white font-medium"
+              value={filtroEstado}
+              onChange={e => setFiltroEstado(e.target.value as FiltroEstado)}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
             >
-              {MESES.map((nombre, i) => (
-                <option key={i + 1} value={i + 1}>{nombre}</option>
+              {(Object.keys(FILTRO_LABEL) as FiltroEstado[]).map(k => (
+                <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
               ))}
             </select>
-          )}
 
-          <span className="text-gray-300 text-sm">|</span>
-
-          {/* Input fecha manual */}
-          <div className="relative">
-            <input
-              type="date"
-              value={filtroFecha}
-              onChange={e => { setFiltroFecha(e.target.value); setPeriodo(null); }}
-              className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white ${
-                filtroFecha ? 'border-orange-400' : 'border-gray-300'
-              }`}
-            />
-            {filtroFecha && (
-              <button
-                onClick={() => { setFiltroFecha(''); setPeriodo('hoy'); }}
-                className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+            <select
+              value={filtroZona}
+              onChange={e => setFiltroZona(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            >
+              <option value="">Todas las zonas</option>
+              {zonas.map(z => (
+                <option key={z.id_zona} value={z.id_zona}>{z.nombre}</option>
+              ))}
+            </select>
           </div>
         </div>
-
-        {/* Fila 2: búsqueda + estado + zona */}
-        <div className="flex flex-wrap gap-3">
-          <div className="relative w-52">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar cliente..."
-              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
-            {busqueda && (
-              <button
-                onClick={() => setBusqueda('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          <select
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value as FiltroEstado)}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-          >
-            {(Object.keys(FILTRO_LABEL) as FiltroEstado[]).map(k => (
-              <option key={k} value={k}>{FILTRO_LABEL[k]}</option>
-            ))}
-          </select>
-
-          <select
-            value={filtroZona}
-            onChange={e => setFiltroZona(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-          >
-            <option value="">Todas las zonas</option>
-            {zonas.map(z => (
-              <option key={z.id_zona} value={z.id_zona}>{z.nombre}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      </FilterPanel>
 
       {/* Mensajes */}
       {successMsg && (
@@ -443,69 +406,81 @@ export function ReservacionesPage() {
         </div>
       )}
 
-      {/* Tabla */}
-      {reservacionesFiltradas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
-          <CalendarX className="w-12 h-12" />
-          <p className="text-sm">
-            {busqueda
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900">Reservaciones</h2>
+          <button
+            onClick={openCrear}
+            className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+          >
+            <CalendarPlus className="w-4 h-4 mr-2" />
+            Nueva reservación
+          </button>
+        </div>
+
+        {loading ? (
+          <TableLoadingState message="Cargando reservaciones..." className="min-h-96" />
+        ) : loadError && reservaciones.length === 0 ? (
+          <div className="p-6">
+            <TableErrorState message={`Error al cargar reservaciones: ${loadError}`} onRetry={() => void loadData()} />
+          </div>
+        ) : reservacionesFiltradas.length === 0 ? (
+          <TableEmptyState
+            icon={<CalendarX className="h-12 w-12" />}
+            message={busqueda
               ? 'Sin resultados para tu búsqueda'
               : `No hay reservaciones ${FILTRO_LABEL[filtroEstado].toLowerCase()}`}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          />
+        ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Cliente</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Fecha llegada</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Personas</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Zona / Mesa</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Estado</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Acciones</th>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha llegada</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Personas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona / Mesa</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {reservacionesFiltradas.map(r => (
-                  <tr key={r.id_reservacion} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{r.nombre_cliente}</p>
+                  <tr key={r.id_reservacion} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm font-medium text-gray-900">{r.nombre_cliente}</p>
                       {r.telefono && <p className="text-xs text-gray-500">{r.telefono}</p>}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {formatFecha(r.fecha_llegada)}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-700">{r.cantidad_personas}</td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{r.cantidad_personas}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       <span>{r.zona_nombre}</span>
-                      {r.mesa_numero > 0 && (
-                        <span className="text-gray-400"> · Mesa {r.mesa_numero}</span>
-                      )}
+                      {r.mesa_numero > 0 && <span className="text-gray-400"> · Mesa {r.mesa_numero}</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${ESTADO_BADGE[r.estado]}`}>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${r.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' : r.estado === 'cancelada' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                           {ESTADO_LABEL[r.estado]}
                         </span>
                         {esVencida(r) && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium w-fit bg-gray-100 text-gray-500">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-700 w-fit">
                             Vencida
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       <RowMenu actions={
                         r.estado === 'pendiente' && !esVencida(r) ? [
-                          { label: 'Editar',    icon: <Pencil className="w-3.5 h-3.5" />,      onClick: () => openEditar(r),     className: 'text-orange-600 hover:bg-orange-50' },
+                          { label: 'Editar', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => openEditar(r), className: 'text-orange-600 hover:bg-orange-50' },
                           { label: 'Completar', icon: <CheckCircle className="w-3.5 h-3.5" />, onClick: () => pedirCompletar(r), className: 'text-blue-600 hover:bg-blue-50' },
-                          { label: 'Cancelar',  icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
+                          { label: 'Cancelar', icon: <X className="w-3.5 h-3.5" />, onClick: () => pedirCancelar(r), className: 'text-red-600 hover:bg-red-50' },
                         ] : r.estado === 'pendiente' && esVencida(r) ? [
-                          { label: 'Cancelar',  icon: <X className="w-3.5 h-3.5" />,           onClick: () => pedirCancelar(r),  className: 'text-red-600 hover:bg-red-50' },
+                          { label: 'Cancelar', icon: <X className="w-3.5 h-3.5" />, onClick: () => pedirCancelar(r), className: 'text-red-600 hover:bg-red-50' },
                         ] : r.estado === 'cancelada' ? [
-                          { label: 'Reactivar', icon: <RotateCcw className="w-3.5 h-3.5" />,   onClick: () => pedirReactivar(r), className: 'text-amber-600 hover:bg-amber-50' },
+                          { label: 'Reactivar', icon: <RotateCcw className="w-3.5 h-3.5" />, onClick: () => pedirReactivar(r), className: 'text-amber-600 hover:bg-amber-50' },
                         ] : []
                       } />
                     </td>
@@ -514,8 +489,8 @@ export function ReservacionesPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <ReservacionModal
         isOpen={modal.open}

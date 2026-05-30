@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle, MoreVertical, UtensilsCrossed } from 'lucide-react';
+import { Plus, Edit, Power, PowerOff, Loader2, MoreVertical, UtensilsCrossed } from 'lucide-react';
 import type { TipoOrdenItem } from '../../types/tipo-orden.types';
 import { ModalShell } from '../ui/ModalShell';
+import { TableErrorState } from '../ui/TableErrorState';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { TableLoadingState } from '../ui/TableLoadingState';
 
 interface TiposOrdenListProps {
   tipos: TipoOrdenItem[];
@@ -278,27 +281,8 @@ export function TiposOrdenList({
 
   const tipoTree = buildTipoOrdenTree(tipos);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Cargando tipos de orden...</span>
-      </div>
-    );
-  }
-
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="flex items-center">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-700">Error al cargar tipos de orden: {error}</span>
-        </div>
-        <button onClick={onRefetch} className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-          Reintentar
-        </button>
-      </div>
-    );
+    return <TableErrorState message={`Error al cargar tipos de orden: ${error}`} onRetry={onRefetch} />;
   }
 
   return (
@@ -322,10 +306,10 @@ export function TiposOrdenList({
           </button>
         </div>
 
-        {tipos.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">No hay tipos de orden registrados</p>
-          </div>
+        {loading ? (
+          <TableLoadingState message="Cargando tipos de orden..." />
+        ) : tipos.length === 0 ? (
+          <TableEmptyState message="No hay tipos de orden registrados" />
         ) : (
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {tipoTree.map((tipo) => (

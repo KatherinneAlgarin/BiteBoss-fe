@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Loader2, AlertCircle, Users, Search, Filter } from 'lucide-react';
+import { Edit2, Users, Search, Filter } from 'lucide-react';
 import type { UsuarioListItem, RolItem } from '../../types/usuario.types';
 import type { SucursalItem } from '../../types/sucursal.types';
 import { formatRoleLabel, normalizeRole } from '../../lib/roles';
 import type { UserRole } from '../../types/auth.types';
 import { useAuth } from '../../hooks/useAuth';
+import { TableErrorState } from '../ui/TableErrorState';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { TableLoadingState } from '../ui/TableLoadingState';
 
 interface UsuariosListProps {
   usuarios: UsuarioListItem[];
@@ -54,30 +57,8 @@ export function UsuariosList({
     return () => clearTimeout(timer);
   }, [searchTerm, selectedRol, selectedSucursal, onSearch]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Cargando usuarios...</span>
-      </div>
-    );
-  }
-
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="flex items-center">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-700">Error al cargar usuarios: {error}</span>
-        </div>
-        <button
-          onClick={onRefetch}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
+    return <TableErrorState message={`Error al cargar usuarios: ${error}`} onRetry={onRefetch} />;
   }
 
   return (
@@ -148,13 +129,15 @@ export function UsuariosList({
       </div>
 
       {/* Table */}
-      {usuarios.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3 bg-white rounded-lg border border-gray-200">
-          <Users className="w-12 h-12" />
-          <p className="text-sm">No hay usuarios que coincidan con los filtros</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {loading ? (
+          <TableLoadingState message="Cargando usuarios..." />
+        ) : usuarios.length === 0 ? (
+          <TableEmptyState
+            message="No hay usuarios que coincidan con los filtros"
+            icon={<Users className="h-12 w-12" />}
+          />
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -205,8 +188,8 @@ export function UsuariosList({
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Results count */}
       <div className="text-xs text-gray-500">

@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Plus, Edit, Power, PowerOff, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Power, PowerOff, Loader2 } from 'lucide-react';
 import type { ZonaItem } from '../../types/zona.types';
 import { ModalShell } from '../ui/ModalShell';
+import { TableErrorState } from '../ui/TableErrorState';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { TableLoadingState } from '../ui/TableLoadingState';
 
 interface ZonasListProps {
   zonas: ZonaItem[];
@@ -66,30 +69,8 @@ export function ZonasList({
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Cargando zonas...</span>
-      </div>
-    );
-  }
-
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="flex items-center">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-700">Error al cargar zonas: {error}</span>
-        </div>
-        <button
-          onClick={onRefetch}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
+    return <TableErrorState message={`Error al cargar zonas: ${error}`} onRetry={onRefetch} />;
   }
 
   return (
@@ -113,10 +94,10 @@ export function ZonasList({
           </button>
         </div>
 
-        {zonas.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No hay zonas registradas en esta sucursal</p>
-          </div>
+        {loading ? (
+          <TableLoadingState message="Cargando zonas..." />
+        ) : zonas.length === 0 ? (
+          <TableEmptyState message="No hay zonas registradas en esta sucursal" />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Plus, Search, Pencil, MoreVertical, Loader2, CheckCircle } from 'lucide-react';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
-import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
+import { TableLoadingState } from '../../../components/ui/TableLoadingState';
 import { PedidoProveedorForm } from '../../../components/pedidos-proveedor/PedidoProveedorForm';
 import { PedidoProveedorDetalle } from '../../../components/pedidos-proveedor/PedidoProveedorDetalle';
 import { EditarPedidoProveedorForm } from '../../../components/pedidos-proveedor/EditarPedidoProveedorForm';
@@ -301,68 +301,64 @@ export function PedidosProveedorPage() {
 
       {error && <AlertMessage type="error" message={error} />}
 
-      {loading ? (
-        <div className="flex items-center justify-center min-h-48 text-orange-500">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : (
-        <div className="bg-white shadow rounded-lg">
-          {pedidosFiltrados.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-sm">
-                {pedidos.length === 0
-                  ? 'No hay órdenes de compra registradas.'
-                  : 'No se encontraron órdenes con los filtros aplicados.'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700 w-12">#</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Proveedor</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Sucursal</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Fecha pedido</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Fecha entrega</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Total</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Estado</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700 w-20">Acciones</th>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        {loading ? (
+          <TableLoadingState message="Cargando órdenes de compra..." />
+        ) : pedidosFiltrados.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-sm">
+              {pedidos.length === 0
+                ? 'No hay órdenes de compra registradas.'
+                : 'No se encontraron órdenes con los filtros aplicados.'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700 w-12">#</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Proveedor</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Sucursal</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Fecha pedido</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Fecha entrega</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-700">Total</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700">Estado</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700 w-20">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {pedidosFiltrados.map(pedido => (
+                  <tr key={pedido.id_pedido_proveedor} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">{pedido.id_pedido_proveedor}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{pedido.nombre_proveedor}</td>
+                    <td className="px-4 py-3 text-gray-600">{pedido.nombre_sucursal}</td>
+                    <td className="px-4 py-3 text-gray-600">{formatFecha(pedido.fecha_pedido)}</td>
+                    <td className="px-4 py-3 text-gray-600">{formatFecha(pedido.fecha_entrega)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                      ${Number(pedido.monto_total).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_BADGE[pedido.estado] ?? 'bg-gray-100 text-gray-700'}`}>
+                        {pedido.estado}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <ActionMenu
+                        onVerDetalle={() => handleVerDetalle(pedido)}
+                        onEditar={() => handleAbrirEditar(pedido)}
+                        onRecibir={() => handleAbrirRecibir(pedido)}
+                        loading={loadingDetalle === pedido.id_pedido_proveedor}
+                        estado={pedido.estado}
+                      />
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pedidosFiltrados.map(pedido => (
-                    <tr key={pedido.id_pedido_proveedor} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-400 font-mono text-xs">{pedido.id_pedido_proveedor}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{pedido.nombre_proveedor}</td>
-                      <td className="px-4 py-3 text-gray-600">{pedido.nombre_sucursal}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatFecha(pedido.fecha_pedido)}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatFecha(pedido.fecha_entrega)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                        ${Number(pedido.monto_total).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_BADGE[pedido.estado] ?? 'bg-gray-100 text-gray-700'}`}>
-                          {pedido.estado}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <ActionMenu
-                          onVerDetalle={() => handleVerDetalle(pedido)}
-                          onEditar={() => handleAbrirEditar(pedido)}
-                          onRecibir={() => handleAbrirRecibir(pedido)}
-                          loading={loadingDetalle === pedido.id_pedido_proveedor}
-                          estado={pedido.estado}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {showForm && (
         <PedidoProveedorForm

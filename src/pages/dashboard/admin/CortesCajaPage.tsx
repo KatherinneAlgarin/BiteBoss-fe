@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { Button } from '../../../components/ui/Button';
+import { FilterPanel } from '../../../components/ui/FilterPanel';
 import { ModalShell } from '../../../components/ui/ModalShell';
 import {
   autorizarCierreCaja,
@@ -133,62 +134,59 @@ export function CortesCajaPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">Cortes de caja</h1>
-            <p className="text-sm text-gray-600">Revisa solicitudes de cierre de cajeros y autoriza o rechaza.</p>
-          </div>
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-120">
-            <div className="flex items-center gap-2 lg:justify-end">
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">Pendientes: {pendientes}</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Mostrando: {itemsFiltrados.length}</span>
-              <button
-                type="button"
-                onClick={limpiarFiltros}
-                className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                Limpiar filtros
-              </button>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <input
-                value={idFiltro}
-                onChange={e => setIdFiltro(e.target.value.replace(/\D/g, ''))}
-                placeholder="Filtrar por ID"
-                inputMode="numeric"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="date"
-                value={fechaFiltro}
-                onChange={e => setFechaFiltro(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <select
-                value={cajeroFiltro}
-                onChange={e => setCajeroFiltro(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="">Todos los cajeros</option>
-                {cajerosDisponibles.map(item => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-              <select
-                value={estado}
-                onChange={e => setEstado((e.target.value as EstadoCajaSesion) || '')}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="">Todos los estados</option>
-                {ESTADOS.map(item => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+      <FilterPanel
+        title="Cortes de caja"
+        description="Revisa solicitudes de cierre de cajeros y autoriza o rechaza."
+        actions={(
+          <>
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">Pendientes: {pendientes}</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Mostrando: {itemsFiltrados.length}</span>
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Limpiar filtros
+            </button>
+          </>
+        )}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <input
+            value={idFiltro}
+            onChange={e => setIdFiltro(e.target.value.replace(/\D/g, ''))}
+            placeholder="Filtrar por ID"
+            inputMode="numeric"
+            className="input-field"
+          />
+          <input
+            type="date"
+            value={fechaFiltro}
+            onChange={e => setFechaFiltro(e.target.value)}
+            className="input-field"
+          />
+          <select
+            value={cajeroFiltro}
+            onChange={e => setCajeroFiltro(e.target.value)}
+            className="input-field"
+          >
+            <option value="">Todos los cajeros</option>
+            {cajerosDisponibles.map(item => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+          <select
+            value={estado}
+            onChange={e => setEstado((e.target.value as EstadoCajaSesion) || '')}
+            className="input-field"
+          >
+            <option value="">Todos los estados</option>
+            {ESTADOS.map(item => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
         </div>
-      </div>
+      </FilterPanel>
 
       {error && <AlertMessage type="error" message={error} />}
 

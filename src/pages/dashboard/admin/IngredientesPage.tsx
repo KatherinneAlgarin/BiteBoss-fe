@@ -3,6 +3,7 @@ import { useIngredientes } from '../../../hooks/useIngredientes';
 import { useBodegas } from '../../../hooks/useBodegas';
 import { IngredientesList } from '../../../components/ingredientes/IngredientesList';
 import { IngredienteForm } from '../../../components/ingredientes/IngredienteForm';
+import { FilterPanel } from '../../../components/ui/FilterPanel';
 import type { IngredienteItem } from '../../../types/ingrediente.types';
 
 export function IngredientesAdminPage() {
@@ -55,18 +56,15 @@ export function IngredientesAdminPage() {
         <p className="text-gray-500 text-sm mt-1">Administra los ingredientes disponibles para los productos</p>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <label htmlFor="busqueda-ingredientes" className="mb-2 block text-sm font-medium text-gray-700">
-          Buscar ingredientes
-        </label>
+      <FilterPanel title="Buscar ingredientes" description="Filtra por nombre, unidad de medida o estado.">
         <input
           id="busqueda-ingredientes"
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
           placeholder="Buscar por nombre, unidad o estado"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="input-field"
         />
-      </div>
+      </FilterPanel>
 
       <IngredientesList
         ingredientes={ingredientesFiltrados}

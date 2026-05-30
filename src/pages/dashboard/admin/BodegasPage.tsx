@@ -4,6 +4,7 @@ import { useSucursales } from '../../../hooks/useSucursales';
 import { useAuth } from '../../../hooks/useAuth';
 import { BodegasList } from '../../../components/bodegas/BodegasList';
 import { BodegaForm } from '../../../components/bodegas/BodegaForm';
+import { FilterPanel } from '../../../components/ui/FilterPanel';
 import { SucursalSelect } from '../../../components/ui/SucursalSelect';
 import type { BodegaItem } from '../../../types/bodega.types';
 
@@ -73,18 +74,15 @@ export function BodegasAdminPage() {
         <p className="text-gray-500 text-sm mt-1">Administra las bodegas de las sucursales</p>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <label htmlFor="busqueda-bodegas" className="mb-2 block text-sm font-medium text-gray-700">
-          Buscar bodegas
-        </label>
+      <FilterPanel title="Buscar bodegas" description="Filtra por nombre, tipo, descripción, sucursal o estado.">
         <input
           id="busqueda-bodegas"
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
           placeholder="Buscar por nombre, tipo, descripción, sucursal o estado"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="input-field"
         />
-      </div>
+      </FilterPanel>
 
       {isAdmin && (
         <div className="bg-white rounded-lg shadow p-4">

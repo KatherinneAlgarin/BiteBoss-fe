@@ -33,6 +33,10 @@ function isGroup(entry: NavEntry): entry is NavGroup {
   return 'children' in entry;
 }
 
+function getStorageKey(userRole: UserRole) {
+  return `biteboss-sidebar-open-groups:${userRole}`;
+}
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -55,9 +59,19 @@ export function Sidebar({
   isLoggingOut = false,
 }: SidebarProps) {
   const location = useLocation();
+  const storageKey = getStorageKey(userRole);
 
   // Inicializar grupos abiertos: abierto si algún hijo está activo
   const [openGroups, setOpenGroups] = useState<Record<number, boolean>>(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw) {
+        return JSON.parse(raw) as Record<number, boolean>;
+      }
+    } catch {
+      // Si falla el storage, se cae al estado inicial calculado.
+    }
+
     const initial: Record<number, boolean> = {};
     data.navMain.forEach((entry, idx) => {
       if (isGroup(entry)) {
@@ -67,8 +81,17 @@ export function Sidebar({
     return initial;
   });
 
+  const persistOpenGroups = (next: Record<number, boolean>) => {
+    setOpenGroups(next);
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      // Ignore storage failures.
+    }
+  };
+
   const toggleGroup = (idx: number) => {
-    setOpenGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
+    persistOpenGroups({ ...openGroups, [idx]: !openGroups[idx] });
   };
 
   return (

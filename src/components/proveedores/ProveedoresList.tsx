@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Loader2, AlertCircle, MoreVertical, Pencil, ToggleLeft, ToggleRight, Search, X } from 'lucide-react';
 import { useProveedores } from '../../hooks/useProveedores';
+import { FilterPanel } from '../ui/FilterPanel';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import type { ProveedorListItem } from '../../types/proveedor.types';
 
@@ -104,15 +105,6 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
     });
   }, [proveedores, busqueda, soloActivos]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Cargando proveedores...</span>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -132,29 +124,24 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
 
   return (
     <>
-      <div className="bg-white shadow rounded-lg">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900 shrink-0">Proveedores</h2>
-          <button
-            onClick={onCreate}
-            className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition-colors shrink-0"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Proveedor
-          </button>
-        </div>
-
-        {/* Filtros */}
-        <div className="px-6 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
-          <div className="relative w-56">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <FilterPanel
+        title="Filtros"
+        description="Busca por nombre, email o teléfono y muestra proveedores inactivos si lo necesitas."
+        actions={(
+          <span className="text-xs text-gray-400">
+            {proveedoresFiltrados.length} resultado{proveedoresFiltrados.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative w-full lg:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar proveedor..."
-              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="input-field pl-9 pr-8"
             />
             {busqueda && (
               <button
@@ -175,13 +162,16 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
             />
             Mostrar inactivos
           </label>
-
-          <span className="text-xs text-gray-400 ml-auto">
-            {proveedoresFiltrados.length} resultado{proveedoresFiltrados.length !== 1 ? 's' : ''}
-          </span>
         </div>
+      </FilterPanel>
 
-        {proveedoresFiltrados.length === 0 ? (
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+            <span className="ml-2 text-gray-600">Cargando proveedores...</span>
+          </div>
+        ) : proveedoresFiltrados.length === 0 ? (
           <div className="text-center py-12">
             {proveedores.length === 0 ? (
               <>
@@ -200,33 +190,37 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700 w-12">#</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Nombre</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Teléfono</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Dirección</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700">Estado</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700 w-20">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {proveedoresFiltrados.map((proveedor) => (
                   <tr key={proveedor.id_proveedor} className={`hover:bg-gray-50 ${!proveedor.activo ? 'opacity-60' : ''}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">
+                      {proveedor.id_proveedor}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                       {proveedor.nombre}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {proveedor.email || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {proveedor.telefono || '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                    <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
                       {proveedor.direccion || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         proveedor.activo
                           ? 'bg-green-100 text-green-800'
@@ -235,7 +229,7 @@ export function ProveedoresList({ onCreate, onEdit }: ProveedoresListProps) {
                         {proveedor.activo ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
                       <ActionMenu
                         proveedor={proveedor}
                         onEdit={() => onEdit(proveedor)}

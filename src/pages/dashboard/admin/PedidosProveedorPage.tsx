@@ -14,6 +14,7 @@ import { listarPedidos, crearPedido, obtenerPedido, editarPedido, confirmarRecep
 import type { PedidoProveedorItem, CrearPedidoProveedorDto, EditarPedidoProveedorDto, ConfirmarRecepcionDto } from '../../../types/pedido-proveedor.types';
 import type { IngredienteItem } from '../../../types/ingrediente.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
+import { FilterPanel } from '../../../components/ui/FilterPanel';
 
 function ActionMenu({ onVerDetalle, onEditar, onRecibir, loading, estado }: {
   onVerDetalle: () => void;
@@ -222,67 +223,81 @@ export function PedidosProveedorPage() {
         </button>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={filtroProveedor}
-            onChange={e => setFiltroProveedor(e.target.value)}
-            placeholder="Buscar proveedor..."
-            className="pl-9 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-48 bg-gray-50"
-          />
-        </div>
-
-        {isAdmin && (
-          <>
-            <datalist id="sucursales-list">
-              {sucursales.map(s => <option key={s.id_sucursal} value={s.nombre} />)}
-            </datalist>
+      <FilterPanel
+        title="Filtros"
+        description="Busca por proveedor, sucursal, estado o rango de fechas."
+        actions={(
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroProveedor('');
+              setFiltroSucursal('');
+              setFiltroEstado('');
+              setFiltroFechaDesde('');
+              setFiltroFechaHasta('');
+            }}
+            className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Limpiar filtros
+          </button>
+        )}
+        className="rounded-lg"
+      >
+        <div className="grid gap-3 lg:grid-cols-4">
+          <div className="relative lg:col-span-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              list="sucursales-list"
-              value={filtroSucursal}
-              onChange={e => setFiltroSucursal(e.target.value)}
-              placeholder="Buscar sucursal..."
-              className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-44 bg-gray-50"
+              value={filtroProveedor}
+              onChange={e => setFiltroProveedor(e.target.value)}
+              placeholder="Buscar proveedor..."
+              className="input-field pl-9"
             />
-          </>
-        )}
+          </div>
 
-        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+          {isAdmin && (
+            <div className="lg:col-span-1">
+              <datalist id="sucursales-list">
+                {sucursales.map(s => <option key={s.id_sucursal} value={s.nombre} />)}
+              </datalist>
+              <input
+                type="text"
+                list="sucursales-list"
+                value={filtroSucursal}
+                onChange={e => setFiltroSucursal(e.target.value)}
+                placeholder="Buscar sucursal..."
+                className="input-field"
+              />
+            </div>
+          )}
 
-        <select
-          value={filtroEstado}
-          onChange={e => setFiltroEstado(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-gray-50 text-gray-700">
-          <option value="">Todos los estados</option>
-          <option value="PENDIENTE">Pendiente</option>
-          <option value="RECIBIDO">Recibido</option>
-          <option value="CANCELADO">Cancelado</option>
-        </select>
+          <select
+            value={filtroEstado}
+            onChange={e => setFiltroEstado(e.target.value)}
+            className="input-field"
+          >
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="RECIBIDO">Recibido</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
 
-        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
-
-        <div className="flex items-center gap-2 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
-          <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Desde</span>
-          <input
-            type="date"
-            value={filtroFechaDesde}
-            onChange={e => setFiltroFechaDesde(e.target.value)}
-            className="text-sm text-gray-700 bg-transparent border-0 focus:outline-none"
-          />
-          <span className="text-gray-300 text-sm">|</span>
-          <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Hasta</span>
-          <input
-            type="date"
-            value={filtroFechaHasta}
-            onChange={e => setFiltroFechaHasta(e.target.value)}
-            className="text-sm text-gray-700 bg-transparent border-0 focus:outline-none"
-          />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-2">
+            <input
+              type="date"
+              value={filtroFechaDesde}
+              onChange={e => setFiltroFechaDesde(e.target.value)}
+              className="input-field"
+            />
+            <input
+              type="date"
+              value={filtroFechaHasta}
+              onChange={e => setFiltroFechaHasta(e.target.value)}
+              className="input-field"
+            />
+          </div>
         </div>
-      </div>
+      </FilterPanel>
 
       {error && <AlertMessage type="error" message={error} />}
 

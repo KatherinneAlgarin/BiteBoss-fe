@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, MoreVertical, ArrowUpDown, Settings2, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, MoreVertical, ArrowUpDown, Settings2, ArrowRight, Loader2, AlertCircle, Trash2, Eye } from 'lucide-react';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
+import { ModalShell } from '../../../components/ui/ModalShell';
 import { SucursalSelect } from '../../../components/ui/SucursalSelect';
 import { RegistrarStockForm } from '../../../components/inventario/RegistrarStockForm';
 import { AjusteStockForm } from '../../../components/inventario/AjusteStockForm';
 import { EditarLimitesForm } from '../../../components/inventario/EditarLimitesForm';
 import { TransferirStockForm } from '../../../components/inventario/TransferirStockForm';
+import { DescartarStockForm } from '../../../components/inventario/DescartarStockForm';
 import { useAuth } from '../../../hooks/useAuth';
 import { useIngredientes } from '../../../hooks/useIngredientes';
 import { useBodegas } from '../../../hooks/useBodegas';
@@ -16,6 +18,7 @@ import {
   getInventarioMovimientos,
   registrarStockIngrediente,
   ajustarStock,
+  descartarStockIngrediente,
   actualizarLimites,
   transferirStock,
 } from '../../../services/inventario.service';
@@ -30,10 +33,11 @@ import type {
 } from '../../../types/inventario.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
-type ModalMode = 'registrar' | 'ajustar' | 'limites' | 'transferir' | null;
+type ModalMode = 'registrar' | 'ajustar' | 'limites' | 'transferir' | 'descartar' | null;
 
-function ActionMenu({ onAjustar, onLimites, onTransferir, loading }: {
+function ActionMenu({ onAjustar, onDescartar, onLimites, onTransferir, loading }: {
   onAjustar?: () => void;
+  onDescartar?: () => void;
   onLimites: () => void;
   onTransferir: () => void;
   loading: boolean;
@@ -78,6 +82,15 @@ function ActionMenu({ onAjustar, onLimites, onTransferir, loading }: {
               <div className="border-t border-gray-100 mx-2" />
             </>
           )}
+          {onDescartar && (
+            <>
+              <button onClick={() => { setOpen(false); onDescartar(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                <Trash2 className="w-4 h-4 shrink-0" /> Descartar stock
+              </button>
+              <div className="border-t border-gray-100 mx-2" />
+            </>
+          )}
           <button onClick={() => { setOpen(false); onLimites(); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
             <Settings2 className="w-4 h-4 shrink-0" /> Editar límites
@@ -117,6 +130,7 @@ export function InventarioPage() {
   const [filtroUsuario, setFiltroUsuario] = useState('');
   const [filtroDesde, setFiltroDesde] = useState('');
   const [filtroHasta, setFiltroHasta] = useState('');
+  const [detalleMovimiento, setDetalleMovimiento] = useState<InventarioMovimientoItem | null>(null);
   const { ingredientes, loading: loadingIngredientes } = useIngredientes();
   const { bodegas, loading: loadingBodegas } = useBodegas(selectedSucursal ?? undefined);
   // Para transferencias: admin ve todas las bodegas, gerente solo las de su sucursal
@@ -200,6 +214,15 @@ export function InventarioPage() {
     await Promise.allSettled([loadInventario(), loadMovimientos()]);
   };
 
+  const handleDescartar = async (idInventario: number, nota: string) => {
+    setLoadingId(idInventario);
+    await descartarStockIngrediente(idInventario, { nota });
+    setModalMode(null);
+    setSelectedItem(null);
+    setLoadingId(null);
+    await Promise.allSettled([loadInventario(), loadMovimientos()]);
+  };
+
   const handleLimites = async (dto: ActualizarLimitesDto) => {
     if (!selectedItem) return;
     setLoadingId(selectedItem.id_inventario);
@@ -221,6 +244,7 @@ export function InventarioPage() {
   };
 
   const openAjustar = (item: InventarioIngredienteItem) => { setSelectedItem(item); setModalMode('ajustar'); };
+  const openDescartar = (item: InventarioIngredienteItem) => { setSelectedItem(item); setModalMode('descartar'); };
   const openLimites = (item: InventarioIngredienteItem) => { setSelectedItem(item); setModalMode('limites'); };
   const openTransferir = (item: InventarioIngredienteItem) => { setSelectedItem(item); setModalMode('transferir'); };
   const closeModal = () => { setModalMode(null); setSelectedItem(null); };
@@ -388,6 +412,7 @@ export function InventarioPage() {
                         <td className="px-4 py-3 text-center">
                           <ActionMenu
                             onAjustar={canManualAdjust ? () => openAjustar(item) : undefined}
+                            onDescartar={canManualAdjust ? () => openDescartar(item) : undefined}
                             onLimites={() => openLimites(item)}
                             onTransferir={() => openTransferir(item)}
                             loading={loadingId === item.id_inventario}
@@ -513,6 +538,7 @@ export function InventarioPage() {
                     <th className="px-4 py-3 text-center font-semibold text-gray-700">Anterior</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700">Nuevo</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700">Nota</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Detalle</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -533,13 +559,35 @@ export function InventarioPage() {
                       <td className="px-4 py-3 text-center text-gray-600">{mov.nombre_bodega}</td>
                       <td className="px-4 py-3 text-center text-gray-600">{mov.nombre_usuario}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${mov.tipo === 'AJUSTE_POSITIVO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {mov.tipo === 'AJUSTE_POSITIVO' ? 'Positivo' : 'Negativo'}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            mov.tipo === 'AJUSTE_POSITIVO'
+                              ? 'bg-green-100 text-green-700'
+                              : mov.tipo === 'AJUSTE_NEGATIVO'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {mov.tipo === 'AJUSTE_POSITIVO'
+                            ? 'Positivo'
+                            : mov.tipo === 'AJUSTE_NEGATIVO'
+                              ? 'Negativo'
+                              : 'Recepción'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center text-gray-700">{mov.stock_anterior}</td>
                       <td className="px-4 py-3 text-center font-semibold text-gray-900">{mov.stock_nuevo}</td>
-                      <td className="px-4 py-3 text-center text-gray-700 max-w-md whitespace-pre-wrap">{mov.nota || 'Sin nota'}</td>
+                      <td className="px-4 py-3 text-center text-gray-700 max-w-md truncate">{mov.nota || 'Sin nota'}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setDetalleMovimiento(mov)}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Ver detalle
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -585,6 +633,102 @@ export function InventarioPage() {
           onSubmit={handleTransferir}
           onCancel={closeModal}
         />
+      )}
+
+      {modalMode === 'descartar' && selectedItem && (
+        <DescartarStockForm
+          item={selectedItem}
+          onSubmit={async (idInventario, dto) => handleDescartar(idInventario, dto.nota)}
+          onCancel={closeModal}
+        />
+      )}
+
+      {detalleMovimiento && (
+        <ModalShell
+          title={`Detalle del ajuste #${detalleMovimiento.id_movimiento}`}
+          onClose={() => setDetalleMovimiento(null)}
+          maxWidthClass="max-w-2xl"
+        >
+          <div className="px-6 py-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Fecha</p>
+                <p className="mt-1 text-gray-800 font-medium">
+                  {detalleMovimiento.fecha
+                    ? new Date(detalleMovimiento.fecha).toLocaleString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : 'Sin fecha'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Tipo</p>
+                <p className="mt-1 text-gray-800 font-medium">
+                  {detalleMovimiento.tipo === 'AJUSTE_POSITIVO'
+                    ? 'Positivo'
+                    : detalleMovimiento.tipo === 'AJUSTE_NEGATIVO'
+                      ? 'Negativo'
+                      : 'Recepción'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Ingrediente</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.nombre_ingrediente}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Bodega</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.nombre_bodega}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Usuario</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.nombre_usuario}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Cantidad del movimiento</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.cantidad}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              <div className="rounded-lg border border-gray-200 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Stock anterior</p>
+                <p className="mt-1 text-gray-800 font-semibold">{detalleMovimiento.stock_anterior}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Stock nuevo</p>
+                <p className="mt-1 text-gray-800 font-semibold">{detalleMovimiento.stock_nuevo}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Diferencia</p>
+                <p className="mt-1 font-semibold text-gray-800">
+                  {(detalleMovimiento.stock_nuevo - detalleMovimiento.stock_anterior) > 0 ? '+' : ''}
+                  {(detalleMovimiento.stock_nuevo - detalleMovimiento.stock_anterior).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
+              <p className="text-xs uppercase tracking-wide text-gray-500">Nota completa</p>
+              <p className="mt-1 text-gray-800 whitespace-pre-wrap break-words">
+                {detalleMovimiento.nota || 'Sin nota'}
+              </p>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setDetalleMovimiento(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </ModalShell>
       )}
     </div>
   );

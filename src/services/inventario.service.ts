@@ -6,6 +6,7 @@ import type {
   InventarioMovimientosFiltros,
   RegistrarStockIngredienteDto,
   AjusteStockDto,
+  DescartarInventarioDto,
   ActualizarLimitesDto,
   TransferirStockDto,
 } from '../types/inventario.types';
@@ -49,4 +50,8 @@ export async function actualizarLimites(id_inventario: number, dto: ActualizarLi
 
 export async function transferirStock(id_inventario: number, dto: TransferirStockDto): Promise<void> {
   await apiPost<{ mensaje: string }>(`/api/inventario/${id_inventario}/transferir`, dto);
+}
+
+export async function descartarStockIngrediente(id_inventario: number, dto: DescartarInventarioDto): Promise<void> {
+  await apiPatch<{ mensaje: string }>(`/api/inventario/${id_inventario}/descartar`, dto);
 }

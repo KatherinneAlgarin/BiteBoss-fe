@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, TrendingUp, ShoppingCart, Building2, Settings, Tag } from 'lucide-react';
+import { Users, UtensilsCrossed, DollarSign, UserCircle, Truck, ListOrdered, Store, LayoutGrid, Package, CreditCard, Warehouse, FlaskConical, BarChart2, TrendingUp, ShoppingCart, Building2, Settings, Tag, ReceiptText } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -36,7 +36,7 @@ const navMain = [
   },
   { title: 'Menú',   url: '/dashboard/admin/menu',  icon: UtensilsCrossed },
   { title: 'Caja',   url: '/dashboard/admin/caja',  icon: DollarSign },
-  { title: 'Cortes Caja', url: '/dashboard/admin/cortes-caja', icon: DollarSign },
+  { title: 'Cortes Caja', url: '/dashboard/admin/cortes-caja', icon: ReceiptText },
   { title: 'Perfil', url: '/dashboard/profile',     icon: UserCircle },
 ];
 

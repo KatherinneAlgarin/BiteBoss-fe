@@ -19,6 +19,7 @@ import { InventarioPage } from './pages/dashboard/admin/InventarioPage';
 import { TiposOrdenPage } from './pages/dashboard/admin/TiposOrdenPage';
 import { TiposPagoPage } from './pages/dashboard/admin/TiposPagoPage';
 import { CategoriasPage } from './pages/dashboard/admin/CategoriasPage';
+import { CortesCajaPage as CortesCajaAdminPage } from './pages/dashboard/admin/CortesCajaPage';
 import { KPIsPage as KPIsAdminPage } from './pages/dashboard/admin/KPIsPage';
 import { KPIsPage as KPIsGerentePage } from './pages/dashboard/gerente/KPIsPage';
 import { SucursalesPage } from './pages/dashboard/admin/SucursalesPage';
@@ -30,6 +31,7 @@ import { IngredientesGerentePage } from './pages/dashboard/gerente/IngredientesP
 import { PedidosProveedorPage } from './pages/dashboard/admin/PedidosProveedorPage';
 import { PedidosProveedorPage as PedidosProveedorGerentePage } from './pages/dashboard/gerente/PedidosProveedorPage';
 import { ProveedoresPage as ProveedoresGerentePage } from './pages/dashboard/gerente/ProveedoresPage';
+import { CortesCajaPage as CortesCajaGerentePage } from './pages/dashboard/gerente/CortesCajaPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
@@ -72,6 +74,7 @@ function App() {
                   <Route path="ingredientes" element={<IngredientesAdminPage />} />
                   <Route path="pedidos-proveedor" element={<PedidosProveedorPage />} />
                   <Route path="categorias" element={<CategoriasPage />} />
+                  <Route path="cortes-caja" element={<CortesCajaAdminPage />} />
                 </Route>
               </Route>
 
@@ -101,6 +104,7 @@ function App() {
                   <Route path="ingredientes" element={<IngredientesGerentePage />} />
                   <Route path="proveedores" element={<ProveedoresGerentePage />} />
                   <Route path="pedidos-proveedor" element={<PedidosProveedorGerentePage />} />
+                  <Route path="cortes-caja" element={<CortesCajaGerentePage />} />
                 </Route>
               </Route>
             </Route>

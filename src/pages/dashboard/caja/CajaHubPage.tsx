@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { MonitorPlay, ReceiptText, Sparkles, ArrowUpRight, Store } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { Button } from '../../../components/ui/Button';
+import { ModalShell } from '../../../components/ui/ModalShell';
 import { listarSucursales } from '../../../services/sucursal.service';
+import { iniciarSesionCaja, obtenerSesionCajaActiva } from '../../../services/caja-cierre.service';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
 function openWindow(path: string, name: string, idSucursal?: number | null) {
@@ -18,6 +20,10 @@ export function CajaHubPage() {
   const [selectedSucursal, setSelectedSucursal] = useState<number | null>(idSucursal);
   const [loadingSucursales, setLoadingSucursales] = useState(false);
   const [errorSucursales, setErrorSucursales] = useState<string | null>(null);
+  const [errorCaja, setErrorCaja] = useState<string | null>(null);
+  const [showCodigoModal, setShowCodigoModal] = useState(false);
+  const [codigoEmpleado, setCodigoEmpleado] = useState('');
+  const [abriendoCaja, setAbriendoCaja] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -55,6 +61,44 @@ export function CajaHubPage() {
     const found = sucursales.find(item => item.id_sucursal === sucursalEfectiva);
     return found?.nombre ?? `Sucursal ${sucursalEfectiva}`;
   }, [sucursalEfectiva, sucursales]);
+
+  const abrirCaja = async () => {
+    if (!sucursalEfectiva) return;
+
+    try {
+      setErrorCaja(null);
+      const sesion = await obtenerSesionCajaActiva();
+      if (!sesion.activa) {
+        setCodigoEmpleado('');
+        setShowCodigoModal(true);
+        return;
+      }
+
+      openWindow('/caja/terminal', 'biteboss-caja-terminal', sucursalEfectiva);
+    } catch (err) {
+      setErrorCaja(err instanceof Error ? err.message : 'No se pudo abrir la caja');
+    }
+  };
+
+  const confirmarAperturaCaja = async () => {
+    if (!sucursalEfectiva) return;
+    if (!codigoEmpleado.trim()) {
+      setErrorCaja('Ingresa tu código de empleado para abrir caja.');
+      return;
+    }
+
+    try {
+      setAbriendoCaja(true);
+      setErrorCaja(null);
+      await iniciarSesionCaja(codigoEmpleado.trim());
+      setShowCodigoModal(false);
+      openWindow('/caja/terminal', 'biteboss-caja-terminal', sucursalEfectiva);
+    } catch (err) {
+      setErrorCaja(err instanceof Error ? err.message : 'No se pudo abrir la caja');
+    } finally {
+      setAbriendoCaja(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -101,6 +145,12 @@ export function CajaHubPage() {
             Solo puedes abrir POS/tablero para tu sucursal asignada.
           </div>
         )}
+
+        {errorCaja && (
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {errorCaja}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -110,7 +160,7 @@ export function CajaHubPage() {
               <MonitorPlay className="h-6 w-6" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-950">Terminal de caja</h2>
+              <h2 className="text-xl font-bold text-gray-950">Caja</h2>
               <p className="mt-1 text-sm text-gray-600">
                 Menú rápido, carrito y creación de pedidos en una ventana independiente.
               </p>
@@ -118,8 +168,8 @@ export function CajaHubPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button type="button" onClick={() => openWindow('/caja/terminal', 'biteboss-caja-terminal', sucursalEfectiva)}>
-              Abrir terminal
+            <Button type="button" onClick={() => void abrirCaja()}>
+              Abrir caja
               <ArrowUpRight className="ml-2 h-4 w-4" />
             </Button>
             <Button type="button" variant="secondary" onClick={() => openWindow('/pedidos-en-vivo', 'biteboss-pedidos-vivo', sucursalEfectiva)}>
@@ -147,6 +197,33 @@ export function CajaHubPage() {
           </div>
         </div>
       </div>
+
+      {showCodigoModal && (
+        <ModalShell title="Abrir caja" onClose={() => setShowCodigoModal(false)} maxWidthClass="max-w-md">
+          <div className="space-y-4 p-6">
+            <p className="text-sm text-gray-600">Ingresa tu código de empleado para iniciar sesión de caja.</p>
+            <div>
+              <label htmlFor="codigo-empleado-caja" className="mb-1 block text-sm font-medium text-gray-700">Código de empleado</label>
+              <input
+                id="codigo-empleado-caja"
+                value={codigoEmpleado}
+                onChange={e => setCodigoEmpleado(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Ej. CJA-001"
+                autoFocus
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button type="button" variant="secondary" fullWidth onClick={() => setShowCodigoModal(false)} disabled={abriendoCaja}>
+                Cancelar
+              </Button>
+              <Button type="button" fullWidth onClick={() => void confirmarAperturaCaja()} isLoading={abriendoCaja}>
+                Abrir caja
+              </Button>
+            </div>
+          </div>
+        </ModalShell>
+      )}
     </div>
   );
 }

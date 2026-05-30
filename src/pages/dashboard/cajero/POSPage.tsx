@@ -10,6 +10,7 @@ import { CartSummary, type CartItem } from '../../../components/pos/CartSummary'
 import { Button } from '../../../components/ui/Button';
 import { listarSucursales } from '../../../services/sucursal.service';
 import { CreateOrderModal, type CheckoutMode } from '../../../components/pos/CreateOrderModal';
+import { CajaCierreModal } from '../../../components/pos/CajaCierreModal';
 import type { Producto } from '../../../types/producto.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
@@ -37,6 +38,7 @@ export function POSPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>('crear-orden');
+  const [cierreCajaOpen, setCierreCajaOpen] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -164,6 +166,18 @@ export function POSPage() {
           />
         )}
 
+        {cierreCajaOpen && (
+          <CajaCierreModal
+            isOpen={cierreCajaOpen}
+            onClose={() => setCierreCajaOpen(false)}
+            onSuccess={(message) => {
+              setCierreCajaOpen(false);
+              setSuccessMessage(message);
+              window.setTimeout(() => setSuccessMessage(null), 4000);
+            }}
+          />
+        )}
+
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px] min-h-[calc(100vh-170px)]">
           <div className="min-h-0 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur flex flex-col">
             <div className="border-b border-orange-100 px-5 py-4">
@@ -226,6 +240,15 @@ export function POSPage() {
                 disabled={cart.length === 0}
               >
                 Limpiar carrito
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                onClick={() => setCierreCajaOpen(true)}
+                disabled={!sucursalEfectiva}
+              >
+                Solicitar cierre de caja
               </Button>
             </div>
           </div>

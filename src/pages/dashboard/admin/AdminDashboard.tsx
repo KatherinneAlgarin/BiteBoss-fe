@@ -36,6 +36,7 @@ const navMain = [
   },
   { title: 'Menú',   url: '/dashboard/admin/menu',  icon: UtensilsCrossed },
   { title: 'Caja',   url: '/dashboard/admin/caja',  icon: DollarSign },
+  { title: 'Cortes Caja', url: '/dashboard/admin/cortes-caja', icon: DollarSign },
   { title: 'Perfil', url: '/dashboard/profile',     icon: UserCircle },
 ];
 

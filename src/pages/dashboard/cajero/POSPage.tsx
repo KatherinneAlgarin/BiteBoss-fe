@@ -171,6 +171,18 @@ export function POSPage() {
     navigate(isAdmin ? '/dashboard/admin/caja' : '/dashboard/cajero');
   }, [isAdmin, navigate]);
 
+  const cerrarPestanaPos = useCallback(() => {
+    // If the POS was opened as a separate window from Caja Hub, this will close it.
+    window.close();
+
+    // Fallback for browsers that block close() on non-script-opened tabs.
+    window.setTimeout(() => {
+      if (!window.closed) {
+        volverAlPanel();
+      }
+    }, 200);
+  }, [volverAlPanel]);
+
   if (validandoAccesoCaja) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(255,247,237,0.96)_42%,rgba(255,237,213,0.9))] px-4 text-gray-900">
@@ -245,6 +257,7 @@ export function POSPage() {
               setCajaBloqueada(true);
               setMensajeBloqueoCaja(message);
               window.setTimeout(() => setSuccessMessage(null), 4000);
+              cerrarPestanaPos();
             }}
           />
         )}

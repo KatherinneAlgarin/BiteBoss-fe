@@ -134,6 +134,12 @@ export function InventarioPage() {
     load();
   }, [idSucursalUsuario]);
 
+  useEffect(() => {
+    if (!isAdmin) {
+      setSelectedSucursal(idSucursalUsuario ?? null);
+    }
+  }, [isAdmin, idSucursalUsuario]);
+
   const loadInventario = async () => {
     if (selectedSucursal === null) { setIngredientesStock([]); return; }
     setLoading(true);
@@ -268,6 +274,7 @@ export function InventarioPage() {
               loading={loadingSucursales}
               label="Sucursal"
               placeholder="Selecciona una sucursal"
+              disabled={!isAdmin}
             />
           </div>
           <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">

@@ -8,6 +8,7 @@ type ModalMode = 'create' | 'edit' | null;
 export function ProveedoresPage() {
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedProveedor, setSelectedProveedor] = useState<ProveedorListItem | null>(null);
+  const [listVersion, setListVersion] = useState(0);
 
   const handleCreate = () => {
     setSelectedProveedor(null);
@@ -20,6 +21,9 @@ export function ProveedoresPage() {
   };
 
   const handleSuccess = () => {
+    if (modalMode === 'create') {
+      setListVersion((prev) => prev + 1);
+    }
     setModalMode(null);
     setSelectedProveedor(null);
   };
@@ -48,7 +52,7 @@ export function ProveedoresPage() {
         </button>
       </div>
 
-      <ProveedoresList onCreate={handleCreate} onEdit={handleEdit} />
+      <ProveedoresList key={listVersion} onCreate={handleCreate} onEdit={handleEdit} />
 
       {modalMode && (
         <ProveedorForm

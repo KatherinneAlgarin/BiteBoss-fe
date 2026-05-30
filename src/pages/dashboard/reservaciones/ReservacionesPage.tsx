@@ -433,34 +433,34 @@ export function ReservacionesPage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full table-fixed divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha llegada</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Personas</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona / Mesa</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Acciones</th>
+                  <th className="w-56 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                  <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha llegada</th>
+                  <th className="w-24 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Personas</th>
+                  <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona / Mesa</th>
+                  <th className="w-40 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="w-20 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reservacionesFiltradas.map(r => (
                   <tr key={r.id_reservacion} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <p className="text-sm font-medium text-gray-900">{r.nombre_cliente}</p>
                       {r.telefono && <p className="text-xs text-gray-500">{r.telefono}</p>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {formatFecha(r.fecha_llegada)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{r.cantidad_personas}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">{r.cantidad_personas}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       <span>{r.zona_nombre}</span>
                       {r.mesa_numero > 0 && <span className="text-gray-400"> · Mesa {r.mesa_numero}</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex flex-col items-center gap-1">
                         <span className={`inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-full ${r.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' : r.estado === 'cancelada' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                           {ESTADO_LABEL[r.estado]}
                         </span>

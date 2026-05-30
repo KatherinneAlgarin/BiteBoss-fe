@@ -33,7 +33,6 @@ import { PedidosProveedorPage as PedidosProveedorGerentePage } from './pages/das
 import { ProveedoresPage as ProveedoresGerentePage } from './pages/dashboard/gerente/ProveedoresPage';
 import { CortesCajaPage as CortesCajaGerentePage } from './pages/dashboard/gerente/CortesCajaPage';
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
-import { CajeroHome } from './pages/dashboard/cajero/CajeroHome';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
@@ -85,8 +84,9 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
                 <Route path="/dashboard/cajero" element={<CajeroDashboard />}>
-                  <Route index element={<CajeroHome />} />
+                  <Route index element={<CajaHubPage />} />
                   <Route path="caja" element={<CajaHubPage />} />
+                  <Route path="cierre-caja" element={<POSPage />} />
                   <Route path="ordenes" element={<POSPage />} />
                 </Route>
               </Route>
@@ -95,6 +95,7 @@ function App() {
                 <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
                   <Route index element={<ReservacionesPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
+                  <Route path="pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
                 </Route>
               </Route>
 

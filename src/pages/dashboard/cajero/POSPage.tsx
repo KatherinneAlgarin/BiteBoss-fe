@@ -1,6 +1,6 @@
 // pages/dashboard/cajero/POSPage.tsx
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useProductos } from '../../../hooks/useProductos';
 import { useAuth } from '../../../hooks/useAuth';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
@@ -15,6 +15,7 @@ import type { Producto } from '../../../types/producto.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
 export function POSPage() {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { id_sucursal: idSucursalUsuario, displayName, role } = useAuth();
   const isAdmin = role === 'admin';
@@ -74,6 +75,12 @@ export function POSPage() {
   useEffect(() => {
     setCart([]);
   }, [sucursalEfectiva]);
+
+  useEffect(() => {
+    if (location.pathname.endsWith('/cierre-caja')) {
+      setCierreCajaOpen(true);
+    }
+  }, [location.pathname]);
 
   const total = useMemo(
     () => cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0),

@@ -1,88 +1,33 @@
 // pages/dashboard/cajero/POSPage.tsx
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProductos } from '../../../hooks/useProductos';
 import { useAuth } from '../../../hooks/useAuth';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { ProductCatalog } from '../../../components/pos/ProductCatalog';
 import { CartSummary, type CartItem } from '../../../components/pos/CartSummary';
-import { Button } from '../../../components/ui/Button';
-import { CreateOrderModal, type TipoOrden } from '../../../components/pos/CreateOrderModal';
-import { createOrden } from '../../../services/orden.service';
-import { listarSucursales } from '../../../services/sucursal.service';
 import type { Producto } from '../../../types/producto.types';
-import type { SucursalItem } from '../../../types/sucursal.types';
+
+const ROLE_HOME: Record<string, string> = {
+  admin:   '/dashboard/admin',
+  gerente: '/dashboard/gerente',
+  mesero:  '/dashboard/mesero',
+};
 
 export function POSPage() {
-  const [searchParams] = useSearchParams();
-  const { id_sucursal: idSucursalUsuario, displayName, role } = useAuth();
-  const isAdmin = role === 'admin';
-
-  const idSucursalFromQuery = useMemo(() => {
-    const raw = searchParams.get('id_sucursal');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [searchParams]);
-
-  const [sucursales, setSucursales] = useState<SucursalItem[]>([]);
-  const [selectedSucursal, setSelectedSucursal] = useState<number | null>(idSucursalFromQuery ?? idSucursalUsuario);
-
-  const sucursalEfectiva = isAdmin
-    ? selectedSucursal
-    : idSucursalUsuario;
-
-  const { productos, loading, error } = useProductos(sucursalEfectiva ?? undefined);
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const { productos, loading, error } = useProductos();
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Redirect admins and encargados (gerente) to their own panel
   useEffect(() => {
-    if (!isAdmin) {
-      setSelectedSucursal(idSucursalUsuario);
-      return;
+    if (role && ROLE_HOME[role]) {
+      navigate(ROLE_HOME[role], { replace: true });
     }
-
-    let mounted = true;
-    const loadSucursales = async () => {
-      try {
-        const data = await listarSucursales(true);
-        if (!mounted) return;
-        setSucursales(data);
-        setSelectedSucursal(prev => prev ?? idSucursalFromQuery ?? data[0]?.id_sucursal ?? null);
-      } catch {
-        // Best effort: si falla, se mantiene la sucursal por id.
-      }
-    };
-
-    void loadSucursales();
-    return () => {
-      mounted = false;
-    };
-  }, [idSucursalUsuario, idSucursalFromQuery, isAdmin]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    if (idSucursalFromQuery) {
-      setSelectedSucursal(idSucursalFromQuery);
-    }
-  }, [idSucursalFromQuery, isAdmin]);
-
-  useEffect(() => {
-    setCart([]);
-  }, [sucursalEfectiva]);
-
-  const total = useMemo(
-    () => cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0),
-    [cart]
-  );
-
-  const clearCart = useCallback(() => {
-    setCart([]);
-  }, []);
+  }, [role, navigate]);
 
   const addToCart = useCallback((producto: Producto) => {
     setCart(prev => {
@@ -117,127 +62,38 @@ export function POSPage() {
     setCart(prev => prev.filter(i => i.id_producto !== id));
   }, []);
 
-  const handleCheckoutSubmit = useCallback(async (data: { nombre_cliente: string; apellido_cliente: string; tipo_orden: TipoOrden }) => {
-    if (!sucursalEfectiva) {
-      setCheckoutError('No se pudo determinar la sucursal para el pedido.');
-      return;
-    }
-
-    setCheckoutLoading(true);
-    setCheckoutError(null);
-    try {
-      await createOrden({
-        id_sucursal: sucursalEfectiva,
-        tipo_orden: data.tipo_orden,
-        nombre_cliente: data.nombre_cliente,
-        apellido_cliente: data.apellido_cliente,
-        detalles: cart.map(item => ({
-          id_producto: item.id_producto,
-          cantidad: item.cantidad,
-        })),
-      });
-
-      clearCart();
-      setCheckoutOpen(false);
-      setSuccessMessage('Pedido enviado correctamente.');
-      window.setTimeout(() => setSuccessMessage(null), 4000);
-    } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : 'No se pudo crear el pedido');
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }, [cart, clearCart, sucursalEfectiva]);
-
-  const nombreSucursalActiva = useMemo(() => {
-    if (!sucursalEfectiva) return 'Sin sucursal';
-    const found = sucursales.find(item => item.id_sucursal === sucursalEfectiva);
-    return found?.nombre ?? `Sucursal ${sucursalEfectiva}`;
-  }, [sucursalEfectiva, sucursales]);
-
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(255,247,237,0.96)_42%,_rgba(255,237,213,0.9))] text-gray-900">
-      <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-6 lg:py-6">
-        <div className="mb-4 flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(249,115,22,0.12)] backdrop-blur">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Caja / POS</p>
-              <h1 className="text-3xl font-black text-gray-950">Terminal de ventas</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                {displayName ? `${displayName} · ` : ''}Selecciona productos, arma el pedido y envíalo a cocina.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-              <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">{nombreSucursalActiva}</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 font-medium">{cart.length} ítems</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 font-medium">${total.toFixed(2)}</span>
-            </div>
-          </div>
+    <div className="flex flex-col h-full">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-gray-900">Punto de Venta (POS)</h1>
+        <p className="text-gray-500 mt-1 text-sm">Selecciona productos para armar el pedido</p>
+      </div>
 
-          {successMessage && <AlertMessage type="success" message={successMessage} />}
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+        {/* Left: product catalog */}
+        <div className="flex-1 min-h-0 card overflow-hidden flex flex-col">
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <AlertMessage
+              type="error"
+              message="No se pudo cargar el catálogo de productos. Por favor, intenta de nuevo más tarde."
+            />
+          ) : (
+            <ProductCatalog productos={productos} onAddToCart={addToCart} />
+          )}
         </div>
 
-        {checkoutOpen && (
-          <CreateOrderModal
-            isOpen={checkoutOpen}
+        {/* Right: order summary */}
+        <div className="w-full lg:w-80 card flex flex-col">
+          <CartSummary
             items={cart}
-            total={total}
-            isCreating={checkoutLoading}
-            error={checkoutError}
-            onClose={() => setCheckoutOpen(false)}
-            onSubmit={handleCheckoutSubmit}
+            onIncrease={increase}
+            onDecrease={decrease}
+            onRemove={remove}
           />
-        )}
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px] min-h-[calc(100vh-170px)]">
-          <div className="min-h-0 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur flex flex-col">
-            <div className="border-b border-orange-100 px-5 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">Menú rápido</h2>
-              <p className="text-sm text-gray-500">Interfaz pensada para venta rápida tipo restaurante de cadena.</p>
-            </div>
-            <div className="flex-1 min-h-0 p-4">
-              {loading ? (
-                <div className="flex h-full items-center justify-center">
-                  <LoadingSpinner />
-                </div>
-              ) : error ? (
-                <AlertMessage
-                  type="error"
-                  message="No se pudo cargar el catálogo de productos. Por favor, intenta de nuevo más tarde."
-                />
-              ) : (
-                <ProductCatalog productos={productos} onAddToCart={addToCart} />
-              )}
-            </div>
-          </div>
-
-          <div className="min-h-0 rounded-3xl border border-orange-100 bg-white/90 p-5 shadow-[0_20px_60px_rgba(249,115,22,0.12)] backdrop-blur flex flex-col">
-            <CartSummary
-              items={cart}
-              onIncrease={increase}
-              onDecrease={decrease}
-              onRemove={remove}
-            />
-
-            <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
-              <Button
-                type="button"
-                fullWidth
-                onClick={() => setCheckoutOpen(true)}
-                disabled={cart.length === 0 || checkoutLoading || !sucursalEfectiva}
-              >
-                Enviar pedido
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                fullWidth
-                onClick={clearCart}
-                disabled={cart.length === 0 || checkoutLoading}
-              >
-                Limpiar carrito
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

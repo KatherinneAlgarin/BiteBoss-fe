@@ -80,7 +80,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
       return;
     }
     try {
-      await update({ estado_operativo: 'POR_COBRAR' });
+      await update({ estado_operativo: 'EN_PREPARACION' });
       onClose();
     } catch (err) {
       // Error handled in hook

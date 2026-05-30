@@ -461,7 +461,7 @@ export function ReservacionesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${r.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' : r.estado === 'cancelada' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                        <span className={`inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-full ${r.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' : r.estado === 'cancelada' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                           {ESTADO_LABEL[r.estado]}
                         </span>
                         {esVencida(r) && (

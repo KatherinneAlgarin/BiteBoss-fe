@@ -56,19 +56,19 @@ function ActionMenu({ onVerDetalle, onEditar, onRecibir, loading, estado }: {
           className="bg-white rounded-xl shadow-xl border border-gray-100 py-1 overflow-hidden">
           <button onClick={() => { setOpen(false); onVerDetalle(); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
-            <Eye className="w-4 h-4 flex-shrink-0" /> Ver detalle
+            <Eye className="w-4 h-4 shrink-0" /> Ver detalle
           </button>
           {estado === 'PENDIENTE' && (
             <>
               <div className="border-t border-gray-100 mx-2" />
               <button onClick={() => { setOpen(false); onEditar(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
-                <Pencil className="w-4 h-4 flex-shrink-0" /> Editar orden
+                <Pencil className="w-4 h-4 shrink-0" /> Editar orden
               </button>
               <div className="border-t border-gray-100 mx-2" />
               <button onClick={() => { setOpen(false); onRecibir(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors">
-                <CheckCircle className="w-4 h-4 flex-shrink-0" /> Confirmar recepción
+                <CheckCircle className="w-4 h-4 shrink-0" /> Confirmar recepción
               </button>
             </>
           )}

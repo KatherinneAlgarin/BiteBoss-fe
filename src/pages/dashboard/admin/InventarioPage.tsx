@@ -689,7 +689,29 @@ export function InventarioPage() {
               </div>
               <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                 <p className="text-xs uppercase tracking-wide text-gray-500">Cantidad del movimiento</p>
-                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.cantidad}</p>
+                <p className="mt-1 text-gray-800 font-medium">
+                  {detalleMovimiento.cantidad} {detalleMovimiento.unidad_medida ?? ''}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Unidad</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.unidad_medida ?? 'Sin unidad'}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Lote</p>
+                <p className="mt-1 text-gray-800 font-medium">{detalleMovimiento.lote ?? 'Sin lote'}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-gray-500">Vencimiento</p>
+                <p className="mt-1 text-gray-800 font-medium">
+                  {detalleMovimiento.fecha_vencimiento
+                    ? new Date(`${detalleMovimiento.fecha_vencimiento}T00:00:00`).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                      })
+                    : 'Sin vencimiento'}
+                </p>
               </div>
             </div>
 
@@ -713,7 +735,7 @@ export function InventarioPage() {
 
             <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
               <p className="text-xs uppercase tracking-wide text-gray-500">Nota completa</p>
-              <p className="mt-1 text-gray-800 whitespace-pre-wrap break-words">
+              <p className="mt-1 text-gray-800 whitespace-pre-wrap wrap-break-word">
                 {detalleMovimiento.nota || 'Sin nota'}
               </p>
             </div>

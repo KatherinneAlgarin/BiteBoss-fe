@@ -77,7 +77,7 @@ function App() {
                 </Route>
               </Route>
 
-              <Route element={<RoleRoute allowedRoles={['admin', 'cajero', 'gerente']} />}>
+              <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
                 <Route path="/caja/terminal" element={<POSPage />} />
                 <Route path="/pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
               </Route>
@@ -108,7 +108,6 @@ function App() {
                   <Route path="ingredientes" element={<IngredientesGerentePage />} />
                   <Route path="proveedores" element={<ProveedoresGerentePage />} />
                   <Route path="pedidos-proveedor" element={<PedidosProveedorGerentePage />} />
-                  <Route path="caja" element={<CajaHubPage />} />
                   <Route path="cortes-caja" element={<CortesCajaGerentePage />} />
                 </Route>
               </Route>

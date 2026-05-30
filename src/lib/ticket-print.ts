@@ -4,6 +4,7 @@ export interface TicketPrintItem {
   cantidad: number;
   nombre_producto?: string;
   nota?: string;
+  ingredientes?: string[];
   precio_unitario?: number;
   subtotal?: number;
 }
@@ -40,6 +41,7 @@ type InvoiceLine = {
   qty: number;
   desc: string;
   note?: string;
+  ingredientes?: string[];
   unitPrice?: number;
   subtotal?: number;
 };
@@ -52,6 +54,7 @@ function buildInvoiceLines(order: TicketPrintOrder): InvoiceLine[] {
     qty: Number(item.cantidad ?? 0),
     desc: item.nombre_producto ?? 'Producto',
     note: item.nota,
+    ingredientes: Array.isArray(item.ingredientes) ? item.ingredientes.filter(Boolean) : undefined,
     unitPrice: Number.isFinite(item.precio_unitario) ? Number(item.precio_unitario) : undefined,
     subtotal: Number.isFinite(item.subtotal) ? Number(item.subtotal) : undefined,
   }));
@@ -59,6 +62,7 @@ function buildInvoiceLines(order: TicketPrintOrder): InvoiceLine[] {
 
 export function printTicket({ order, metodoPago, titulo = 'Ticket de venta' }: TicketPrintPayload): void {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const isComanda = titulo.trim().toLowerCase() === 'ticket de pedido';
 
   const cliente = `${order.nombre_cliente ?? ''} ${order.apellido_cliente ?? ''}`.trim();
   const detalles = buildInvoiceLines(order);
@@ -98,7 +102,9 @@ export function printTicket({ order, metodoPago, titulo = 'Ticket de venta' }: T
   doc.text(`Cliente: ${cliente || '—'}`, margin + 3, y + 11.7);
   doc.text(`Tipo de orden: ${order.tipo_orden ?? '—'}`, margin + 3, y + 16.7);
   doc.text(`Mesa: ${order.mesa_numero ? `Mesa ${order.mesa_numero}` : '—'}`, margin + 78, y + 16.7);
-  doc.text(`Metodo de pago: ${metodoPago ?? '—'}`, margin + 125, y + 16.7);
+  if (!isComanda) {
+    doc.text(`Metodo de pago: ${metodoPago ?? '—'}`, margin + 125, y + 16.7);
+  }
   y += 24;
 
   // Tabla de detalle
@@ -128,7 +134,13 @@ export function printTicket({ order, metodoPago, titulo = 'Ticket de venta' }: T
     for (const item of detalles) {
       const descLines = doc.splitTextToSize(item.desc, colUnit - colDesc - 3);
       const noteLines = item.note ? doc.splitTextToSize(`Nota: ${item.note}`, colUnit - colDesc - 3) : [];
-      const blockHeight = Math.max(6, (descLines.length + noteLines.length) * 4.4 + 2);
+      const ingredientesText = item.ingredientes && item.ingredientes.length > 0
+        ? `Ingredientes: ${item.ingredientes.join(', ')}`
+        : '';
+      const ingredientesLines = ingredientesText
+        ? doc.splitTextToSize(ingredientesText, colUnit - colDesc - 3)
+        : [];
+      const blockHeight = Math.max(6, (descLines.length + noteLines.length + ingredientesLines.length) * 4.4 + 2);
 
       // salto de pagina si no cabe
       if (y + blockHeight + 34 > 285) {
@@ -149,6 +161,17 @@ export function printTicket({ order, metodoPago, titulo = 'Ticket de venta' }: T
         doc.setFontSize(8.5);
         doc.setTextColor(90);
         doc.text(noteLines, colDesc, y + 4.8 + (descLines.length * 4.4));
+        doc.setTextColor(0);
+      }
+
+      if (ingredientesLines.length > 0) {
+        doc.setFontSize(8.3);
+        doc.setTextColor(60);
+        doc.text(
+          ingredientesLines,
+          colDesc,
+          y + 4.8 + ((descLines.length + noteLines.length) * 4.4),
+        );
         doc.setTextColor(0);
       }
 

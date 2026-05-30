@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Clock3, RefreshCw, ClipboardList, CircleAlert, ArrowRight, Printer } from 'lucide-react';
-import { getOrdenesTiempoReal, updateOrden } from '../../services/orden.service';
+import { getOrdenById, getOrdenesTiempoReal, updateOrden } from '../../services/orden.service';
 import type { OrdenResumen } from '../../types/orden.types';
 import { useAuth } from '../../hooks/useAuth';
 import { printTicket } from '../../lib/ticket-print';
+import { obtenerIngredientesDeProducto } from '../../services/producto.service';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: typeof ClipboardList }> = {
   NUEVO: { label: 'Nuevos', className: 'bg-orange-50 text-orange-700 border-orange-200', icon: ClipboardList },
@@ -81,6 +82,20 @@ function estadoLabel(estado: string | null) {
     OCULTO: 'Oculto',
   };
   return map[estado] ?? estado;
+}
+
+function formatIngredienteLabel(ingrediente: { nombre_ingrediente?: string; cantidad?: number; unidad_medida?: string }): string {
+  const nombre = ingrediente.nombre_ingrediente?.trim();
+  if (!nombre) return '';
+
+  const cantidad = Number(ingrediente.cantidad ?? 0);
+  const unidad = (ingrediente.unidad_medida ?? '').trim();
+
+  if (cantidad > 0) {
+    return unidad ? `${nombre} (${cantidad} ${unidad})` : `${nombre} (${cantidad})`;
+  }
+
+  return nombre;
 }
 
 export function PedidosTiempoRealPage() {
@@ -209,10 +224,40 @@ export function PedidosTiempoRealPage() {
     ? selectedOrder.estado_operativo !== 'ENTREGADO' && selectedOrder.estado_operativo !== 'CANCELADO'
     : false;
 
-  const handlePrintTicket = useCallback((order: OrdenResumen) => {
+  const handlePrintTicket = useCallback(async (order: OrdenResumen) => {
     try {
+      const ordenCompleta = await getOrdenById(order.id_pedido);
+      const detalles = ordenCompleta.detalles ?? order.detalles ?? [];
+      const idsProducto = Array.from(new Set(detalles.map(detalle => detalle.id_producto).filter(id => Number.isFinite(id))));
+
+      const ingredientesByProducto = new Map<number, string[]>();
+
+      await Promise.all(
+        idsProducto.map(async (idProducto) => {
+          try {
+            const ingredientes = await obtenerIngredientesDeProducto(idProducto);
+            const labels = ingredientes
+              .map(formatIngredienteLabel)
+              .filter(label => label.length > 0);
+
+            ingredientesByProducto.set(idProducto, labels);
+          } catch {
+            ingredientesByProducto.set(idProducto, []);
+          }
+        })
+      );
+
+      const orderForPrint = {
+        ...order,
+        total: Number(ordenCompleta.total ?? order.total ?? 0),
+        detalles: detalles.map(detalle => ({
+          ...detalle,
+          ingredientes: ingredientesByProducto.get(detalle.id_producto) ?? [],
+        })),
+      };
+
       printTicket({
-        order,
+        order: orderForPrint,
         titulo: 'Ticket de pedido',
       });
     } catch (err) {
@@ -361,7 +406,7 @@ export function PedidosTiempoRealPage() {
                     {selectedIsUpdating ? 'Actualizando...' : selectedNext === 'OCULTO' ? 'Ocultar' : 'Siguiente'}
                   </button>
                   <button
-                    onClick={() => selectedOrder && handlePrintTicket(selectedOrder)}
+                    onClick={() => selectedOrder && void handlePrintTicket(selectedOrder)}
                     disabled={!selectedOrder || !selectedCanPrintTicket}
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >

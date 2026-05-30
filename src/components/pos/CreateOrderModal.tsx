@@ -165,9 +165,9 @@ export function CreateOrderModal({
     const loadPedidosMesa = async () => {
       try {
         const data = await getOrdenesTiempoReal(idSucursal);
-        const abiertos = data.filter(orden => orden.mesa_numero != null && ['NUEVO', 'EN_PROCESO'].includes(orden.estado_operativo));
-        setPedidosMesa(abiertos);
-        setSelectedPedidoId(prev => prev ?? abiertos[0]?.id_pedido ?? null);
+        const pendientesPago = data.filter(orden => orden.mesa_numero != null && orden.estado_financiero === 'SIN_PAGAR');
+        setPedidosMesa(pendientesPago);
+        setSelectedPedidoId(prev => prev ?? pendientesPago[0]?.id_pedido ?? null);
       } catch (err) {
         setMessageError(err instanceof Error ? err.message : 'No se pudieron cargar las cuentas de mesa');
       }

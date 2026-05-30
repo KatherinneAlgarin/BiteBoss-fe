@@ -58,6 +58,8 @@ function formatElapsed(iso?: string, now = Date.now(), endIso?: string) {
 function nextEstado(estado: OrdenResumen['estado_operativo']): OrdenResumen['estado_operativo'] | null {
   if (estado === 'NUEVO') return 'EN_PROCESO';
   if (estado === 'EN_PROCESO') return 'ENTREGADO';
+  if (estado === 'ENTREGADO') return 'OCULTO';
+  if (estado === 'CANCELADO') return 'OCULTO';
   return null;
 }
 
@@ -68,6 +70,7 @@ function estadoLabel(estado: string | null) {
     EN_PROCESO: 'En proceso',
     ENTREGADO: 'Entregado',
     CANCELADO: 'Cancelado',
+    OCULTO: 'Oculto',
   };
   return map[estado] ?? estado;
 }
@@ -157,6 +160,9 @@ export function PedidosTiempoRealPage() {
     setUpdatingIds(prev => [...prev, order.id_pedido]);
     try {
       await updateOrden(order.id_pedido, { estado_operativo: next });
+      if (next === 'OCULTO') {
+        setSelectedOrderId(null);
+      }
       await load(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo actualizar el estado del pedido');
@@ -350,7 +356,7 @@ export function PedidosTiempoRealPage() {
                     disabled={!selectedOrder || !selectedNext || selectedIsUpdating}
                     className="rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {selectedIsUpdating ? 'Actualizando...' : 'Siguiente'}
+                    {selectedIsUpdating ? 'Actualizando...' : selectedNext === 'OCULTO' ? 'Ocultar' : 'Siguiente'}
                   </button>
                   <button
                     onClick={() => selectedOrder && void abrirHistorial(selectedOrder)}

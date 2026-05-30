@@ -4,7 +4,7 @@ export type Orden = {
   numero_orden: string;
   id_sucursal_tipo_orden?: number;
   tipo_orden?: string;
-  estado_operativo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO';
+  estado_operativo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | 'OCULTO';
   estado_financiero: 'SIN_PAGAR' | 'PAGADO' | 'PAGO_PARCIAL' | 'REEMBOLSADO';
   nombre_cliente?: string;
   apellido_cliente?: string;
@@ -19,7 +19,8 @@ export type OrdenResumen = {
   id_pedido: number;
   numero_orden: string;
   tipo_orden?: string;
-  estado_operativo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO';
+  estado_operativo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | 'OCULTO';
+  estado_financiero?: 'SIN_PAGAR' | 'PAGADO' | 'PAGO_PARCIAL' | 'REEMBOLSADO';
   total: number;
   fecha_apertura?: string;
   fecha_cerrado?: string;
@@ -37,8 +38,8 @@ export type OrdenResumen = {
 
 export type HistorialEstadoOrden = {
   id_auditoria: number;
-  estado_anterior: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | null;
-  estado_nuevo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | null;
+  estado_anterior: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | 'OCULTO' | null;
+  estado_nuevo: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | 'OCULTO' | null;
   creado_en: string;
   id_usuario?: number;
   usuario_nombre?: string | null;
@@ -59,7 +60,7 @@ export type Detalle = {
 
 export type OrdenUpdate = {
   tipo_orden?: string;
-  estado_operativo?: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO';
+  estado_operativo?: 'NUEVO' | 'EN_PROCESO' | 'ENTREGADO' | 'CANCELADO' | 'OCULTO';
   nombre_cliente?: string;
   apellido_cliente?: string;
   id_mesa?: number;

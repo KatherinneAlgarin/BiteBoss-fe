@@ -58,18 +58,18 @@ function ActionMenu({ item, onEdit, onDesactivar, onActivar, loadingId }: {
           className="bg-white rounded-xl shadow-xl border border-gray-100 py-1 overflow-hidden">
           <button onClick={() => { setOpen(false); onEdit(); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
-            <Edit className="w-4 h-4 flex-shrink-0" /> Editar
+            <Edit className="w-4 h-4 shrink-0" /> Editar
           </button>
           <div className="border-t border-gray-100 mx-2" />
           {item.activo ? (
             <button onClick={() => { setOpen(false); onDesactivar(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors">
-              <Power className="w-4 h-4 flex-shrink-0" /> Desactivar
+              <Power className="w-4 h-4 shrink-0" /> Desactivar
             </button>
           ) : (
             <button onClick={() => { setOpen(false); onActivar(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 transition-colors">
-              <PowerOff className="w-4 h-4 flex-shrink-0" /> Activar
+              <PowerOff className="w-4 h-4 shrink-0" /> Activar
             </button>
           )}
         </div>,

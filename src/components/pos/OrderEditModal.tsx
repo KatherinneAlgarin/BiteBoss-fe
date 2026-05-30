@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import type { Orden, Detalle } from '../../types/orden.types';
 import { useOrden } from '../../hooks/useOrdenes';
 import { useMetodosPago } from '../../hooks/usePagos';
+import { useTiposOrden } from '../../hooks/useTiposOrden';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -22,6 +23,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
   const [orden, setOrden] = useState<Orden>(initialOrden);
   const { update, updateDetalle, removeDetalle, loading, error } = useOrden(initialOrden.id_pedido);
   const { metodos, loading: loadingMetodos } = useMetodosPago(SUCURSAL_ID);
+  const { tipos } = useTiposOrden();
   const [selectedMetodo, setSelectedMetodo] = useState<string>('');
 
   useEffect(() => {
@@ -35,14 +37,11 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
     return { subtotal, impuesto, total };
   };
 
-  const handleTipoOrdenChange = async (tipo: 'dine-in' | 'takeout' | 'delivery') => {
+  const handleTipoOrdenChange = async (tipo: string) => {
     try {
-      const updates: any = { tipo_orden: tipo };
-      if (tipo !== 'dine-in') {
-        updates.id_mesa = null;
-      }
+      const updates: Partial<Orden> = { tipo_orden: tipo };
       await update(updates);
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -51,7 +50,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
     const newCantidad = detalle.cantidad + 1;
     try {
       await updateDetalle(detalle.id_pedido_producto, { cantidad: newCantidad });
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -61,7 +60,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
     const newCantidad = detalle.cantidad - 1;
     try {
       await updateDetalle(detalle.id_pedido_producto, { cantidad: newCantidad });
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -69,7 +68,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
   const handleRemove = async (detalle: Detalle) => {
     try {
       await removeDetalle(detalle.id_pedido_producto);
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -82,7 +81,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
     try {
       await update({ estado_operativo: 'POR_COBRAR' });
       onClose();
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -91,7 +90,7 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
     try {
       await update({ estado_operativo: 'CANCELADO' });
       onClose();
-    } catch (err) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -119,9 +118,12 @@ export function OrderEditModal({ orden: initialOrden, isOpen, onClose }: OrderEd
               onChange={(e) => handleTipoOrdenChange(e.target.value as any)}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
-              <option value="dine-in">Consumir en el local</option>
-              <option value="takeout">Para llevar</option>
-              <option value="delivery">Delivery</option>
+              <option value="">Seleccionar tipo</option>
+              {tipos.filter(tipo => tipo.activo).map(tipo => (
+                <option key={tipo.id_tipo_orden} value={tipo.nombre}>
+                  {tipo.nombre}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -58,7 +58,7 @@ export function CajaHubPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-orange-100 bg-gradient-to-br from-white via-orange-50 to-amber-100 p-6 shadow-[0_20px_60px_rgba(249,115,22,0.12)]">
+      <div className="rounded-3xl border border-orange-100 bg-linear-to-br from-white via-orange-50 to-amber-100 p-6 shadow-[0_20px_60px_rgba(249,115,22,0.12)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Caja</p>
@@ -85,7 +85,7 @@ export function CajaHubPage() {
                 value={selectedSucursal ?? ''}
                 onChange={e => setSelectedSucursal(e.target.value ? Number(e.target.value) : null)}
                 disabled={loadingSucursales}
-                className="min-w-[230px] rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm text-gray-700"
+                className="min-w-57.5 rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm text-gray-700"
               >
                 <option value="">Seleccionar sucursal...</option>
                 {sucursales.map(sucursal => (

@@ -16,8 +16,8 @@ export async function getProductosCatalogo(idSucursal?: number): Promise<Product
 }
 
 /** @deprecated use getProductosCatalogo – sucursal is resolved from the JWT on the server */
-export async function getProductosBySucursal(_sucursalId: number): Promise<Producto[]> {
-  return getProductosCatalogo();
+export async function getProductosBySucursal(sucursalId: number): Promise<Producto[]> {
+  return getProductosCatalogo(sucursalId);
 }
 
 export interface CrearProductoDto {

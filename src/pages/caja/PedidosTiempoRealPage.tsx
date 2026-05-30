@@ -94,7 +94,7 @@ export function PedidosTiempoRealPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timerNow, setTimerNow] = useState(Date.now());
+  const [timerNow, setTimerNow] = useState(() => Date.now());
   const [highlightedIds, setHighlightedIds] = useState<number[]>([]);
   const [updatingIds, setUpdatingIds] = useState<number[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -330,7 +330,7 @@ export function PedidosTiempoRealPage() {
             })}
             </div>
 
-            <div className="fixed bottom-6 left-4 right-4 z-30 sm:left-auto sm:right-6 sm:w-[440px]">
+            <div className="fixed bottom-6 left-4 right-4 z-30 sm:left-auto sm:right-6 sm:w-110">
               <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/90 px-4 py-4 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div>

@@ -3,7 +3,7 @@ export type Orden = {
   id_pedido: number;
   numero_orden: string;
   id_sucursal_tipo_orden?: number;
-  tipo_orden?: 'dine-in' | 'takeout' | 'delivery';
+  tipo_orden?: string;
   estado_operativo: 'ABIERTO' | 'POR_COBRAR' | 'CERRADO' | 'CANCELADO' | 'FINALIZADO';
   estado_financiero: 'SIN_PAGAR' | 'PAGADO' | 'PAGO_PARCIAL' | 'REEMBOLSADO';
   nombre_cliente?: string;
@@ -18,7 +18,7 @@ export type Orden = {
 export type OrdenResumen = {
   id_pedido: number;
   numero_orden: string;
-  tipo_orden?: 'dine-in' | 'takeout' | 'delivery' | string;
+  tipo_orden?: string;
   estado_operativo: 'ABIERTO' | 'POR_COBRAR' | 'CERRADO' | 'CANCELADO' | 'FINALIZADO';
   total: number;
   fecha_apertura?: string;
@@ -58,7 +58,7 @@ export type Detalle = {
 };
 
 export type OrdenUpdate = {
-  tipo_orden?: 'dine-in' | 'takeout' | 'delivery';
+  tipo_orden?: string;
   estado_operativo?: 'ABIERTO' | 'POR_COBRAR' | 'CERRADO' | 'CANCELADO' | 'FINALIZADO';
   nombre_cliente?: string;
   apellido_cliente?: string;
@@ -79,7 +79,7 @@ export type DetalleUpdate = {
 
 export type CrearOrdenDto = {
   id_sucursal?: number;
-  tipo_orden: 'dine-in' | 'takeout' | 'delivery';
+  tipo_orden: string;
   id_mesa?: number;
   nombre_cliente?: string;
   apellido_cliente?: string;

@@ -6,8 +6,9 @@ export interface MetodoPago {
 }
 
 export interface PagoCreate {
-  id_pedido: number;
-  metodo_pago: string;
+  id_orden: number;
+  metodo: string;
   monto: number;
-  notas?: string;
+  referencia?: string;
+  propina?: number;
 }

@@ -119,9 +119,9 @@ export function Sidebar({
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }`}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <Icon className="w-5 h-5 shrink-0" />
                     <span className="flex-1 text-left">{entry.title}</span>
-                    <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isOpen && (

@@ -117,7 +117,7 @@ export function MenuPage() {
               map.set(key, categoria);
             }
             return map;
-          }, new Map<string, Categoria>()).values()
+          }, new Map<string, CategoriaItem>()).values()
         ).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
         setCategorias(categoriasUnicas);
@@ -723,7 +723,7 @@ export function MenuPage() {
         </div>
 
         {/* Product List */}
-        <div className="lg:col-span-2 card flex flex-col h-[680px]">
+        <div className="lg:col-span-2 card flex flex-col h-170">
           <h2 className="text-lg font-semibold mb-4">Productos ({filteredProductos.length})</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <Input

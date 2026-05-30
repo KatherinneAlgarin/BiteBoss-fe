@@ -8,9 +8,8 @@ import { AlertMessage } from '../../../components/ui/AlertMessage';
 import { ProductCatalog } from '../../../components/pos/ProductCatalog';
 import { CartSummary, type CartItem } from '../../../components/pos/CartSummary';
 import { Button } from '../../../components/ui/Button';
-import { CreateOrderModal, type TipoOrden } from '../../../components/pos/CreateOrderModal';
-import { createOrden } from '../../../services/orden.service';
 import { listarSucursales } from '../../../services/sucursal.service';
+import { CreateOrderModal, type CheckoutMode } from '../../../components/pos/CreateOrderModal';
 import type { Producto } from '../../../types/producto.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
@@ -36,9 +35,8 @@ export function POSPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>('crear-orden');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -117,36 +115,14 @@ export function POSPage() {
     setCart(prev => prev.filter(i => i.id_producto !== id));
   }, []);
 
-  const handleCheckoutSubmit = useCallback(async (data: { nombre_cliente: string; apellido_cliente: string; tipo_orden: TipoOrden }) => {
-    if (!sucursalEfectiva) {
-      setCheckoutError('No se pudo determinar la sucursal para el pedido.');
-      return;
-    }
-
-    setCheckoutLoading(true);
-    setCheckoutError(null);
-    try {
-      await createOrden({
-        id_sucursal: sucursalEfectiva,
-        tipo_orden: data.tipo_orden,
-        nombre_cliente: data.nombre_cliente,
-        apellido_cliente: data.apellido_cliente,
-        detalles: cart.map(item => ({
-          id_producto: item.id_producto,
-          cantidad: item.cantidad,
-        })),
-      });
-
+  const handleCheckoutSuccess = useCallback((message: string) => {
+    if (checkoutMode === 'crear-orden') {
       clearCart();
-      setCheckoutOpen(false);
-      setSuccessMessage('Pedido enviado correctamente.');
-      window.setTimeout(() => setSuccessMessage(null), 4000);
-    } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : 'No se pudo crear el pedido');
-    } finally {
-      setCheckoutLoading(false);
     }
-  }, [cart, clearCart, sucursalEfectiva]);
+    setCheckoutOpen(false);
+    setSuccessMessage(message);
+    window.setTimeout(() => setSuccessMessage(null), 4000);
+  }, [clearCart, checkoutMode]);
 
   const nombreSucursalActiva = useMemo(() => {
     if (!sucursalEfectiva) return 'Sin sucursal';
@@ -155,8 +131,8 @@ export function POSPage() {
   }, [sucursalEfectiva, sucursales]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(255,247,237,0.96)_42%,_rgba(255,237,213,0.9))] text-gray-900">
-      <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-6 lg:py-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(255,247,237,0.96)_42%,rgba(255,237,213,0.9))] text-gray-900">
+      <div className="mx-auto max-w-400 px-4 py-4 lg:px-6 lg:py-6">
         <div className="mb-4 flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(249,115,22,0.12)] backdrop-blur">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -179,12 +155,12 @@ export function POSPage() {
         {checkoutOpen && (
           <CreateOrderModal
             isOpen={checkoutOpen}
+            mode={checkoutMode}
+            idSucursal={sucursalEfectiva ?? null}
             items={cart}
             total={total}
-            isCreating={checkoutLoading}
-            error={checkoutError}
             onClose={() => setCheckoutOpen(false)}
-            onSubmit={handleCheckoutSubmit}
+            onSuccess={handleCheckoutSuccess}
           />
         )}
 
@@ -222,8 +198,11 @@ export function POSPage() {
               <Button
                 type="button"
                 fullWidth
-                onClick={() => setCheckoutOpen(true)}
-                disabled={cart.length === 0 || checkoutLoading || !sucursalEfectiva}
+                onClick={() => {
+                  setCheckoutMode('crear-orden');
+                  setCheckoutOpen(true);
+                }}
+                disabled={cart.length === 0 || !sucursalEfectiva}
               >
                 Enviar pedido
               </Button>
@@ -231,8 +210,20 @@ export function POSPage() {
                 type="button"
                 variant="secondary"
                 fullWidth
+                onClick={() => {
+                  setCheckoutMode('cerrar-cuenta');
+                  setCheckoutOpen(true);
+                }}
+                disabled={!sucursalEfectiva}
+              >
+                Cerrar cuenta de mesa
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
                 onClick={clearCart}
-                disabled={cart.length === 0 || checkoutLoading}
+                disabled={cart.length === 0}
               >
                 Limpiar carrito
               </Button>

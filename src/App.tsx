@@ -78,14 +78,17 @@ function App() {
                 </Route>
               </Route>
 
+              <Route element={<RoleRoute allowedRoles={['admin', 'cajero', 'gerente']} />}>
+                <Route path="/caja/terminal" element={<POSPage />} />
+                <Route path="/pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
+              </Route>
+
               <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
                 <Route path="/dashboard/cajero" element={<CajeroDashboard />}>
                   <Route index element={<CajeroHome />} />
                   <Route path="caja" element={<CajaHubPage />} />
                   <Route path="ordenes" element={<POSPage />} />
                 </Route>
-                <Route path="/caja/terminal" element={<POSPage />} />
-                <Route path="/pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
               </Route>
 
               <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
@@ -104,6 +107,7 @@ function App() {
                   <Route path="ingredientes" element={<IngredientesGerentePage />} />
                   <Route path="proveedores" element={<ProveedoresGerentePage />} />
                   <Route path="pedidos-proveedor" element={<PedidosProveedorGerentePage />} />
+                  <Route path="caja" element={<CajaHubPage />} />
                   <Route path="cortes-caja" element={<CortesCajaGerentePage />} />
                 </Route>
               </Route>

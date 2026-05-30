@@ -58,7 +58,7 @@ export function TendenciaChart({ data, titulo = 'Tendencia de Ventas' }: Tendenc
               width={48}
             />
             <Tooltip
-              formatter={(value: number) => [formatCurrency(value), 'Ventas']}
+              formatter={(value) => [formatCurrency(Number(value ?? 0)), 'Ventas']}
               labelFormatter={label => `Fecha: ${label}`}
               contentStyle={{
                 fontSize: 12,

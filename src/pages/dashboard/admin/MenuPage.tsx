@@ -117,7 +117,7 @@ export function MenuPage() {
               map.set(key, categoria);
             }
             return map;
-          }, new Map<string, Categoria>()).values()
+          }, new Map<string, CategoriaItem>()).values()
         ).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
         setCategorias(categoriasUnicas);

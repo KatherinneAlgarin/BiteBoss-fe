@@ -1,8 +1,12 @@
 import { apiGet, apiPatch, apiPost } from './api';
-import type { CajaCierreListadoItem, CajaResumen, EstadoCajaSesion } from '../types/caja-cierre.types';
+import type { CajaCierreListadoItem, CajaResumen, CajeroSesionActivaItem, EstadoCajaSesion } from '../types/caja-cierre.types';
 
 export async function obtenerSesionCajaActiva(): Promise<{ activa: boolean; sesion: { id_caja_sesion: number; estado: EstadoCajaSesion } | null }> {
   return apiGet<{ activa: boolean; sesion: { id_caja_sesion: number; estado: EstadoCajaSesion } | null }>('/api/caja-cierres/sesion-activa');
+}
+
+export async function listarCajerosConCajaAbierta(): Promise<CajeroSesionActivaItem[]> {
+  return apiGet<CajeroSesionActivaItem[]>('/api/caja-cierres/cajeros-activos');
 }
 
 export async function iniciarSesionCaja(codigo_empleado: string): Promise<CajaResumen> {

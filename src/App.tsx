@@ -35,6 +35,8 @@ import { CortesCajaPage as CortesCajaGerentePage } from './pages/dashboard/geren
 import { CajeroDashboard } from './pages/dashboard/cajero/CajeroDashboard';
 import { POSPage } from './pages/dashboard/cajero/POSPage';
 import { MeseroDashboard } from './pages/dashboard/mesero/MeseroDashboard';
+import { TomarOrdenMeseroPage } from './pages/dashboard/mesero/TomarOrdenMeseroPage';
+import { PedidosMesaMeseroPage } from './pages/dashboard/mesero/PedidosMesaMeseroPage';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
 import { ReservacionesPage } from './pages/dashboard/reservaciones/ReservacionesPage';
 import { PedidosTiempoRealPage } from './pages/caja/PedidosTiempoRealPage';
@@ -93,7 +95,9 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>
                 <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
-                  <Route index element={<ReservacionesPage />} />
+                  <Route index element={<TomarOrdenMeseroPage />} />
+                  <Route path="tomar-orden" element={<TomarOrdenMeseroPage />} />
+                  <Route path="pedidos-mesa" element={<PedidosMesaMeseroPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
                 </Route>
               </Route>

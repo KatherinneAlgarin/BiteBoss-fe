@@ -1,11 +1,12 @@
 import { Outlet } from 'react-router-dom';
-import { UserCircle, CalendarDays } from 'lucide-react';
+import { UserCircle, ClipboardPlus, BellRing } from 'lucide-react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
 const navMain = [
-  { title: 'Reservaciones', url: '/dashboard/mesero/reservaciones', icon: CalendarDays },
-  { title: 'Perfil',          url: '/dashboard/profile',                icon: UserCircle },
+  { title: 'Tomar orden', url: '/dashboard/mesero/tomar-orden', icon: ClipboardPlus },
+  { title: 'Pedidos a mesa', url: '/dashboard/mesero/pedidos-mesa', icon: BellRing },
+  { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
 ];
 
 export function MeseroDashboard() {

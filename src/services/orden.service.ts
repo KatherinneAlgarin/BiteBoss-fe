@@ -1,13 +1,22 @@
 // services/orden.service.ts
-import { apiGet, apiPost, apiPut, apiDelete } from './api';
-import type { Orden, OrdenUpdate, DetalleCreate, DetalleUpdate, CrearOrdenDto } from '../types/orden.types';
+import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from './api';
+import type { Orden, OrdenResumen, OrdenUpdate, DetalleCreate, DetalleUpdate, CrearOrdenDto, HistorialEstadoOrden } from '../types/orden.types';
 
-export async function getOrdenesPendientes(): Promise<Orden[]> {
-  return apiGet<Orden[]>('/api/ordenes?estado=pendiente');
+export async function getOrdenesPendientes(): Promise<OrdenResumen[]> {
+  return apiGet<OrdenResumen[]>('/api/ordenes?estado=ABIERTO');
+}
+
+export async function getOrdenesTiempoReal(idSucursal?: number): Promise<OrdenResumen[]> {
+  const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
+  return apiGet<OrdenResumen[]>(`/api/ordenes${query}`);
 }
 
 export async function getOrdenById(id: number): Promise<Orden> {
   return apiGet<Orden>(`/api/ordenes/${id}`);
+}
+
+export async function getHistorialEstadosOrden(id: number): Promise<HistorialEstadoOrden[]> {
+  return apiGet<HistorialEstadoOrden[]>(`/api/ordenes/${id}/historial-estados`);
 }
 
 export async function createOrden(payload: CrearOrdenDto): Promise<Orden> {
@@ -15,7 +24,7 @@ export async function createOrden(payload: CrearOrdenDto): Promise<Orden> {
 }
 
 export async function updateOrden(id: number, updates: OrdenUpdate): Promise<Orden> {
-  return apiPut<Orden>(`/api/ordenes/${id}`, updates);
+  return apiPatch<Orden>(`/api/ordenes/${id}`, updates);
 }
 
 export async function addProductoToOrden(idPedido: number, detalle: DetalleCreate): Promise<Orden> {

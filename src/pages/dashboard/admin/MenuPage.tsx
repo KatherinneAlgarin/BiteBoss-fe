@@ -109,7 +109,18 @@ export function MenuPage() {
 
         const ingredientes = await listarIngredientes();
 
-        setCategorias(cats);
+        const categoriasUnicas = Array.from(
+          cats.reduce((map, categoria) => {
+            if (!categoria.activo) return map;
+            const key = categoria.nombre.trim().toLowerCase();
+            if (!map.has(key)) {
+              map.set(key, categoria);
+            }
+            return map;
+          }, new Map<string, Categoria>()).values()
+        ).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+        setCategorias(categoriasUnicas);
         setSucursales(sucursalesActivas);
         setIngredientesDisponibles(ingredientes.filter(item => item.activo));
         await loadProductos({ silent: true });

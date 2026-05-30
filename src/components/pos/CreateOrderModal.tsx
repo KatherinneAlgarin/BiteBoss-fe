@@ -9,6 +9,7 @@ import type { MesaItem } from '../../types/mesa.types';
 import type { OrdenResumen } from '../../types/orden.types';
 import { getOrdenesTiempoReal, createOrden } from '../../services/orden.service';
 import { getMetodosPago, registrarPago } from '../../services/pago.service';
+import type { TicketPrintPayload } from '../../lib/ticket-print';
 import { listarTiposOrden } from '../../services/tipo-orden.service';
 import { obtenerSucursal } from '../../services/sucursal.service';
 import { listarZonasPorSucursal } from '../../services/zona.service';
@@ -24,7 +25,7 @@ interface CreateOrderModalProps {
   items: CartItem[];
   total: number;
   onClose: () => void;
-  onSuccess: (message: string) => void;
+  onSuccess: (message: string, ticketData?: TicketPrintPayload) => void;
 }
 
 function formatOrderLabel(order: OrdenResumen) {
@@ -287,7 +288,21 @@ export function CreateOrderModal({
           });
         }
 
-        onSuccess(requiresMesa ? 'Pedido creado y asignado a mesa.' : 'Pedido creado y pagado correctamente.');
+        onSuccess(
+          requiresMesa ? 'Pedido creado y asignado a mesa.' : 'Pedido creado y pagado correctamente.',
+          !requiresMesa
+            ? {
+                order: {
+                  ...orden,
+                  tipo_orden: selectedTipoOrden.nombre,
+                  nombre_cliente: nombre.trim(),
+                  apellido_cliente: apellido.trim(),
+                },
+                metodoPago: selectedMetodo,
+                titulo: 'Ticket de venta',
+              }
+            : undefined,
+        );
         onClose();
       } catch (err) {
         setMessageError(err instanceof Error ? err.message : 'No se pudo completar el pedido');
@@ -314,7 +329,14 @@ export function CreateOrderModal({
         monto: selectedPedido.total,
         metodo: selectedMetodo,
       });
-      onSuccess(`Cuenta de la ${selectedPedido.mesa_numero ? `mesa ${selectedPedido.mesa_numero}` : 'mesa'} cerrada correctamente.`);
+      onSuccess(
+        `Cuenta de la ${selectedPedido.mesa_numero ? `mesa ${selectedPedido.mesa_numero}` : 'mesa'} cerrada correctamente.`,
+        {
+          order: selectedPedido,
+          metodoPago: selectedMetodo,
+          titulo: 'Ticket de cierre de cuenta',
+        },
+      );
       onClose();
     } catch (err) {
       setMessageError(err instanceof Error ? err.message : 'No se pudo cerrar la cuenta');

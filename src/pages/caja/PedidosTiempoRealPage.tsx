@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Clock3, RefreshCw, ClipboardList, CircleAlert, ArrowRight, History } from 'lucide-react';
-import { getOrdenesTiempoReal, getHistorialEstadosOrden, updateOrden } from '../../services/orden.service';
-import type { HistorialEstadoOrden, OrdenResumen } from '../../types/orden.types';
+import { Clock3, RefreshCw, ClipboardList, CircleAlert, ArrowRight, Printer } from 'lucide-react';
+import { getOrdenesTiempoReal, updateOrden } from '../../services/orden.service';
+import type { OrdenResumen } from '../../types/orden.types';
 import { useAuth } from '../../hooks/useAuth';
+import { printTicket } from '../../lib/ticket-print';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: typeof ClipboardList }> = {
   NUEVO: { label: 'Nuevos', className: 'bg-orange-50 text-orange-700 border-orange-200', icon: ClipboardList },
@@ -105,10 +106,6 @@ export function PedidosTiempoRealPage() {
   const [highlightedIds, setHighlightedIds] = useState<number[]>([]);
   const [updatingIds, setUpdatingIds] = useState<number[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const [historialTarget, setHistorialTarget] = useState<OrdenResumen | null>(null);
-  const [historial, setHistorial] = useState<HistorialEstadoOrden[]>([]);
-  const [loadingHistorial, setLoadingHistorial] = useState(false);
-  const [historialError, setHistorialError] = useState<string | null>(null);
   const previousMapRef = useRef<Map<number, string>>(new Map());
 
   const load = useCallback(async (silent = false) => {
@@ -192,21 +189,6 @@ export function PedidosTiempoRealPage() {
     }
   }, [load]);
 
-  const abrirHistorial = useCallback(async (order: OrdenResumen) => {
-    setHistorialTarget(order);
-    setLoadingHistorial(true);
-    setHistorialError(null);
-    try {
-      const data = await getHistorialEstadosOrden(order.id_pedido);
-      setHistorial(data);
-    } catch (err) {
-      setHistorialError(err instanceof Error ? err.message : 'No se pudo cargar el historial');
-      setHistorial([]);
-    } finally {
-      setLoadingHistorial(false);
-    }
-  }, []);
-
   const grouped = useMemo(() => {
     return Object.entries(STATUS_CONFIG).map(([status, config]) => ({
       status,
@@ -222,9 +204,21 @@ export function PedidosTiempoRealPage() {
 
   const selectedIsUpdating = selectedOrder ? updatingIds.includes(selectedOrder.id_pedido) : false;
   const selectedNext = selectedOrder ? nextEstado(selectedOrder.estado_operativo) : null;
+  const selectedCanPrintTicket = selectedOrder ? selectedOrder.estado_operativo === 'NUEVO' : false;
   const selectedCanCancel = selectedOrder
     ? selectedOrder.estado_operativo !== 'ENTREGADO' && selectedOrder.estado_operativo !== 'CANCELADO'
     : false;
+
+  const handlePrintTicket = useCallback((order: OrdenResumen) => {
+    try {
+      printTicket({
+        order,
+        titulo: 'Ticket de pedido',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo imprimir el ticket.');
+    }
+  }, []);
 
   useEffect(() => {
     if (!selectedOrderId) return;
@@ -350,7 +344,7 @@ export function PedidosTiempoRealPage() {
                       {selectedOrder ? `Pedido #${selectedOrder.numero_orden}` : 'Selecciona una card'}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      {selectedOrder ? estadoLabel(selectedOrder.estado_operativo) : 'Para actualizar, ver historial o cancelar'}
+                      {selectedOrder ? estadoLabel(selectedOrder.estado_operativo) : 'Para actualizar, imprimir o cancelar'}
                     </p>
                   </div>
                   <div className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">
@@ -362,22 +356,22 @@ export function PedidosTiempoRealPage() {
                   <button
                     onClick={() => selectedOrder && void handleNextEstado(selectedOrder)}
                     disabled={!selectedOrder || !selectedNext || selectedIsUpdating}
-                    className="rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-11 items-center justify-center rounded-2xl bg-orange-500 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {selectedIsUpdating ? 'Actualizando...' : selectedNext === 'OCULTO' ? 'Ocultar' : 'Siguiente'}
                   </button>
                   <button
-                    onClick={() => selectedOrder && void abrirHistorial(selectedOrder)}
-                    disabled={!selectedOrder}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => selectedOrder && handlePrintTicket(selectedOrder)}
+                    disabled={!selectedOrder || !selectedCanPrintTicket}
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <History className="h-4 w-4" />
-                    Historial
+                    <Printer className="h-4 w-4" />
+                    PDF
                   </button>
                   <button
                     onClick={() => selectedOrder && void handleCancelar(selectedOrder)}
                     disabled={!selectedOrder || !selectedCanCancel || selectedIsUpdating}
-                    className="rounded-2xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm font-semibold text-red-100 hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-red-400/30 bg-red-500/15 px-4 text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Cancelar
                   </button>
@@ -388,46 +382,6 @@ export function PedidosTiempoRealPage() {
         )}
       </div>
 
-      {historialTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-white text-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div>
-                <h2 className="text-lg font-bold">Historial de estados</h2>
-                <p className="text-sm text-slate-500">Pedido #{historialTarget.numero_orden}</p>
-              </div>
-              <button
-                onClick={() => setHistorialTarget(null)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                Cerrar
-              </button>
-            </div>
-            <div className="max-h-[65vh] overflow-y-auto p-5">
-              {loadingHistorial ? (
-                <p className="text-sm text-slate-500">Cargando historial...</p>
-              ) : historialError ? (
-                <p className="text-sm text-red-600">{historialError}</p>
-              ) : historial.length === 0 ? (
-                <p className="text-sm text-slate-500">Aún no hay cambios de estado registrados.</p>
-              ) : (
-                <div className="space-y-3">
-                  {historial.map(item => (
-                    <div key={item.id_auditoria} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="text-sm font-semibold text-slate-800">
-                        {estadoLabel(item.estado_anterior)} {'->'} {estadoLabel(item.estado_nuevo)}
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500">
-                        {new Date(item.creado_en).toLocaleString('es-ES')} · {item.usuario_nombre ?? 'Usuario'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

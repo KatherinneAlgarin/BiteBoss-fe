@@ -12,6 +12,7 @@ import { listarSucursales } from '../../../services/sucursal.service';
 import { CreateOrderModal, type CheckoutMode } from '../../../components/pos/CreateOrderModal';
 import { CajaCierreModal } from '../../../components/pos/CajaCierreModal';
 import { obtenerSesionCajaActiva } from '../../../services/caja-cierre.service';
+import { printTicket, type TicketPrintPayload } from '../../../lib/ticket-print';
 import type { Producto } from '../../../types/producto.types';
 import type { SucursalItem } from '../../../types/sucursal.types';
 
@@ -152,12 +153,21 @@ export function POSPage() {
     setCart(prev => prev.filter(i => i.id_producto !== id));
   }, []);
 
-  const handleCheckoutSuccess = useCallback((message: string) => {
+  const handleCheckoutSuccess = useCallback((message: string, ticketData?: TicketPrintPayload) => {
     if (checkoutMode === 'crear-orden') {
       clearCart();
     }
     setCheckoutOpen(false);
     setSuccessMessage(message);
+
+    if (ticketData) {
+      try {
+        printTicket(ticketData);
+      } catch {
+        // Si falla la descarga automática, no bloquea el flujo de cobro.
+      }
+    }
+
     window.setTimeout(() => setSuccessMessage(null), 4000);
   }, [clearCart, checkoutMode]);
 
@@ -232,7 +242,9 @@ export function POSPage() {
             </div>
           </div>
 
-          {successMessage && <AlertMessage type="success" message={successMessage} />}
+          {successMessage && (
+            <AlertMessage type="success" message={successMessage} />
+          )}
         </div>
 
         {checkoutOpen && (

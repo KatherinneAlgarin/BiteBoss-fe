@@ -95,7 +95,6 @@ function App() {
                 <Route path="/dashboard/mesero" element={<MeseroDashboard />}>
                   <Route index element={<ReservacionesPage />} />
                   <Route path="reservaciones" element={<ReservacionesPage />} />
-                  <Route path="pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
                 </Route>
               </Route>
 

@@ -96,7 +96,6 @@ const NAV_BY_ROLE: Record<UserRole, NavEntry[]> = {
   ],
   mesero: [
     { title: 'Reservaciones', url: '/dashboard/mesero/reservaciones', icon: CalendarDays },
-    { title: 'Pedidos en vivo', url: '/dashboard/mesero/pedidos-en-vivo', icon: ReceiptText },
     { title: 'Perfil', url: '/dashboard/profile', icon: UserCircle },
   ],
   cajero: [

@@ -12,6 +12,7 @@ import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminDashboard } from './pages/dashboard/admin/AdminDashboard';
 import { AdminHome } from './pages/dashboard/admin/AdminHome';
+import { CajaHubPage } from './pages/dashboard/caja/CajaHubPage';
 import { UsuariosPage } from './pages/dashboard/admin/UsuariosPage';
 import { ProveedoresPage } from './pages/dashboard/admin/ProveedoresPage';
 import { MenuPage } from './pages/dashboard/admin/MenuPage';
@@ -38,6 +39,7 @@ import { MeseroHome } from './pages/dashboard/mesero/MeseroHome';
 import { GerenteDashboard } from './pages/dashboard/gerente/GerenteDashboard';
 import { GerenteHome } from './pages/dashboard/gerente/GerenteHome';
 import { ReservacionesPage } from './pages/dashboard/reservaciones/ReservacionesPage';
+import { PedidosTiempoRealPage } from './pages/caja/PedidosTiempoRealPage';
 // Import diagnostics for development
 import './lib/api-diagnostics';
 
@@ -63,6 +65,7 @@ function App() {
                   <Route path="usuarios" element={<UsuariosPage />} />
                   <Route path="proveedores" element={<ProveedoresPage />} />
                   <Route path="menu" element={<MenuPage />} />
+                  <Route path="caja" element={<CajaHubPage />} />
                   <Route path="inventario" element={<InventarioPage />} />
                   <Route path="tipos-orden" element={<TiposOrdenPage />} />
                   <Route path="tipos-pago" element={<TiposPagoPage />} />
@@ -77,9 +80,12 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['admin', 'cajero']} />}>
                 <Route path="/dashboard/cajero" element={<CajeroDashboard />}>
-                  <Route index element={<POSPage />} />
+                  <Route index element={<CajeroHome />} />
+                  <Route path="caja" element={<CajaHubPage />} />
                   <Route path="ordenes" element={<POSPage />} />
                 </Route>
+                <Route path="/caja/terminal" element={<POSPage />} />
+                <Route path="/pedidos-en-vivo" element={<PedidosTiempoRealPage />} />
               </Route>
 
               <Route element={<RoleRoute allowedRoles={['admin', 'mesero']} />}>

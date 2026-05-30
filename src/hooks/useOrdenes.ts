@@ -1,10 +1,10 @@
 // hooks/useOrdenes.ts
 import { useState, useEffect } from 'react';
-import type { Orden } from '../types/orden.types';
+import type { Orden, OrdenResumen } from '../types/orden.types';
 import { getOrdenesPendientes, getOrdenById, updateOrden, addProductoToOrden, updateDetalleOrden, removeDetalleOrden } from '../services/orden.service';
 
 export function useOrdenesPendientes() {
-  const [ordenes, setOrdenes] = useState<Orden[]>([]);
+  const [ordenes, setOrdenes] = useState<OrdenResumen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -3,7 +3,7 @@ import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from './api';
 import type { Orden, OrdenResumen, OrdenUpdate, DetalleCreate, DetalleUpdate, CrearOrdenDto, HistorialEstadoOrden } from '../types/orden.types';
 
 export async function getOrdenesPendientes(): Promise<OrdenResumen[]> {
-  return apiGet<OrdenResumen[]>('/api/ordenes?estado=ABIERTO');
+  return apiGet<OrdenResumen[]>('/api/ordenes?estado=NUEVO');
 }
 
 export async function getOrdenesTiempoReal(idSucursal?: number): Promise<OrdenResumen[]> {

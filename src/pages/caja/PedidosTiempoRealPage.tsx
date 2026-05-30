@@ -6,9 +6,9 @@ import type { HistorialEstadoOrden, OrdenResumen } from '../../types/orden.types
 import { useAuth } from '../../hooks/useAuth';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: typeof ClipboardList }> = {
-  ABIERTO: { label: 'Nuevos', className: 'bg-orange-50 text-orange-700 border-orange-200', icon: ClipboardList },
-  POR_COBRAR: { label: 'Por cobrar', className: 'bg-amber-50 text-amber-800 border-amber-200', icon: Clock3 },
-  CERRADO: { label: 'Cerrados', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: ArrowRight },
+  NUEVO: { label: 'Nuevos', className: 'bg-orange-50 text-orange-700 border-orange-200', icon: ClipboardList },
+  EN_PROCESO: { label: 'En proceso', className: 'bg-amber-50 text-amber-800 border-amber-200', icon: Clock3 },
+  ENTREGADO: { label: 'Entregados', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: ArrowRight },
   CANCELADO: { label: 'Cancelados', className: 'bg-red-50 text-red-700 border-red-200', icon: CircleAlert },
 };
 
@@ -56,21 +56,18 @@ function formatElapsed(iso?: string, now = Date.now(), endIso?: string) {
 }
 
 function nextEstado(estado: OrdenResumen['estado_operativo']): OrdenResumen['estado_operativo'] | null {
-  if (estado === 'ABIERTO') return 'POR_COBRAR';
-  if (estado === 'POR_COBRAR') return 'CERRADO';
-  if (estado === 'CERRADO') return 'FINALIZADO';
-  if (estado === 'CANCELADO') return 'FINALIZADO';
+  if (estado === 'NUEVO') return 'EN_PROCESO';
+  if (estado === 'EN_PROCESO') return 'ENTREGADO';
   return null;
 }
 
 function estadoLabel(estado: string | null) {
   if (!estado) return '—';
   const map: Record<string, string> = {
-    ABIERTO: 'Abierto',
-    POR_COBRAR: 'Por cobrar',
-    CERRADO: 'Cerrado',
+    NUEVO: 'Nuevo',
+    EN_PROCESO: 'En proceso',
+    ENTREGADO: 'Entregado',
     CANCELADO: 'Cancelado',
-    FINALIZADO: 'Finalizado',
   };
   return map[estado] ?? estado;
 }
@@ -169,7 +166,7 @@ export function PedidosTiempoRealPage() {
   }, [load]);
 
   const handleCancelar = useCallback(async (order: OrdenResumen) => {
-    if (order.estado_operativo === 'CERRADO' || order.estado_operativo === 'CANCELADO') return;
+    if (order.estado_operativo === 'ENTREGADO' || order.estado_operativo === 'CANCELADO') return;
 
     setUpdatingIds(prev => [...prev, order.id_pedido]);
     try {
@@ -213,7 +210,7 @@ export function PedidosTiempoRealPage() {
   const selectedIsUpdating = selectedOrder ? updatingIds.includes(selectedOrder.id_pedido) : false;
   const selectedNext = selectedOrder ? nextEstado(selectedOrder.estado_operativo) : null;
   const selectedCanCancel = selectedOrder
-    ? selectedOrder.estado_operativo !== 'CERRADO' && selectedOrder.estado_operativo !== 'CANCELADO'
+    ? selectedOrder.estado_operativo !== 'ENTREGADO' && selectedOrder.estado_operativo !== 'CANCELADO'
     : false;
 
   useEffect(() => {
@@ -353,7 +350,7 @@ export function PedidosTiempoRealPage() {
                     disabled={!selectedOrder || !selectedNext || selectedIsUpdating}
                     className="rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {selectedIsUpdating ? 'Actualizando...' : selectedNext === 'FINALIZADO' ? 'Finalizar' : 'Siguiente'}
+                    {selectedIsUpdating ? 'Actualizando...' : 'Siguiente'}
                   </button>
                   <button
                     onClick={() => selectedOrder && void abrirHistorial(selectedOrder)}

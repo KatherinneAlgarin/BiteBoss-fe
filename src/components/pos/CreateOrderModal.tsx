@@ -165,7 +165,7 @@ export function CreateOrderModal({
     const loadPedidosMesa = async () => {
       try {
         const data = await getOrdenesTiempoReal(idSucursal);
-        const abiertos = data.filter(orden => orden.mesa_numero != null && ['ABIERTO', 'POR_COBRAR'].includes(orden.estado_operativo));
+        const abiertos = data.filter(orden => orden.mesa_numero != null && ['NUEVO', 'EN_PROCESO'].includes(orden.estado_operativo));
         setPedidosMesa(abiertos);
         setSelectedPedidoId(prev => prev ?? abiertos[0]?.id_pedido ?? null);
       } catch (err) {

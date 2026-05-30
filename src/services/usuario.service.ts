@@ -28,6 +28,10 @@ export function listarRoles(): Promise<RolItem[]> {
   return apiGet<RolItem[]>('/api/usuarios/roles');
 }
 
+export function generarCodigoEmpleadoAleatorio(): Promise<{ codigo_empleado: string }> {
+  return apiGet<{ codigo_empleado: string }>('/api/usuarios/codigo-empleado/aleatorio');
+}
+
 export function crearUsuario(dto: CrearUsuarioDto): Promise<UsuarioCreadoResponse> {
   return apiPost<UsuarioCreadoResponse>('/api/usuarios', dto);
 }

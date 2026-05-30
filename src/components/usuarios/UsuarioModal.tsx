@@ -3,6 +3,7 @@ import { Eye, EyeOff, X, Loader2 } from 'lucide-react';
 import type { CrearUsuarioDto, ActualizarUsuarioDto, RolItem, UsuarioListItem } from '../../types/usuario.types';
 import type { SucursalItem } from '../../types/sucursal.types';
 import { formatRoleLabel } from '../../lib/roles';
+import { generarCodigoEmpleadoAleatorio } from '../../services/usuario.service';
 
 export type UsuarioModalMode = 'crear' | 'editar';
 
@@ -10,6 +11,7 @@ interface CrearFormState {
   nombre: string;
   email: string;
   password: string;
+  codigo_empleado: string;
   id_rol: string;
   id_sucursal: string;
 }
@@ -25,6 +27,7 @@ function buildInitialCrearForm(): CrearFormState {
     nombre:      '',
     email:       '',
     password:    '',
+    codigo_empleado: '',
     id_rol:      '',
     id_sucursal: '',
   };
@@ -53,6 +56,9 @@ function validateCrearForm(form: CrearFormState): Partial<Record<keyof CrearForm
     errors.password = 'La contraseña es requerida';
   else if (form.password.length < 6)
     errors.password = 'La contraseña debe tener al menos 6 caracteres';
+
+  if (form.codigo_empleado.trim() && !/^\d{4}$/.test(form.codigo_empleado.trim()))
+    errors.codigo_empleado = 'El código de empleado debe tener 4 dígitos numéricos';
 
   if (!form.id_rol)      errors.id_rol      = 'El rol es requerido';
   if (!form.id_sucursal) errors.id_sucursal = 'La sucursal es requerida';
@@ -112,6 +118,7 @@ export function UsuarioModal(props: Props) {
   const [serverError, setServerError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [generandoCodigo, setGenerandoCodigo] = useState(false);
 
   useEffect(() => {
     setCrearForm(buildInitialCrearForm());
@@ -128,10 +135,28 @@ export function UsuarioModal(props: Props) {
 
   function handleCrearChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
-    setCrearForm(prev => ({ ...prev, [name]: value }));
+    const sanitizedValue = name === 'codigo_empleado'
+      ? value.replace(/\D/g, '').slice(0, 4)
+      : value;
+
+    setCrearForm(prev => ({ ...prev, [name]: sanitizedValue }));
     if (crearErrors[name as keyof CrearFormState])
       setCrearErrors(prev => ({ ...prev, [name]: undefined }));
     setServerError('');
+  }
+
+  async function handleGenerarCodigoEmpleado() {
+    setGenerandoCodigo(true);
+    setServerError('');
+    try {
+      const { codigo_empleado } = await generarCodigoEmpleadoAleatorio();
+      setCrearForm(prev => ({ ...prev, codigo_empleado }));
+      setCrearErrors(prev => ({ ...prev, codigo_empleado: undefined }));
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'No se pudo generar el código de empleado');
+    } finally {
+      setGenerandoCodigo(false);
+    }
   }
 
   function handleEditarChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -163,6 +188,7 @@ export function UsuarioModal(props: Props) {
         nombre:      crearForm.nombre.trim(),
         email:       crearForm.email.trim().toLowerCase(),
         password:    crearForm.password,
+        codigo_empleado: crearForm.codigo_empleado.trim() || undefined,
         id_rol:      Number(crearForm.id_rol),
         id_sucursal: Number(crearForm.id_sucursal),
       });
@@ -288,6 +314,34 @@ export function UsuarioModal(props: Props) {
                 </button>
               </div>
               {crearErrors.password && <p className="mt-1 text-xs text-red-600">{crearErrors.password}</p>}
+            </div>
+
+            {/* Rol */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Código de empleado
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="codigo_empleado"
+                  value={crearForm.codigo_empleado}
+                  onChange={handleCrearChange}
+                  placeholder="0000"
+                  inputMode="numeric"
+                  maxLength={4}
+                  className={crearInputClass('codigo_empleado')}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleGenerarCodigoEmpleado()}
+                  disabled={generandoCodigo || submitting}
+                  className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {generandoCodigo ? 'Generando...' : 'Generar'}
+                </button>
+              </div>
+              {crearErrors.codigo_empleado && <p className="mt-1 text-xs text-red-600">{crearErrors.codigo_empleado}</p>}
             </div>
 
             {/* Rol */}
